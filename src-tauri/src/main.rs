@@ -12,6 +12,7 @@ mod commands;
 mod engine;
 mod errors;
 mod models;
+mod watcher;
 
 /// A simple greeting command to verify Inter-Process Communication (IPC) connectivity
 /// between the frontend and the Tauri backend.
@@ -25,9 +26,36 @@ fn greet(name: &str) -> String {
 /// Configures the default Tauri builder setup, hooks up logging handlers,
 /// registers backend command handlers, and starts the main application loop.
 fn main() {
+    let http_executor = engine::http_client::HttpExecutor::new();
+    let app_state = commands::workspace::AppState::new(http_executor);
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .manage(app_state)
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            commands::workspace::open_workspace,
+            commands::workspace::close_workspace,
+            commands::workspace::get_workspace_info,
+            commands::workspace::save_workspace_state,
+            commands::workspace::get_git_status,
+            commands::workspace::get_git_diff,
+            commands::collection::create_collection,
+            commands::collection::create_folder,
+            commands::collection::rename_item,
+            commands::collection::delete_item,
+            commands::collection::duplicate_item,
+            commands::collection::reorder_item,
+            commands::request::read_request,
+            commands::request::update_request,
+            commands::request::execute_request,
+            commands::request::cancel_request,
+            commands::environment::list_environments,
+            commands::environment::read_environment,
+            commands::environment::create_environment,
+            commands::environment::update_environment,
+            commands::environment::delete_environment,
+        ])
         .setup(|app| {
             let log_dir = app.path().app_log_dir().unwrap();
             let file_appender = tracing_appender::rolling::daily(log_dir, "aether.log");

@@ -319,6 +319,12 @@ impl RequestTracker {
         (request_id, token)
     }
 
+    /// Registers a new active request task with a predefined request ID.
+    pub async fn register_with_id(&self, request_id: String, token: CancellationToken) {
+        let mut map = self.active_requests.lock().await;
+        map.insert(request_id, token);
+    }
+
     /// Cancels a registered request, terminating its connection and task runner.
     pub async fn cancel(&self, request_id: &str) -> bool {
         let mut map = self.active_requests.lock().await;
