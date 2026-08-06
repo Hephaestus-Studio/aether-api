@@ -9,6 +9,7 @@
 use tauri::Manager;
 
 mod commands;
+mod engine;
 mod errors;
 mod models;
 
