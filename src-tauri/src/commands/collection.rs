@@ -29,6 +29,7 @@ pub async fn create_collection(
     name: String,
     state: State<'_, AppState>,
 ) -> Result<CreateCollectionResult, AppError> {
+    tracing::info!("Creating collection: '{}'", name);
     let ws = state.workspace.lock().await;
     let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
 
@@ -36,6 +37,7 @@ pub async fn create_collection(
     let collection_dir = ws_state.path.join("collections").join(&clean_name);
 
     if collection_dir.exists() {
+        tracing::warn!("Collection '{}' already exists at {}", clean_name, collection_dir.display());
         return Err(AppError::DuplicateItem(format!(
             "Collection '{}' already exists",
             clean_name
@@ -60,6 +62,8 @@ pub async fn create_collection(
         .unwrap_or(&collection_dir)
         .to_string_lossy()
         .to_string();
+
+    tracing::info!("Created collection '{}' with ID: {}", name, id);
 
     Ok(CreateCollectionResult {
         id,
@@ -96,6 +100,7 @@ pub async fn create_folder(
     name: String,
     state: State<'_, AppState>,
 ) -> Result<CreateFolderResult, AppError> {
+    tracing::info!("Creating folder: '{}' inside '{}'", name, parent_path);
     let ws = state.workspace.lock().await;
     let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
 
@@ -110,6 +115,7 @@ pub async fn create_folder(
     let folder_dir = parent_abs.join(&clean_name);
 
     if folder_dir.exists() {
+        tracing::warn!("Folder '{}' already exists at {}", clean_name, folder_dir.display());
         return Err(AppError::DuplicateItem(format!(
             "Folder '{}' already exists",
             clean_name
@@ -133,6 +139,8 @@ pub async fn create_folder(
         .unwrap_or(&folder_dir)
         .to_string_lossy()
         .to_string();
+
+    tracing::info!("Created folder '{}' with ID: {}", name, id);
 
     Ok(CreateFolderResult {
         id,
@@ -164,6 +172,7 @@ pub async fn rename_item(
     new_name: String,
     state: State<'_, AppState>,
 ) -> Result<RenameResult, AppError> {
+    tracing::info!("Renaming item '{}' to '{}'", old_path, new_name);
     let ws = state.workspace.lock().await;
     let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
 
@@ -173,6 +182,7 @@ pub async fn rename_item(
         ws_state.path.join(&old_path)
     };
     if !old.exists() {
+        tracing::error!("Item not found for rename: {}", old_path);
         return Err(AppError::ItemNotFound(old_path));
     }
 
@@ -187,6 +197,7 @@ pub async fn rename_item(
     };
 
     if new.exists() && new != old {
+        tracing::warn!("Target path for rename already exists: {}", new.display());
         return Err(AppError::DuplicateItem(format!(
             "Item already exists at new path"
         )));
@@ -232,6 +243,8 @@ pub async fn rename_item(
         }
     }
 
+    tracing::info!("Successfully renamed '{}' -> '{}'", old_path, new.display());
+
     Ok(RenameResult {
         new_path: new.to_string_lossy().to_string(),
     })
@@ -244,6 +257,7 @@ pub async fn rename_item(
 /// or [`AppError::ItemNotFound`] if the target path cannot be resolved.
 #[tauri::command]
 pub async fn delete_item(path: String, state: State<'_, AppState>) -> Result<(), AppError> {
+    tracing::warn!("Deleting item from workspace: {}", path);
     let ws = state.workspace.lock().await;
     let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
 
@@ -253,6 +267,7 @@ pub async fn delete_item(path: String, state: State<'_, AppState>) -> Result<(),
         ws_state.path.join(&path)
     };
     if !target.exists() {
+        tracing::error!("Target path to delete not found: {}", path);
         return Err(AppError::ItemNotFound(path));
     }
 
@@ -261,6 +276,8 @@ pub async fn delete_item(path: String, state: State<'_, AppState>) -> Result<(),
     } else {
         std::fs::remove_file(&target)?;
     }
+
+    tracing::info!("Item successfully deleted: {}", path);
 
     Ok(())
 }

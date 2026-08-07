@@ -145,6 +145,7 @@ pub async fn create_environment(
     name: String,
     state: State<'_, AppState>,
 ) -> Result<EnvironmentDetails, AppError> {
+    tracing::info!("Creating environment: '{}'", name);
     let ws = state.workspace.lock().await;
     let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
 
@@ -152,6 +153,7 @@ pub async fn create_environment(
     let env_file = env_dir.join(format!("{}.yml", sanitize_name(&name)));
 
     if env_file.exists() {
+        tracing::warn!("Environment '{}' already exists at {}", name, env_file.display());
         return Err(AppError::DuplicateItem(format!(
             "Environment '{}' already exists",
             name
@@ -160,6 +162,8 @@ pub async fn create_environment(
 
     let env = crate::models::environment::Environment::new(&name);
     crate::engine::yaml_parser::atomic_write_yaml(&env_file, &env)?;
+
+    tracing::info!("Created environment '{}' successfully", name);
 
     Ok(EnvironmentDetails {
         name,
@@ -178,6 +182,7 @@ pub async fn update_environment(
     variables: Vec<EnvVariableItem>,
     state: State<'_, AppState>,
 ) -> Result<(), AppError> {
+    tracing::info!("Updating environment: '{}' ({} variables)", name, variables.len());
     let ws = state.workspace.lock().await;
     let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
 
@@ -195,6 +200,7 @@ pub async fn update_environment(
     } else if env_file_yaml.exists() {
         env_file_yaml
     } else {
+        tracing::error!("Environment file not found for update: {}", name);
         return Err(AppError::ItemNotFound(name));
     };
 
@@ -219,6 +225,8 @@ pub async fn update_environment(
     env.updated_at = Utc::now();
     crate::engine::yaml_parser::atomic_write_yaml(&env_file, &env)?;
 
+    tracing::info!("Environment '{}' updated successfully", name);
+
     Ok(())
 }
 
@@ -229,6 +237,7 @@ pub async fn update_environment(
 /// or [`AppError::ItemNotFound`] if target environment does not exist.
 #[tauri::command]
 pub async fn delete_environment(name: String, state: State<'_, AppState>) -> Result<(), AppError> {
+    tracing::warn!("Deleting environment: '{}'", name);
     let ws = state.workspace.lock().await;
     let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
 
@@ -246,9 +255,11 @@ pub async fn delete_environment(name: String, state: State<'_, AppState>) -> Res
     } else if env_file_yaml.exists() {
         env_file_yaml
     } else {
+        tracing::error!("Environment file not found for deletion: {}", name);
         return Err(AppError::ItemNotFound(name));
     };
 
-    std::fs::remove_file(env_file)?;
+    std::fs::remove_file(&env_file)?;
+    tracing::info!("Environment '{}' deleted successfully", name);
     Ok(())
 }

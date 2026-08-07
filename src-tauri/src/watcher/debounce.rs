@@ -59,6 +59,7 @@ pub async fn start_debounce_loop(mut rx: mpsc::Receiver<Event>, app_handle: taur
                 let deduplicated = deduplicate_events(payloads);
 
                 for payload in deduplicated {
+                    tracing::debug!("Filesystem change detected and emitted to frontend: {:?}", payload);
                     let _ = app_handle.emit("fs-change", payload);
                 }
             }

@@ -17,6 +17,7 @@ use tokio_util::sync::CancellationToken;
 /// or [`AppError::Io`] if the file cannot be read.
 #[tauri::command]
 pub async fn read_request(path: String, state: State<'_, AppState>) -> Result<Request, AppError> {
+    tracing::debug!("Reading request configuration: {}", path);
     let ws = state.workspace.lock().await;
     let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
 
@@ -42,6 +43,7 @@ pub async fn update_request(
     mut request_details: Request,
     state: State<'_, AppState>,
 ) -> Result<(), AppError> {
+    tracing::info!("Updating request configuration: {}", path);
     let ws = state.workspace.lock().await;
     let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
 
@@ -52,6 +54,7 @@ pub async fn update_request(
     };
     request_details.updated_at = chrono::Utc::now();
     crate::engine::yaml_parser::atomic_write_yaml(&file_path, &request_details)?;
+    tracing::debug!("Successfully wrote updated request to {}", file_path.display());
     Ok(())
 }
 
@@ -70,6 +73,11 @@ pub async fn execute_request(
     state: State<'_, AppState>,
     app_handle: tauri::AppHandle,
 ) -> Result<HttpResponse, AppError> {
+    tracing::info!(
+        "Executing request: {} (active env: {:?})",
+        request_path,
+        active_environment_name
+    );
     let ws = state.workspace.lock().await;
     let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
 
@@ -186,13 +194,19 @@ pub async fn execute_request(
     };
 
     let resolved_request = Request {
-        url: resolved_url,
+        url: resolved_url.clone(),
         params: resolved_params,
         headers: resolved_headers,
         auth: resolved_auth,
         body: resolved_body,
         ..request
     };
+
+    tracing::info!(
+        "Sending HTTP {} request to {}",
+        resolved_request.method,
+        resolved_url
+    );
 
     let cancel_token = CancellationToken::new();
     state.request_tracker.remove(&request_path).await;
@@ -217,6 +231,21 @@ pub async fn execute_request(
 
     state.request_tracker.remove(&request_path).await;
 
+    match &response {
+        Ok(res) => {
+            tracing::info!(
+                "Request [{}] completed with status {} {} in {:.2} ms",
+                resolved_request.method,
+                res.status,
+                res.status_text,
+                res.timing.total_ms
+            );
+        }
+        Err(err) => {
+            tracing::error!("Request execution failed for {}: {:?}", request_path, err);
+        }
+    }
+
     response
 }
 
@@ -229,9 +258,12 @@ pub async fn cancel_request(
     request_path: String,
     state: State<'_, AppState>,
 ) -> Result<(), AppError> {
+    tracing::info!("Cancelling request execution: {}", request_path);
     if state.request_tracker.cancel(&request_path).await {
+        tracing::info!("Request {} cancelled successfully", request_path);
         Ok(())
     } else {
+        tracing::warn!("Failed to cancel request {}: not running", request_path);
         Err(AppError::ItemNotFound(format!(
             "Request '{}' is not running",
             request_path

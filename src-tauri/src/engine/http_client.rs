@@ -75,25 +75,30 @@ impl HttpExecutor {
 
         let request = req_builder.build().map_err(|e| AppError::NetworkError(e))?;
 
+        tracing::debug!("Sending HTTP request to {}", request.url());
         let start_time = Instant::now();
 
         let response_result = tokio::select! {
             res = effective_client.execute(request) => {
                 res.map_err(|e| {
                     if e.is_timeout() {
+                        tracing::warn!("HTTP request timed out");
                         AppError::TimeoutError
                     } else {
+                        tracing::error!("HTTP network error: {:?}", e);
                         AppError::NetworkError(e)
                     }
                 })
             }
             _ = cancel_token.cancelled() => {
+                tracing::warn!("HTTP request execution was cancelled");
                 return Err(AppError::RequestCancelled);
             }
         };
 
         let response = response_result?;
         let ttfb_ms = start_time.elapsed().as_secs_f64() * 1000.0;
+        tracing::debug!("HTTP response headers received in {:.2} ms", ttfb_ms);
 
         let status = response.status().as_u16();
         let status_text = response

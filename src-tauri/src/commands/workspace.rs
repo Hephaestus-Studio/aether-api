@@ -66,13 +66,16 @@ pub async fn open_workspace(
     state: State<'_, AppState>,
     app_handle: tauri::AppHandle,
 ) -> Result<WorkspaceTree, AppError> {
+    tracing::info!("Opening workspace at path: {}", directory_path);
     let path = PathBuf::from(&directory_path);
     if !path.exists() || !path.is_dir() {
+        tracing::error!("Workspace directory not found: {}", directory_path);
         return Err(AppError::ItemNotFound(directory_path));
     }
 
     let workspace_yml = path.join("workspace.yml");
     if !workspace_yml.exists() {
+        tracing::info!("Scaffolding new workspace.yml at {}", path.display());
         create_workspace_scaffold(&path)?;
     }
 
@@ -90,6 +93,8 @@ pub async fn open_workspace(
         tree: tree.clone(),
     });
 
+    tracing::info!("Workspace successfully loaded: {}", path.display());
+
     Ok(tree)
 }
 
@@ -98,6 +103,7 @@ pub async fn open_workspace(
 /// Cancels all active requests running in background threads and drops the workspace state lock.
 #[tauri::command]
 pub async fn close_workspace(state: State<'_, AppState>) -> Result<(), AppError> {
+    tracing::info!("Closing active workspace");
     let mut ws = state.workspace.lock().await;
     if ws.is_some() {
         state.request_tracker.cancel_all().await;
