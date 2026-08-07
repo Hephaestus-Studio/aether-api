@@ -1,51 +1,73 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
+import { useEffect } from "react";
+import { MantineProvider, createTheme } from "@mantine/core";
+import { useWorkspaceStore } from "./stores/workspaceStore";
+import { useEnvStore } from "./stores/envStore";
+import { useFsWatcher } from "./hooks/useFsWatcher";
 import { invoke } from "@tauri-apps/api/core";
-import "./App.css";
+import AppShell from "./components/layout/AppShell";
+import WelcomeScreen from "./components/WelcomeScreen";
+import "@mantine/core/styles.css";
+import "./styles/theme.css";
+import "./styles/global.css";
 
-function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+const theme = createTheme({
+  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+  fontFamilyMonospace: "JetBrains Mono, Fira Code, monospace",
+  primaryColor: "indigo",
+  defaultRadius: "sm",
+});
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+export default function App() {
+  const { workspacePath, setTreeData, setGitStatus, reset } = useWorkspaceStore();
+  const { setEnvironments } = useEnvStore();
+
+  // Handle desynchronization between Frontend and Backend on startup / reload
+  useEffect(() => {
+    if (workspacePath) {
+      invoke("get_workspace_info")
+        .then(() => {
+          // Sync environments list
+          invoke("list_environments")
+            .then((envs: any) => setEnvironments(envs))
+            .catch(console.error);
+
+          // Sync git status
+          invoke("get_git_status")
+            .then((git: any) => setGitStatus(git))
+            .catch(console.error);
+        })
+        .catch((err) => {
+          console.warn("Backend workspace desync detected, resetting frontend state:", err);
+          reset();
+        });
+    }
+  }, [workspacePath, reset, setEnvironments, setGitStatus]);
+
+  useFsWatcher(async (payload) => {
+    console.log("FS Changed:", payload);
+    try {
+      const tree: any = await invoke("open_workspace", { directoryPath: workspacePath });
+      setTreeData(tree.children);
+
+      try {
+        const git: any = await invoke("get_git_status");
+        setGitStatus(git);
+      } catch (err) {
+        console.error("Failed to update git status:", err);
+      }
+
+      if (payload.eventPath.includes("environments")) {
+        const envs: any = await invoke("list_environments");
+        setEnvironments(envs);
+      }
+    } catch (err) {
+      console.error("Failed to hot-reload workspace tree:", err);
+    }
+  });
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+    <MantineProvider theme={theme} defaultColorScheme="dark">
+      {workspacePath ? <AppShell /> : <WelcomeScreen />}
+    </MantineProvider>
   );
 }
-
-export default App;

@@ -1,0 +1,41 @@
+.bar {
+  height: var(--height-status-bar);
+  background-color: var(--bg-activity);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+}
+
+.leftGroup,
+.rightGroup {
+  display: flex;
+  align-items: center;
+}
+
+.mutedText {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.gitBtn,
+.envBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+.gitBtn:hover,
+.envBtn:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.envText {
+  color: var(--text-primary);
+  font-size: 11px;
+}

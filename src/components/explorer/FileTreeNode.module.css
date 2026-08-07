@@ -1,0 +1,37 @@
+.nodeWrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.button {
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  width: 100%;
+  background: none;
+  border: none;
+  transition: background-color 0.15s ease;
+}
+
+.button:hover {
+  background-color: var(--bg-tab-active);
+}
+
+.label {
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.childrenContainer {
+  padding-left: 14px;
+  border-left: 1px solid var(--border-color);
+  margin-left: 14px;
+  margin-top: 2px;
+}
+
+.indentPlaceholder {
+  width: 12px;
+}

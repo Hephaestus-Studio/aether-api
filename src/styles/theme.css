@@ -1,0 +1,135 @@
+:root {
+  /* Font Family Definition */
+  --aether-font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --aether-font-mono: "JetBrains Mono", "Fira Code", monospace;
+
+  /* Spacing System */
+  --aether-spacing-xs: 4px;
+  --aether-spacing-sm: 8px;
+  --aether-spacing-md: 12px;
+  --aether-spacing-lg: 16px;
+  --aether-spacing-xl: 24px;
+
+  /* Border Radius */
+  --aether-radius-xs: 2px;
+  --aether-radius-sm: 4px;
+  --aether-radius-md: 6px;
+  --aether-radius-lg: 8px;
+
+  /* HTTP Method Colors */
+  --aether-color-get: #10b981;
+  --aether-color-get-bg: rgba(16, 185, 129, 0.15);
+  --aether-color-post: #f59e0b;
+  --aether-color-post-bg: rgba(245, 158, 11, 0.15);
+  --aether-color-put: #3b82f6;
+  --aether-color-put-bg: rgba(59, 130, 246, 0.15);
+  --aether-color-patch: #8b5cf6;
+  --aether-color-patch-bg: rgba(139, 92, 246, 0.15);
+  --aether-color-delete: #ef4444;
+  --aether-color-delete-bg: rgba(239, 68, 68, 0.15);
+  --aether-color-options: #ec4899;
+  --aether-color-head: #6b7280;
+
+  /* Layout Metrics */
+  --width-activity-bar: 48px;
+  --height-status-bar: 22px;
+  --height-tab-bar: 36px;
+}
+
+[data-mantine-color-scheme="dark"] {
+  --aether-color-primary-base: #6366f1;
+  --aether-color-primary-hover: #4f46e5;
+
+  --aether-color-bg-main: #0b0f19;
+  --aether-color-bg-surface: #111827;
+  --aether-color-bg-editor: #0e131f;
+
+  --aether-color-border-light: #1f2937;
+  --aether-color-border-focus: #4f46e5;
+
+  --aether-color-text-active: #f9fafb;
+  --aether-color-text-muted: #9ca3af;
+  --aether-color-text-disabled: #4b5563;
+
+  --aether-shadow-modal: 0 12px 32px rgba(0, 0, 0, 0.4);
+  --aether-shadow-dropdown: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+  /* Semantic Aliases for components */
+  --bg-app: var(--aether-color-bg-main);
+  --bg-sidebar: var(--aether-color-bg-surface);
+  --bg-activity: #0b0c10;
+  --bg-panel: var(--aether-color-bg-editor);
+  --bg-tab-active: var(--aether-color-bg-editor);
+  --bg-tab-inactive: var(--aether-color-bg-surface);
+
+  --border-color: var(--aether-color-border-light);
+  --border-color-active: var(--aether-color-border-focus);
+
+  --text-primary: var(--aether-color-text-active);
+  --text-muted: var(--aether-color-text-muted);
+  --text-bright: #ffffff;
+
+  --color-get: var(--aether-color-get);
+  --color-post: var(--aether-color-post);
+  --color-put: var(--aether-color-put);
+  --color-patch: var(--aether-color-patch);
+  --color-delete: var(--aether-color-delete);
+  --color-head: var(--aether-color-head);
+  --color-options: var(--aether-color-options);
+}
+
+[data-mantine-color-scheme="light"] {
+  --aether-color-primary-base: #4f46e5;
+  --aether-color-primary-hover: #4338ca;
+
+  --aether-color-bg-main: #f9fafb;
+  --aether-color-bg-surface: #ffffff;
+  --aether-color-bg-editor: #f3f4f6;
+
+  --aether-color-border-light: #e5e7eb;
+  --aether-color-border-focus: #6366f1;
+
+  --aether-color-text-active: #111827;
+  --aether-color-text-muted: #6b7280;
+  --aether-color-text-disabled: #9ca3af;
+
+  --aether-shadow-modal: 0 12px 32px rgba(0, 0, 0, 0.15);
+  --aether-shadow-dropdown: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+  /* Semantic Aliases for components */
+  --bg-app: var(--aether-color-bg-main);
+  --bg-sidebar: var(--aether-color-bg-surface);
+  --bg-activity: #eaeaea;
+  --bg-panel: var(--aether-color-bg-editor);
+  --bg-tab-active: var(--aether-color-bg-editor);
+  --bg-tab-inactive: var(--aether-color-bg-surface);
+
+  --border-color: var(--aether-color-border-light);
+  --border-color-active: var(--aether-color-border-focus);
+
+  --text-primary: var(--aether-color-text-active);
+  --text-muted: var(--aether-color-text-muted);
+  --text-bright: #212529;
+
+  --color-get: #059669;
+  --color-post: #d97706;
+  --color-put: #2563eb;
+  --color-patch: #7c3aed;
+  --color-delete: #dc2626;
+  --color-head: #4b5563;
+  --color-options: #db2777;
+}
+
+/* Custom global styles for variable highlighting in URL input */
+.url-var-highlight {
+  color: var(--mantine-color-orange-filled);
+  font-weight: 600;
+  background-color: rgba(253, 126, 20, 0.15);
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+.url-var-invalid {
+  color: var(--mantine-color-red-filled);
+  text-decoration: underline wavy;
+}

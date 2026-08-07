@@ -1,0 +1,56 @@
+.tabBar {
+  height: var(--height-tab-bar);
+  background-color: var(--bg-app);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: row;
+}
+
+.scrollArea {
+  flex: 1;
+}
+
+.tabGroup {
+  height: 100%;
+}
+
+.tab {
+  height: calc(var(--height-tab-bar) - 1px);
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-tab-inactive);
+  border-right: 1px solid var(--border-color);
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.1s ease;
+}
+
+.tab:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.tabActive {
+  background-color: var(--bg-tab-active) !important;
+}
+
+.methodText {
+  margin-right: 6px;
+}
+
+.nameText {
+  color: var(--text-primary);
+  max-width: 120px;
+}
+
+.dirtyMarker {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--mantine-color-indigo-4);
+  margin-left: 6px;
+}
+
+.closeBtn {
+  margin-left: 8px;
+}

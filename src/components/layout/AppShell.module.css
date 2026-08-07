@@ -1,0 +1,32 @@
+.navbar {
+  display: flex;
+  flex-direction: row;
+}
+
+.sidebarContainer {
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+}
+
+.main {
+  height: calc(100vh - 22px);
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-app);
+}
+
+.editorWrapper {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.emptyState {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}

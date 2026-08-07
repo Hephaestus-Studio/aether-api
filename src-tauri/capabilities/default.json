@@ -3,11 +3,5 @@
   "identifier": "default",
   "description": "AetherAPI default permissions",
   "windows": ["main"],
-  "permissions": [
-    "core:default",
-    "opener:default",
-    "fs:default",
-    "dialog:default",
-    "shell:default"
-  ]
+  "permissions": ["core:default", "opener:default", "fs:default", "dialog:default", "shell:default"]
 }

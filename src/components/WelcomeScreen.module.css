@@ -1,0 +1,48 @@
+.container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+}
+
+.title {
+  font-size: 36px;
+  letter-spacing: -1px;
+  color: var(--text-bright);
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.buttonGroup {
+  width: 280px;
+}
+
+.recentsContainer {
+  width: 340px;
+}
+
+.recentsTitle {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.recentItem {
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  font-size: 12px;
+  transition: all 0.15s ease;
+}
+
+.recentItem:hover {
+  background-color: var(--bg-tab-active);
+  border-color: var(--border-color-active);
+}

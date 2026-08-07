@@ -1,0 +1,23 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.panel {
+  overflow: auto;
+}
+
+.divider {
+  height: 4px;
+  background-color: var(--border-color);
+  cursor: row-resize;
+  position: relative;
+  z-index: 10;
+  transition: background-color 0.2s ease;
+}
+
+.divider:hover {
+  background-color: var(--mantine-color-indigo-4);
+}
