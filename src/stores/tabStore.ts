@@ -5,6 +5,9 @@ interface TabState {
   tabs: TabItem[];
   activeTabId: string | null;
   closedTabsHistory: TabItem[];
+  responses: Record<string, any>;
+  loadingStates: Record<string, boolean>;
+  protocols: Record<string, string>;
 
   openTab: (tab: TabItem) => void;
   closeTab: (tabId: string) => void;
@@ -14,12 +17,18 @@ interface TabState {
   reopenLastClosed: () => void;
   closeAllTabs: () => void;
   closeOtherTabs: (tabId: string) => void;
+  setResponse: (tabId: string, response: any) => void;
+  setLoading: (tabId: string, loading: boolean) => void;
+  setProtocol: (tabId: string, protocol: string) => void;
 }
 
 export const useTabStore = create<TabState>((set, get) => ({
   tabs: [],
   activeTabId: null,
   closedTabsHistory: [],
+  responses: {},
+  loadingStates: {},
+  protocols: {},
 
   openTab: (tab) => {
     const { tabs } = get();
@@ -31,7 +40,7 @@ export const useTabStore = create<TabState>((set, get) => ({
   },
 
   closeTab: (tabId) => {
-    const { tabs, activeTabId, closedTabsHistory } = get();
+    const { tabs, activeTabId, closedTabsHistory, responses, loadingStates, protocols } = get();
     const tabToClose = tabs.find((t) => t.id === tabId);
     if (!tabToClose) return;
 
@@ -42,10 +51,22 @@ export const useTabStore = create<TabState>((set, get) => ({
       newActiveId = newTabs.at(-1)?.id ?? null;
     }
 
+    const newResponses = { ...responses };
+    delete newResponses[tabId];
+
+    const newLoadingStates = { ...loadingStates };
+    delete newLoadingStates[tabId];
+
+    const newProtocols = { ...protocols };
+    delete newProtocols[tabId];
+
     set({
       tabs: newTabs,
       activeTabId: newActiveId,
       closedTabsHistory: [...closedTabsHistory, tabToClose],
+      responses: newResponses,
+      loadingStates: newLoadingStates,
+      protocols: newProtocols,
     });
   },
 
@@ -71,13 +92,46 @@ export const useTabStore = create<TabState>((set, get) => ({
     set({ closedTabsHistory: closedTabsHistory.slice(0, -1) });
   },
 
-  closeAllTabs: () => set({ tabs: [], activeTabId: null }),
+  closeAllTabs: () => set({ tabs: [], activeTabId: null, responses: {}, loadingStates: {}, protocols: {} }),
 
   closeOtherTabs: (tabId) => {
-    const { tabs } = get();
+    const { tabs, responses, loadingStates, protocols } = get();
+    const newResponses = { [tabId]: responses[tabId] };
+    const newLoadingStates = { [tabId]: loadingStates[tabId] };
+    const newProtocols = { [tabId]: protocols[tabId] };
     set({
       tabs: tabs.filter((t) => t.id === tabId),
       activeTabId: tabId,
+      responses: newResponses,
+      loadingStates: newLoadingStates,
+      protocols: newProtocols,
+    });
+  },
+
+  setResponse: (tabId, response) => {
+    set({
+      responses: {
+         ...get().responses,
+        [tabId]: response,
+      },
+    });
+  },
+
+  setLoading: (tabId, loading) => {
+    set({
+      loadingStates: {
+        ...get().loadingStates,
+        [tabId]: loading,
+      },
+    });
+  },
+
+  setProtocol: (tabId, protocol) => {
+    set({
+      protocols: {
+        ...get().protocols,
+        [tabId]: protocol,
+      },
     });
   },
 }));

@@ -19,5 +19,5 @@
 }
 
 .divider:hover {
-  background-color: var(--mantine-color-indigo-4);
+  background-color: var(--aether-color-primary-base);
 }

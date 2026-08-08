@@ -1,6 +1,6 @@
 .titleBar {
   height: 35px;
-  background-color: #181b22;
+  background-color: var(--bg-app);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   align-items: center;
@@ -8,7 +8,7 @@
   padding: 0;
   color: #cccccc;
   font-family: var(--aether-font-sans), sans-serif;
-  font-size: 12px;
+  font-size: var(--aether-font-size-sm);
   user-select: none;
   position: relative;
   z-index: 1000;
@@ -43,7 +43,7 @@
   border: none;
   color: #cccccc;
   padding: 4px 8px;
-  font-size: 12px;
+  font-size: var(--aether-font-size-sm);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -59,7 +59,7 @@
   position: absolute;
   top: 100%;
   left: 0;
-  background-color: #1e222b;
+  background-color: var(--bg-sidebar);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 4px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);

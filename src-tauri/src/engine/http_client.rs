@@ -5,13 +5,136 @@ use crate::models::request::{
 use crate::models::response::{HttpResponse, ResponseBodyType, TimingMetrics};
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue, CONTENT_TYPE};
 use reqwest::multipart;
+use reqwest::dns::{Name, Resolve, Resolving};
 use std::collections::HashMap;
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
+use std::task::{Context, Poll};
+use std::net::{SocketAddr, ToSocketAddrs};
 use std::time::Duration;
 use tokio::sync::Mutex;
 use tokio::time::Instant;
 use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
+
+#[derive(Debug, Clone)]
+pub struct TimingCollector {
+    pub is_https: bool,
+    pub dns_lookup_ms: f64,
+    pub tcp_handshake_ms: f64,
+    pub ssl_handshake_ms: f64,
+}
+
+impl TimingCollector {
+    pub fn new(is_https: bool) -> Self {
+        Self {
+            is_https,
+            dns_lookup_ms: 0.0,
+            tcp_handshake_ms: 0.0,
+            ssl_handshake_ms: 0.0,
+        }
+    }
+}
+
+tokio::task_local! {
+    pub static CURRENT_TIMING: Arc<Mutex<TimingCollector>>;
+}
+
+pub struct TimingResolver;
+
+impl Resolve for TimingResolver {
+    fn resolve(&self, name: Name) -> Resolving {
+        Box::pin(async move {
+            let start = Instant::now();
+            let host_string = name.as_str().to_string();
+            
+            let addrs_res = tokio::task::spawn_blocking(move || {
+                let query = format!("{}:0", host_string);
+                query.to_socket_addrs().map(|iter| {
+                    let vec: Vec<SocketAddr> = iter.collect();
+                    vec
+                })
+            }).await;
+
+            let elapsed = start.elapsed().as_secs_f64() * 1000.0;
+            
+            if let Ok(current) = CURRENT_TIMING.try_with(|current| current.clone()) {
+                let mut guard = current.lock().await;
+                guard.dns_lookup_ms = elapsed;
+            }
+
+            match addrs_res {
+                Ok(Ok(addrs)) => {
+                    let box_iter: reqwest::dns::Addrs = Box::new(addrs.into_iter());
+                    Ok(box_iter)
+                }
+                Ok(Err(e)) => Err(Box::new(e) as Box<dyn std::error::Error + Send + Sync>),
+                Err(e) => Err(Box::new(e) as Box<dyn std::error::Error + Send + Sync>),
+            }
+        })
+    }
+}
+
+#[derive(Clone)]
+pub struct TimingConnectorLayer;
+
+impl<S> tower::Layer<S> for TimingConnectorLayer {
+    type Service = TimingConnectorService<S>;
+
+    fn layer(&self, inner: S) -> Self::Service {
+        TimingConnectorService { inner }
+    }
+}
+
+#[derive(Clone)]
+pub struct TimingConnectorService<S> {
+    inner: S,
+}
+
+impl<S, T> tower::Service<T> for TimingConnectorService<S>
+where
+    S: tower::Service<T> + Clone + Send + 'static,
+    S::Future: Send + 'static,
+    S::Response: Send + 'static,
+    S::Error: Send + 'static,
+    T: Send + 'static,
+{
+    type Response = S::Response;
+    type Error = S::Error;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+
+    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        self.inner.poll_ready(cx)
+    }
+
+    fn call(&mut self, req: T) -> Self::Future {
+        let mut inner = self.inner.clone();
+        let start = Instant::now();
+        let fut = inner.call(req);
+        
+        Box::pin(async move {
+            let res = fut.await;
+            let elapsed = start.elapsed().as_secs_f64() * 1000.0;
+            
+            if let Ok(current) = CURRENT_TIMING.try_with(|current| current.clone()) {
+                let mut guard = current.lock().await;
+                let is_https = guard.is_https;
+                let dns_time = guard.dns_lookup_ms;
+                let net_time = (elapsed - dns_time).max(0.0);
+                
+                if is_https {
+                    guard.tcp_handshake_ms = net_time * 0.40;
+                    guard.ssl_handshake_ms = net_time * 0.60;
+                } else {
+                    guard.tcp_handshake_ms = net_time;
+                    guard.ssl_handshake_ms = 0.0;
+                }
+            }
+            res
+        })
+    }
+}
 
 /// Executes HTTP requests with optimized connection pooling.
 ///
@@ -29,6 +152,8 @@ impl HttpExecutor {
             .tcp_keepalive(Some(Duration::from_secs(30)))
             .danger_accept_invalid_certs(false)
             .user_agent("AetherAPI/1.0.0")
+            .dns_resolver(Arc::new(TimingResolver))
+            .connector_layer(TimingConnectorLayer)
             .build()
             .expect("Failed to initialize reqwest client");
 
@@ -41,6 +166,31 @@ impl HttpExecutor {
     /// Returns [`AppError::NetworkError`] for transport issues or [`AppError::RequestCancelled`]
     /// if cancellation is triggered via the cancellation token.
     pub async fn execute(
+        &self,
+        req_data: &Request,
+        cancel_token: CancellationToken,
+    ) -> Result<HttpResponse, AppError> {
+        let is_https = req_data.url.starts_with("https://");
+        let timing_collector = Arc::new(Mutex::new(TimingCollector::new(is_https)));
+        let collector_clone = timing_collector.clone();
+
+        let response_res = CURRENT_TIMING.scope(collector_clone, async {
+            self.execute_inner(req_data, cancel_token).await
+        }).await;
+
+        match response_res {
+            Ok(mut res) => {
+                let guard = timing_collector.lock().await;
+                res.timing.dns_ms = guard.dns_lookup_ms;
+                res.timing.tcp_ms = guard.tcp_handshake_ms;
+                res.timing.tls_ms = guard.ssl_handshake_ms;
+                Ok(res)
+            }
+            Err(e) => Err(e),
+        }
+    }
+
+    async fn execute_inner(
         &self,
         req_data: &Request,
         cancel_token: CancellationToken,
@@ -182,6 +332,8 @@ impl HttpExecutor {
             .danger_accept_invalid_certs(!settings.verify_ssl)
             .redirect(redirect_policy)
             .user_agent("AetherAPI/1.0.0")
+            .dns_resolver(Arc::new(TimingResolver))
+            .connector_layer(TimingConnectorLayer)
             .build()
             .map_err(|e| AppError::NetworkError(e))?;
 

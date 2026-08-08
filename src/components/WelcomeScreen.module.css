@@ -4,7 +4,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  background-color: #1e222b;
+  background-color: var(--bg-app);
   color: #ffffff;
   font-family: var(--aether-font-sans), sans-serif;
   overflow: hidden;
@@ -35,8 +35,8 @@
 }
 
 .title {
-  font-size: 24px;
-  font-weight: 500;
+  font-size: var(--aether-font-size-2xl);
+  font-weight: var(--aether-font-weight-medium);
   color: #ffffff;
   letter-spacing: -0.5px;
   margin: 0;
@@ -54,11 +54,11 @@
 .openButton {
   width: 100%;
   height: 44px;
-  background-color: #2f3442;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background-color: #242424;
+  border: 1px solid var(--border-color);
   color: #ffffff;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--aether-font-size-md);
+  font-weight: var(--aether-font-weight-medium);
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -69,16 +69,16 @@
 }
 
 .openButton:hover {
-  background-color: #383d4e;
-  border-color: rgba(255, 255, 255, 0.1);
+  background-color: #2a2a2a;
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .cloneLink {
   background: none;
   border: none;
   color: #a0a5b5;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: var(--aether-font-size-sm);
+  font-weight: var(--aether-font-weight-medium);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -101,8 +101,8 @@
 
 .sectionHeader {
   color: #8a8e99;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: var(--aether-font-size-xs);
+  font-weight: var(--aether-font-weight-semibold);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 12px;
@@ -179,8 +179,8 @@
   position: absolute;
   top: 50px;
   width: 600px;
-  background-color: #1e222b;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--bg-sidebar);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   overflow: hidden;
@@ -202,14 +202,14 @@
 
 .quickInputBox {
   padding: 8px;
-  background-color: #1e222b;
+  background-color: var(--bg-sidebar);
   display: flex;
 }
 
 .quickInputField {
   width: 100%;
-  background-color: #181b22;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   padding: 8px 12px;
   color: #ffffff;
@@ -220,18 +220,18 @@
 }
 
 .quickInputField:focus {
-  border-color: #6366f1;
+  border-color: var(--aether-color-primary-base);
 }
 
 .quickInputList {
   list-style: none;
   padding: 4px;
   margin: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   gap: 2px;
-  background-color: #1e222b;
+  background-color: var(--bg-sidebar);
 }
 
 .quickInputItem {
@@ -280,8 +280,8 @@
 /* Progress bar inside QuickInput */
 .quickInputProgress {
   padding: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background-color: #1e222b;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--bg-sidebar);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -300,7 +300,7 @@
 }
 
 .progressPercent {
-  color: #6366f1;
+  color: var(--aether-color-primary-base);
   font-size: 12px;
   font-weight: 600;
 }
@@ -308,13 +308,13 @@
 .progressBar {
   height: 4px;
   width: 100%;
-  background-color: #181b22;
+  background-color: var(--bg-app);
   border-radius: 2px;
   overflow: hidden;
 }
 
 .progressFill {
   height: 100%;
-  background-color: #6366f1;
+  background-color: var(--aether-color-primary-base);
   transition: width 0.1s ease;
 }

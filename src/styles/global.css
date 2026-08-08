@@ -9,9 +9,17 @@
 
 body {
   font-family: var(--aether-font-sans);
+  font-size: var(--aether-font-size-md);
+  line-height: var(--aether-line-height-base);
   background-color: var(--bg-app);
   color: var(--text-primary);
   overflow: hidden;
+  user-select: none;
+}
+
+*:not(input):not(textarea):not(pre):not(code):not([contenteditable="true"]):not(.selectable):not(.monaco-editor *) {
+  -webkit-user-select: none;
+  -moz-user-select: none;
   user-select: none;
 }
 

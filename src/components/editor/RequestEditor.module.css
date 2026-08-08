@@ -21,8 +21,8 @@
 }
 
 .requestNameInput {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: var(--aether-font-size-lg);
+  font-weight: var(--aether-font-weight-semibold);
   color: var(--text-primary);
   flex: 1;
 }
@@ -30,13 +30,13 @@
 .requestNameInput :global(.mantine-Input-input) {
   padding: 0;
   height: auto;
-  font-size: 15px;
-  font-weight: 600;
+  font-size: var(--aether-font-size-lg);
+  font-weight: var(--aether-font-weight-semibold);
 }
 
 .saveBtn {
   color: var(--text-muted);
-  font-weight: 500;
+  font-weight: var(--aether-font-weight-medium);
 }
 
 .saveBtn:hover {
@@ -65,16 +65,16 @@
 }
 
 .methodSelect :global(.mantine-Input-input) {
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--aether-font-size-sm);
+  font-weight: var(--aether-font-weight-bold);
   text-align: center;
   color: var(--text-primary);
   padding: 0 4px;
 }
 
 .methodSelect :global(.mantine-Select-option) {
-  font-weight: 600;
-  font-size: 12px;
+  font-weight: var(--aether-font-weight-semibold);
+  font-size: var(--aether-font-size-sm);
 }
 
 .addressBarSeparator {
@@ -88,14 +88,14 @@
 }
 
 .urlInput :global(.mantine-Input-input) {
-  font-size: 13px;
+  font-size: var(--aether-font-size-md);
   padding: 0 12px;
 }
 
 .sendBtn {
   height: 36px;
-  font-weight: 600;
-  font-size: 13px;
+  font-weight: var(--aether-font-weight-semibold);
+  font-size: var(--aether-font-size-md);
   padding: 0 16px;
 }
 
@@ -133,4 +133,19 @@
 .tabList :global(.mantine-Tabs-tab[data-active]) {
   color: var(--text-primary);
   border-bottom-color: var(--aether-color-primary-base);
+}
+
+.protocolBadge {
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
+}
+
+.protocolBadge:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.protocolDropdownDropdown {
+  background-color: var(--bg-sidebar) !important;
+  border: 1px solid var(--border-color) !important;
 }

@@ -8,7 +8,9 @@ import AppShell from "./components/layout/AppShell";
 import WelcomeScreen from "./components/WelcomeScreen";
 import TitleBar from "./components/layout/TitleBar";
 import ResizeBorders from "./components/layout/ResizeBorders";
+import { Notifications } from "@mantine/notifications";
 import "@mantine/core/styles.css";
+import "@mantine/notifications/styles.css";
 import "./styles/theme.css";
 import "./styles/global.css";
 
@@ -97,7 +99,8 @@ export default function App() {
   });
 
   return (
-    <MantineProvider theme={theme} defaultColorScheme="dark">
+    <MantineProvider theme={theme} forceColorScheme="dark">
+      <Notifications position="top-right" zIndex={1000} />
       <div
         style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}
       >

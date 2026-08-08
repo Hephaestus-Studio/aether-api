@@ -3,6 +3,25 @@
   --aether-font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --aether-font-mono: "JetBrains Mono", "Fira Code", monospace;
 
+  /* Font Sizes */
+  --aether-font-size-xs: 11px;
+  --aether-font-size-sm: 12px;
+  --aether-font-size-md: 13px;
+  --aether-font-size-lg: 15px;
+  --aether-font-size-xl: 20px;
+  --aether-font-size-2xl: 24px;
+
+  /* Font Weights */
+  --aether-font-weight-normal: 400;
+  --aether-font-weight-medium: 500;
+  --aether-font-weight-semibold: 600;
+  --aether-font-weight-bold: 700;
+
+  /* Line Heights */
+  --aether-line-height-tight: 1.2;
+  --aether-line-height-base: 1.5;
+  --aether-line-height-loose: 1.8;
+
   /* Spacing System */
   --aether-spacing-xs: 4px;
   --aether-spacing-sm: 8px;
@@ -40,12 +59,12 @@
   --aether-color-primary-base: #6366f1;
   --aether-color-primary-hover: #4f46e5;
 
-  --aether-color-bg-main: #0b0f19;
-  --aether-color-bg-surface: #1e222b;
-  --aether-color-bg-editor: #0e131f;
+  --aether-color-bg-main: #212121;
+  --aether-color-bg-surface: #1c1c1c;
+  --aether-color-bg-editor: #212121;
 
-  --aether-color-border-light: #1f2937;
-  --aether-color-border-focus: #4f46e5;
+  --aether-color-border-light: #2d2d2d;
+  --aether-color-border-focus: #6366f1;
 
   --aether-color-text-active: #f9fafb;
   --aether-color-text-muted: #9ca3af;
@@ -57,7 +76,7 @@
   /* Semantic Aliases for components */
   --bg-app: var(--aether-color-bg-main);
   --bg-sidebar: var(--aether-color-bg-surface);
-  --bg-activity: #0b0c10;
+  --bg-activity: #171717;
   --bg-panel: var(--aether-color-bg-editor);
   --bg-tab-active: var(--aether-color-bg-editor);
   --bg-tab-inactive: var(--aether-color-bg-surface);
@@ -76,48 +95,6 @@
   --color-delete: var(--aether-color-delete);
   --color-head: var(--aether-color-head);
   --color-options: var(--aether-color-options);
-}
-
-[data-mantine-color-scheme="light"] {
-  --aether-color-primary-base: #4f46e5;
-  --aether-color-primary-hover: #4338ca;
-
-  --aether-color-bg-main: #f9fafb;
-  --aether-color-bg-surface: #ffffff;
-  --aether-color-bg-editor: #f3f4f6;
-
-  --aether-color-border-light: #e5e7eb;
-  --aether-color-border-focus: #6366f1;
-
-  --aether-color-text-active: #111827;
-  --aether-color-text-muted: #6b7280;
-  --aether-color-text-disabled: #9ca3af;
-
-  --aether-shadow-modal: 0 12px 32px rgba(0, 0, 0, 0.15);
-  --aether-shadow-dropdown: 0 4px 12px rgba(0, 0, 0, 0.08);
-
-  /* Semantic Aliases for components */
-  --bg-app: var(--aether-color-bg-main);
-  --bg-sidebar: var(--aether-color-bg-surface);
-  --bg-activity: #eaeaea;
-  --bg-panel: var(--aether-color-bg-editor);
-  --bg-tab-active: var(--aether-color-bg-editor);
-  --bg-tab-inactive: var(--aether-color-bg-surface);
-
-  --border-color: var(--aether-color-border-light);
-  --border-color-active: var(--aether-color-border-focus);
-
-  --text-primary: var(--aether-color-text-active);
-  --text-muted: var(--aether-color-text-muted);
-  --text-bright: #212529;
-
-  --color-get: #059669;
-  --color-post: #d97706;
-  --color-put: #2563eb;
-  --color-patch: #7c3aed;
-  --color-delete: #dc2626;
-  --color-head: #4b5563;
-  --color-options: #db2777;
 }
 
 /* Custom global styles for variable highlighting in URL input */

@@ -20,6 +20,7 @@ serde_yml = { version = "0.0.13", features = [] }
 reqwest = { version = "0.13.4", features = ["json", "cookies", "multipart", "query", "form"] }
 tokio = { version = "1.53.1", features = ["full"] }
 tokio-util = { version = "0.7.19", features = ["rt"] }
+tower = "0.5.2"
 notify = { version = "8.2.0", features = [] }
 walkdir = { version = "2.5.0", features = [] }
 regex = { version = "1.13.1", features = [] }

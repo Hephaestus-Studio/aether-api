@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { Box, Select, TextInput, Button, Tabs } from "@mantine/core";
+import { Box, Select, TextInput, Button, Tabs, Menu, Text } from "@mantine/core";
 import { invoke } from "@tauri-apps/api/core";
-import { IconDeviceFloppy, IconChevronDown, IconGlobe } from "@tabler/icons-react";
+import { IconDeviceFloppy, IconChevronDown, IconGlobe, IconPlug, IconBolt, IconAtom, IconArrowsExchange, IconBroadcast } from "@tabler/icons-react";
+import { notifications } from "@mantine/notifications";
 import { useTabStore } from "@/stores/tabStore";
 import { useEnvStore } from "@/stores/envStore";
 import ParamsEditor from "./ParamsEditor";
@@ -21,6 +22,39 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
   const activeEnvironmentName = useEnvStore((s) => s.activeEnvironmentName);
   const markDirty = useTabStore((s) => s.markDirty);
   const markClean = useTabStore((s) => s.markClean);
+  const setResponse = useTabStore((s) => s.setResponse);
+  const setTabLoading = useTabStore((s) => s.setLoading);
+
+  const activeProtocol = useTabStore((s) => s.protocols[tabId]) || "http";
+  const setProtocol = useTabStore((s) => s.setProtocol);
+
+  const getProtocolIcon = (proto: string) => {
+    switch (proto) {
+      case "http":
+        return <IconGlobe size={16} color="#00b4d8" />;
+      case "websocket":
+        return <IconPlug size={16} color="#ff9f1c" />;
+      case "socketio":
+        return <IconBolt size={16} color="#ffca3a" />;
+      case "graphql":
+        return <IconAtom size={16} color="#ff007f" />;
+      case "grpc":
+        return <IconArrowsExchange size={16} color="#007acc" />;
+      case "mqtt":
+        return <IconBroadcast size={16} color="#7209b7" />;
+      default:
+        return <IconGlobe size={16} color="#00b4d8" />;
+    }
+  };
+
+  const handleProtocolChange = (proto: string) => {
+    setProtocol(tabId, proto);
+    notifications.show({
+      title: "Protocol Selected",
+      message: `Switched to ${proto.toUpperCase()} client layout (pipeline integration coming soon).`,
+      color: "indigo",
+    });
+  };
 
   useEffect(() => {
     invoke<any>("read_request", { path: tabId })
@@ -31,16 +65,32 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
   const handleSend = async () => {
     if (!request) return;
     setLoading(true);
+    setTabLoading(tabId, true);
     try {
+      // Auto-save the request details to disk first so the backend executes the latest state
+      await invoke("update_request", { path: tabId, requestDetails: request });
+      markClean(tabId);
+
       const response = await invoke<any>("execute_request", {
         requestPath: tabId,
         activeEnvironmentName,
       });
       console.log("HTTP Response:", response);
+      setResponse(tabId, response);
     } catch (err) {
       console.error("HTTP Request execution error:", err);
+      let errorMsg = String(err);
+      if (errorMsg.includes("Tauri error")) {
+        errorMsg = "Check URL format or backend server availability.";
+      }
+      notifications.show({
+        title: "Request Failed",
+        message: errorMsg,
+        color: "red",
+      });
     } finally {
       setLoading(false);
+      setTabLoading(tabId, false);
     }
   };
 
@@ -87,7 +137,58 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
       {/* Title Row */}
       <div className={classes.titleRow}>
         <div className={classes.requestTitleGroup}>
-          <IconGlobe size={18} color={getMethodColor(request.method)} />
+          <Menu shadow="md" width={150}>
+            <Menu.Target>
+              <Box className={classes.protocolBadge} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                {getProtocolIcon(activeProtocol)}
+                <Text size="xs" fw={700} style={{ color: "var(--text-primary)" }}>
+                  {activeProtocol.toUpperCase()}
+                </Text>
+                <IconChevronDown size={12} style={{ color: "var(--text-muted)", marginLeft: 2 }} />
+              </Box>
+            </Menu.Target>
+            <Menu.Dropdown className={classes.protocolDropdownDropdown}>
+              <Menu.Item
+                leftSection={<IconGlobe size={16} color="#00b4d8" />}
+                onClick={() => handleProtocolChange("http")}
+              >
+                HTTP
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconPlug size={16} color="#ff9f1c" />}
+                onClick={() => handleProtocolChange("websocket")}
+              >
+                WebSocket
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconBolt size={16} color="#ffca3a" />}
+                onClick={() => handleProtocolChange("socketio")}
+              >
+                Socket.IO
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconAtom size={16} color="#ff007f" />}
+                onClick={() => handleProtocolChange("graphql")}
+              >
+                GraphQL
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconArrowsExchange size={16} color="#007acc" />}
+                onClick={() => handleProtocolChange("grpc")}
+              >
+                gRPC
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconBroadcast size={16} color="#7209b7" />}
+                onClick={() => handleProtocolChange("mqtt")}
+              >
+                MQTT
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+
+          <Box style={{ width: 1, height: 16, backgroundColor: "var(--border-color)", margin: "0 8px" }} />
+
           <TextInput
             variant="unstyled"
             value={request.name}

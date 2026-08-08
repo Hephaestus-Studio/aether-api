@@ -1,6 +1,4 @@
 .container {
-  padding: 16px;
-  border-top: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -10,10 +8,254 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100%;
+}
+
+.topHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding: 0 16px;
+  background-color: var(--bg-sidebar);
+}
+
+.tabsList {
+  border-bottom: none !important;
+}
+
+.tabItem {
+  font-size: var(--aether-font-size-md);
+  font-weight: var(--aether-font-weight-medium);
+  padding: 10px 16px;
+  height: 40px;
+  border-bottom: 2px solid transparent !important;
+  color: var(--text-muted);
+  background-color: transparent !important;
+}
+
+.tabItem[data-active] {
+  color: var(--text-primary) !important;
+  border-bottom-color: var(--aether-color-primary-base) !important;
+}
+
+.headerCount {
+  color: var(--mantine-color-green-5);
+  font-weight: var(--aether-font-weight-semibold);
+  margin-left: 4px;
+}
+
+.metricsGroup {
+  display: flex;
+  align-items: center;
+}
+
+.metricLabel {
+  font-size: var(--aether-font-size-sm);
+  color: var(--text-muted);
+}
+
+.metricValueGreen {
+  color: var(--mantine-color-green-5);
+  font-weight: var(--aether-font-weight-semibold);
+}
+
+.saveBtn {
+  font-size: var(--aether-font-size-sm);
+  font-weight: var(--aether-font-weight-medium);
+  padding: 0 4px;
+  color: var(--mantine-color-indigo-light-color);
 }
 
 .panel {
   flex: 1;
-  padding-top: 12px;
-  overflow: auto;
+  padding: 0;
+  overflow: hidden;
+  height: calc(100% - 40px);
+}
+
+.placeholderTabContent {
+  padding: 24px;
+  text-align: center;
+}
+
+/* ResponseBody sub-control bar styles */
+.bodyControlBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background-color: var(--bg-app);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.bodyControlLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bodyControlRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editorContainer {
+  flex: 1;
+  height: calc(100% - 45px);
+  overflow: hidden;
+}
+
+.emptyState,
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 32px;
+}
+
+.metricLabelInteractive {
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.metricValueGreenUnderlined {
+  color: var(--mantine-color-green-5);
+  font-weight: 600;
+  border-bottom: 1px dashed var(--mantine-color-green-5);
+}
+
+.sizePopoverDropdown {
+  background-color: var(--bg-sidebar) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 6px;
+  padding: 12px !important;
+}
+
+.popoverSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.popoverTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.popoverTitleText {
+  color: var(--text-primary);
+}
+
+.popoverSubRow {
+  display: flex;
+  justify-content: space-between;
+  padding-left: 24px;
+}
+
+.arrowBoxBlue {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--aether-color-primary-base);
+  border-radius: 3px;
+  width: 16px;
+  height: 16px;
+}
+
+.arrowBoxOrange {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--aether-color-post);
+  border-radius: 3px;
+  width: 16px;
+  height: 16px;
+}
+
+.popoverFooter {
+  border-top: 1px solid var(--border-color);
+  margin-top: 8px;
+  padding-top: 6px;
+  text-align: left;
+}
+
+.timePopoverDropdown {
+  background-color: var(--bg-sidebar) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 6px;
+  padding: 12px !important;
+}
+
+.timeHeaderRow {
+  display: flex;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 4px;
+}
+
+.timeRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.timeEventCell {
+  width: 110px;
+  font-size: 11px;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.timeTimelineCell {
+  width: 140px;
+  padding: 0 8px;
+}
+
+.timeDurationCell {
+  width: 60px;
+  text-align: right;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.waterfallTrack {
+  position: relative;
+  background-color: rgba(255, 255, 255, 0.03);
+  height: 8px;
+  border-radius: 4px;
+  width: 100%;
+}
+
+.waterfallBar {
+  position: absolute;
+  background-color: var(--mantine-color-green-5);
+  height: 8px;
+  border-radius: 4px;
+}
+
+.waterfallBarGrey {
+  position: absolute;
+  background-color: var(--text-disabled);
+  height: 8px;
+  border-radius: 4px;
+}
+
+.timeDivider {
+  border-bottom: 1px solid var(--border-color);
+  margin-top: 8px;
+}
+
+.timeTotalLabel {
+  color: var(--mantine-color-green-5);
+}
+
+.timeTotalValue {
+  color: var(--mantine-color-green-5);
 }
