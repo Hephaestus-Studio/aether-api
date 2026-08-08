@@ -1,48 +1,320 @@
 .container {
-  height: 100vh;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #1e222b;
+  color: #ffffff;
+  font-family: var(--aether-font-sans), sans-serif;
+  overflow: hidden;
+}
+
+.content {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: var(--bg-app);
-  color: var(--text-primary);
+  width: 100%;
+}
+
+.logoWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.logo {
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .title {
-  font-size: 36px;
-  letter-spacing: -1px;
-  color: var(--text-bright);
+  font-size: 24px;
+  font-weight: 500;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+  margin: 0;
 }
 
-.subtitle {
-  color: var(--text-muted);
-  font-size: 14px;
+.actionGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 380px;
+  margin-bottom: 32px;
 }
 
-.buttonGroup {
-  width: 280px;
-}
-
-.recentsContainer {
-  width: 340px;
-}
-
-.recentsTitle {
-  color: var(--text-muted);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.recentItem {
-  cursor: pointer;
-  padding: 8px 12px;
+.openButton {
+  width: 100%;
+  height: 44px;
+  background-color: #2f3442;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
   border-radius: 6px;
-  border: 1px solid var(--border-color);
-  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.recentItem:hover {
-  background-color: var(--bg-tab-active);
-  border-color: var(--border-color-active);
+.openButton:hover {
+  background-color: #383d4e;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.cloneLink {
+  background: none;
+  border: none;
+  color: #a0a5b5;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.cloneLink:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.sectionContainer {
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sectionHeader {
+  color: #8a8e99;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  user-select: none;
+}
+
+.workspaceList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.workspaceCard {
+  cursor: pointer;
+  padding: 12px 16px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: rgba(255, 255, 255, 0.01);
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.workspaceCard:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.cardTitle {
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardSubtitle {
+  color: #8a8e99;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emptyState {
+  color: #8a8e99;
+  font-size: 12px;
+  text-align: center;
+  padding: 24px;
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.005);
+}
+
+/* Modal Styles */
+.quickInputOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+}
+
+.quickInputContainer {
+  position: absolute;
+  top: 50px;
+  width: 600px;
+  background-color: #1e222b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: quickInputEnter 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes quickInputEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.quickInputBox {
+  padding: 8px;
+  background-color: #1e222b;
+  display: flex;
+}
+
+.quickInputField {
+  width: 100%;
+  background-color: #181b22;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 8px 12px;
+  color: #ffffff;
+  font-size: 13px;
+  outline: none;
+  font-family: var(--aether-font-sans), sans-serif;
+  transition: border-color 0.15s ease;
+}
+
+.quickInputField:focus {
+  border-color: #6366f1;
+}
+
+.quickInputList {
+  list-style: none;
+  padding: 4px;
+  margin: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background-color: #1e222b;
+}
+
+.quickInputItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition:
+    background-color 0.1s,
+    color 0.1s;
+  user-select: none;
+}
+
+.quickInputItem:hover,
+.quickInputItemActive {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.quickInputItemLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #cccccc;
+  font-size: 13px;
+}
+
+.quickInputItem:hover .quickInputItemLeft,
+.quickInputItemActive .quickInputItemLeft {
+  color: #ffffff;
+}
+
+.quickInputUrlMuted {
+  color: #8a8e99;
+  font-size: 12px;
+  margin-left: 6px;
+  font-weight: normal;
+}
+
+.quickInputItemRight {
+  color: #707584;
+  font-size: 11px;
+}
+
+/* Progress bar inside QuickInput */
+.quickInputProgress {
+  padding: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: #1e222b;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.progressLabelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.progressLabel {
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.progressPercent {
+  color: #6366f1;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.progressBar {
+  height: 4px;
+  width: 100%;
+  background-color: #181b22;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background-color: #6366f1;
+  transition: width 0.1s ease;
 }

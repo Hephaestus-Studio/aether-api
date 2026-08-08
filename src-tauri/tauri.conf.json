@@ -13,8 +13,9 @@
     "windows": [
       {
         "title": "aether-api",
-        "width": 800,
-        "height": 600
+        "width": 1024,
+        "height": 768,
+        "decorations": false
       }
     ],
     "security": {

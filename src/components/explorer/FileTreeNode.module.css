@@ -22,7 +22,7 @@
 
 .label {
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .childrenContainer {
@@ -34,4 +34,14 @@
 
 .indentPlaceholder {
   width: 12px;
+}
+
+.methodTag {
+  font-size: 9px;
+  font-weight: 800;
+  width: 32px;
+  text-align: left;
+  display: inline-block;
+  letter-spacing: 0.2px;
+  user-select: none;
 }

@@ -3,14 +3,100 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+  background-color: var(--aether-color-bg-editor);
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.requestTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.requestNameInput {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.requestNameInput :global(.mantine-Input-input) {
+  padding: 0;
+  height: auto;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.saveBtn {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.saveBtn:hover {
+  background-color: var(--bg-tab-active);
+  color: var(--text-primary);
+}
+
+.addressBarRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.addressBarContainer {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--bg-app);
+  height: 36px;
 }
 
 .methodSelect {
-  width: 110px;
+  width: 90px;
+}
+
+.methodSelect :global(.mantine-Input-input) {
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--text-primary);
+  padding: 0 4px;
+}
+
+.methodSelect :global(.mantine-Select-option) {
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.addressBarSeparator {
+  width: 1px;
+  height: 20px;
+  background-color: var(--border-color);
 }
 
 .urlInput {
   flex: 1;
+}
+
+.urlInput :global(.mantine-Input-input) {
+  font-size: 13px;
+  padding: 0 12px;
+}
+
+.sendBtn {
+  height: 36px;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 0 16px;
 }
 
 .tabs {
@@ -22,4 +108,29 @@
 .panel {
   flex: 1;
   padding-top: 12px;
+}
+
+.tabListContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 8px;
+}
+
+.tabList {
+  border-bottom: none !important;
+}
+
+.tabList :global(.mantine-Tabs-tab) {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  padding: 8px 12px;
+}
+
+.tabList :global(.mantine-Tabs-tab[data-active]) {
+  color: var(--text-primary);
+  border-bottom-color: var(--aether-color-primary-base);
 }

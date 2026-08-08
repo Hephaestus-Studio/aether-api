@@ -6,6 +6,8 @@ import { useFsWatcher } from "./hooks/useFsWatcher";
 import { invoke } from "@tauri-apps/api/core";
 import AppShell from "./components/layout/AppShell";
 import WelcomeScreen from "./components/WelcomeScreen";
+import TitleBar from "./components/layout/TitleBar";
+import ResizeBorders from "./components/layout/ResizeBorders";
 import "@mantine/core/styles.css";
 import "./styles/theme.css";
 import "./styles/global.css";
@@ -20,6 +22,35 @@ const theme = createTheme({
 export default function App() {
   const { workspacePath, setTreeData, setGitStatus, reset } = useWorkspaceStore();
   const { setEnvironments } = useEnvStore();
+
+  // Restore open workspace from backend on startup/reload
+  useEffect(() => {
+    let isMounted = true;
+
+    invoke<any>("get_workspace_info")
+      .then(async (info) => {
+        if (isMounted && info && info.path) {
+          console.log("Restoring active backend workspace:", info.path);
+          try {
+            const tree = await invoke<any>("open_workspace", { directoryPath: info.path });
+            if (!isMounted) return;
+
+            useWorkspaceStore.getState().setWorkspacePath(info.path);
+            useWorkspaceStore.getState().setTreeData(tree.children);
+            useWorkspaceStore.getState().setWorkspaceInfo(info);
+          } catch (err) {
+            console.error("Failed to restore workspace session:", err);
+          }
+        }
+      })
+      .catch((err) => {
+        console.log("No active workspace in backend on startup:", err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Handle desynchronization between Frontend and Backend on startup / reload
   useEffect(() => {
@@ -67,7 +98,15 @@ export default function App() {
 
   return (
     <MantineProvider theme={theme} defaultColorScheme="dark">
-      {workspacePath ? <AppShell /> : <WelcomeScreen />}
+      <div
+        style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}
+      >
+        <TitleBar />
+        <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
+          {workspacePath ? <AppShell /> : <WelcomeScreen />}
+        </div>
+        <ResizeBorders />
+      </div>
     </MantineProvider>
   );
 }

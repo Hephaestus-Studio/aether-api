@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { AppShell as MantineAppShell, Box } from "@mantine/core";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useTabStore } from "@/stores/tabStore";
@@ -14,25 +14,102 @@ import CommandPalette from "@/components/tools/CommandPalette";
 import classes from "./AppShell.module.css";
 
 export default function AppShell() {
-  const { workspaceInfo, activeView } = useWorkspaceStore();
+  const { workspaceInfo, activeView, setWorkspaceInfo } = useWorkspaceStore();
   const [sidebarOpened, setSidebarOpened] = useState(true);
   const [quickOpenOpened, setQuickOpenOpened] = useState(false);
   const [commandPaletteOpened, setCommandPaletteOpened] = useState(false);
 
   const activeTabId = useTabStore((s) => s.activeTabId);
 
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    return workspaceInfo?.settings?.sidebarWidth || 280;
+  });
+
+  const sidebarWidthRef = useRef(sidebarWidth);
+  useEffect(() => {
+    sidebarWidthRef.current = sidebarWidth;
+  }, [sidebarWidth]);
+
+  const handleResizeMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = sidebarWidthRef.current;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const deltaX = moveEvent.clientX - startX;
+      const newWidth = startWidth + deltaX;
+
+      if (newWidth < 150) {
+        setSidebarOpened(false);
+      } else if (newWidth > 600) {
+        setSidebarWidth(600);
+      } else {
+        setSidebarOpened(true);
+        setSidebarWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+
+      if (workspaceInfo) {
+        setWorkspaceInfo({
+          ...workspaceInfo,
+          settings: {
+            ...workspaceInfo.settings,
+            sidebarWidth: sidebarWidthRef.current,
+          },
+        });
+      }
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+  };
+
   return (
     <MantineAppShell
       header={{ height: 0 }}
       navbar={{
-        width: sidebarOpened ? (workspaceInfo?.settings?.sidebarWidth || 280) + 48 : 48,
+        width: sidebarOpened ? sidebarWidth + 48 : 48,
         breakpoint: "sm",
       }}
       footer={{ height: 22 }}
       padding={0}
+      transitionDuration={0}
       styles={{
-        navbar: { borderRight: "1px solid var(--border-color)", overflow: "hidden" },
-        footer: { borderTop: "1px solid var(--border-color)", padding: 0 },
+        root: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
+        navbar: {
+          position: "absolute",
+          top: 0,
+          bottom: 22,
+          borderRight: "1px solid var(--border-color)",
+          overflow: "hidden",
+          height: "auto",
+          display: "flex",
+          flexDirection: "row",
+        },
+        main: {
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 22,
+          height: "auto",
+          display: "flex",
+          flexDirection: "column",
+          backgroundColor: "var(--bg-app)",
+        },
+        footer: {
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 22,
+          borderTop: "1px solid var(--border-color)",
+          padding: 0,
+        },
       }}
     >
       <MantineAppShell.Navbar className={classes.navbar}>
@@ -42,9 +119,12 @@ export default function AppShell() {
           setSidebarOpened={setSidebarOpened}
         />
         {sidebarOpened && (
-          <Box className={classes.sidebarContainer}>
-            <Sidebar />
-          </Box>
+          <>
+            <Box className={classes.sidebarContainer}>
+              <Sidebar />
+            </Box>
+            <div className={classes.resizeHandle} onMouseDown={handleResizeMouseDown} />
+          </>
         )}
       </MantineAppShell.Navbar>
 

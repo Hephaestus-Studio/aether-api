@@ -1,0 +1,175 @@
+.titleBar {
+  height: 35px;
+  background-color: #181b22;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0;
+  color: #cccccc;
+  font-family: var(--aether-font-sans), sans-serif;
+  font-size: 12px;
+  user-select: none;
+  position: relative;
+  z-index: 1000;
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 10px;
+  z-index: 1010;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  color: #ffffff;
+  margin-right: 4px;
+}
+
+.menuBar {
+  display: flex;
+  align-items: center;
+}
+
+.menuItemContainer {
+  position: relative;
+}
+
+.menuItem {
+  background: none;
+  border: none;
+  color: #cccccc;
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.menuItem:hover,
+.menuItemActive {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #1e222b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  z-index: 1100;
+  min-width: 180px;
+  margin-top: 4px;
+  padding: 4px 0;
+}
+
+.dropdownItem {
+  padding: 6px 12px;
+  color: #cccccc;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  transition:
+    background-color 0.1s,
+    color 0.1s;
+}
+
+.dropdownItem:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.dropdownShortcut {
+  color: #707584;
+  font-size: 10px;
+  font-family: var(--aether-font-sans), sans-serif;
+  margin-left: 16px;
+}
+
+.divider {
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.08);
+  margin: 4px 0;
+}
+
+.center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  z-index: 1005;
+}
+
+.commandCenter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  padding: 4px 16px;
+  width: 280px;
+  max-width: 400px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  height: 22px;
+}
+
+.commandCenter:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.commandCenterText {
+  color: #8a8e99;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  z-index: 1010;
+}
+
+.windowControls {
+  display: flex;
+  height: 35px;
+}
+
+.controlButton {
+  background: none;
+  border: none;
+  color: #cccccc;
+  width: 46px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+.controlButton:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.closeButton:hover {
+  background-color: #e81123 !important;
+  color: #ffffff !important;
+}

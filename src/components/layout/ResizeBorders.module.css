@@ -1,0 +1,79 @@
+.borderN {
+  position: fixed;
+  top: 0;
+  left: 4px;
+  right: 4px;
+  height: 4px;
+  cursor: ns-resize;
+  z-index: 9999;
+}
+
+.borderS {
+  position: fixed;
+  bottom: 0;
+  left: 4px;
+  right: 4px;
+  height: 4px;
+  cursor: ns-resize;
+  z-index: 9999;
+}
+
+.borderE {
+  position: fixed;
+  top: 4px;
+  bottom: 4px;
+  right: 0;
+  width: 4px;
+  cursor: ew-resize;
+  z-index: 9999;
+}
+
+.borderW {
+  position: fixed;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  width: 4px;
+  cursor: ew-resize;
+  z-index: 9999;
+}
+
+.cornerNW {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  cursor: nwse-resize;
+  z-index: 10000;
+}
+
+.cornerNE {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 6px;
+  cursor: nesw-resize;
+  z-index: 10000;
+}
+
+.cornerSW {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  cursor: nesw-resize;
+  z-index: 10000;
+}
+
+.cornerSE {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: 6px;
+  height: 6px;
+  cursor: nwse-resize;
+  z-index: 10000;
+}

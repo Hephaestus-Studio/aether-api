@@ -148,6 +148,7 @@ pub enum MultipartFieldType {
 
 /// Execution settings configured for an API request.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RequestSettings {
     /// Maximum execution time in milliseconds before timing out.
     pub timeout_ms: u64, // Default: 30000
@@ -175,6 +176,7 @@ impl Default for RequestSettings {
 /// Contains all configuration data necessary to execute an HTTP request,
 /// including method, URL, parameters, headers, authentication, body, and options.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Request {
     /// Version of the request schema, e.g., "1.0.0".
     pub schema_version: String, // "1.0.0"
