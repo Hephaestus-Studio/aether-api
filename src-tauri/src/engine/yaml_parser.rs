@@ -49,7 +49,9 @@ where
         }
     }
 
-    let schema_version = val.get("schema_version").or_else(|| val.get("schemaVersion"));
+    let schema_version = val
+        .get("schema_version")
+        .or_else(|| val.get("schemaVersion"));
     match schema_version {
         Some(version) => {
             let ver_str = version.as_str().unwrap_or("");

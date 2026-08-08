@@ -3,6 +3,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useTabStore } from "@/stores/tabStore";
 import { IconMinus, IconSquare, IconCopy, IconX } from "@tabler/icons-react";
 import logoUrl from "@/assets/logo.svg";
 import classes from "./TitleBar.module.css";
@@ -13,6 +14,18 @@ export default function TitleBar() {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [isMaximized, setIsMaximized] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const toggleTerminal = useTabStore((s) => s.toggleTerminal);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "`") {
+        e.preventDefault();
+        toggleTerminal();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [toggleTerminal]);
 
   const appWindow = getCurrentWindow();
 
@@ -154,7 +167,37 @@ export default function TitleBar() {
                 </div>
               )}
 
-              {activeMenu === menu && menu !== "File" && (
+              {activeMenu === menu && menu === "Terminal" && (
+                <div className={classes.dropdownMenu}>
+                  <div
+                    className={classes.dropdownItem}
+                    onClick={() => {
+                      toggleTerminal();
+                      setActiveMenu(null);
+                    }}
+                  >
+                    <span>Toggle Terminal</span>
+                    <span className={classes.dropdownShortcut}>Ctrl+`</span>
+                  </div>
+                </div>
+              )}
+
+              {activeMenu === menu && menu === "View" && (
+                <div className={classes.dropdownMenu}>
+                  <div
+                    className={classes.dropdownItem}
+                    onClick={() => {
+                      toggleTerminal();
+                      setActiveMenu(null);
+                    }}
+                  >
+                    <span>Toggle Terminal</span>
+                    <span className={classes.dropdownShortcut}>Ctrl+`</span>
+                  </div>
+                </div>
+              )}
+
+              {activeMenu === menu && menu !== "File" && menu !== "Terminal" && menu !== "View" && (
                 <div className={classes.dropdownMenu}>
                   <div className={classes.dropdownItem} style={{ opacity: 0.5, cursor: "default" }}>
                     <span>Not Implemented</span>

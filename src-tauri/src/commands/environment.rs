@@ -153,7 +153,11 @@ pub async fn create_environment(
     let env_file = env_dir.join(format!("{}.yml", sanitize_name(&name)));
 
     if env_file.exists() {
-        tracing::warn!("Environment '{}' already exists at {}", name, env_file.display());
+        tracing::warn!(
+            "Environment '{}' already exists at {}",
+            name,
+            env_file.display()
+        );
         return Err(AppError::DuplicateItem(format!(
             "Environment '{}' already exists",
             name
@@ -182,7 +186,11 @@ pub async fn update_environment(
     variables: Vec<EnvVariableItem>,
     state: State<'_, AppState>,
 ) -> Result<(), AppError> {
-    tracing::info!("Updating environment: '{}' ({} variables)", name, variables.len());
+    tracing::info!(
+        "Updating environment: '{}' ({} variables)",
+        name,
+        variables.len()
+    );
     let ws = state.workspace.lock().await;
     let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
 

@@ -1,7 +1,16 @@
 import { useState, useEffect } from "react";
 import { Box, Select, TextInput, Button, Tabs, Menu, Text } from "@mantine/core";
 import { invoke } from "@tauri-apps/api/core";
-import { IconDeviceFloppy, IconChevronDown, IconGlobe, IconPlug, IconBolt, IconAtom, IconArrowsExchange, IconBroadcast } from "@tabler/icons-react";
+import {
+  IconDeviceFloppy,
+  IconChevronDown,
+  IconGlobe,
+  IconPlug,
+  IconBolt,
+  IconAtom,
+  IconArrowsExchange,
+  IconBroadcast,
+} from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useTabStore } from "@/stores/tabStore";
 import { useEnvStore } from "@/stores/envStore";
@@ -139,7 +148,10 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
         <div className={classes.requestTitleGroup}>
           <Menu shadow="md" width={150}>
             <Menu.Target>
-              <Box className={classes.protocolBadge} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+              <Box
+                className={classes.protocolBadge}
+                style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
+              >
                 {getProtocolIcon(activeProtocol)}
                 <Text size="xs" fw={700} style={{ color: "var(--text-primary)" }}>
                   {activeProtocol.toUpperCase()}
@@ -187,7 +199,14 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
             </Menu.Dropdown>
           </Menu>
 
-          <Box style={{ width: 1, height: 16, backgroundColor: "var(--border-color)", margin: "0 8px" }} />
+          <Box
+            style={{
+              width: 1,
+              height: 16,
+              backgroundColor: "var(--border-color)",
+              margin: "0 8px",
+            }}
+          />
 
           <TextInput
             variant="unstyled"

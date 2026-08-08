@@ -82,7 +82,14 @@ export default function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>)
     let size = 0;
     try {
       const urlObj = new URL(req.url || "http://localhost");
-      size += (req.method || "GET").length + 1 + urlObj.pathname.length + urlObj.search.length + 1 + 8 + 2;
+      size +=
+        (req.method || "GET").length +
+        1 +
+        urlObj.pathname.length +
+        urlObj.search.length +
+        1 +
+        8 +
+        2;
       size += 6 + urlObj.host.length + 2;
     } catch {
       size += (req.method || "GET").length + 1 + (req.url || "").length + 1 + 8 + 2;
@@ -149,14 +156,28 @@ export default function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>)
   const activeTcp = isTcpCached ? 0 : tcpMs;
   const activeTls = isTlsCached ? 0 : tlsMs;
 
-  const calculatedTotalMs = prepareMs + socketMs + activeDns + activeTcp + activeTls + transferStartMs + downloadMs + processMs;
+  const calculatedTotalMs =
+    prepareMs +
+    socketMs +
+    activeDns +
+    activeTcp +
+    activeTls +
+    transferStartMs +
+    downloadMs +
+    processMs;
 
   const phases = [
     { label: "Prepare", duration: prepareMs, isMuted: true, isCached: false },
     { label: "Socket Initialization", duration: socketMs, isMuted: false, isCached: false },
     { label: "DNS Lookup", duration: dnsMs, isMuted: false, isCached: isDnsCached },
     { label: "TCP Handshake", duration: tcpMs, isMuted: false, isCached: isTcpCached },
-    { label: "SSL Handshake", duration: tlsMs, isMuted: false, isCached: isTlsCached, isHidden: !isHttps && tlsMs === 0 },
+    {
+      label: "SSL Handshake",
+      duration: tlsMs,
+      isMuted: false,
+      isCached: isTlsCached,
+      isHidden: !isHttps && tlsMs === 0,
+    },
     { label: "Transfer Start", duration: transferStartMs, isMuted: false, isCached: false },
     { label: "Download", duration: downloadMs, isMuted: false, isCached: false },
     { label: "Process", duration: processMs, isMuted: true, isCached: false },
@@ -213,8 +234,15 @@ export default function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>)
                 {response.status} {response.statusText}
               </span>
             </Group>
-            
-            <HoverCard width={350} position="bottom-end" withArrow shadow="md" openDelay={200} closeDelay={200}>
+
+            <HoverCard
+              width={350}
+              position="bottom-end"
+              withArrow
+              shadow="md"
+              openDelay={200}
+              closeDelay={200}
+            >
               <HoverCard.Target>
                 <Group gap={4} wrap="nowrap" className={classes.metricLabelInteractive}>
                   <span>Time:</span>
@@ -226,9 +254,21 @@ export default function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>)
               <HoverCard.Dropdown className={classes.timePopoverDropdown}>
                 {/* Header row */}
                 <Box className={classes.timeHeaderRow}>
-                  <Text size="xxs" fw={700} style={{ color: "var(--text-muted)", width: 110 }}>EVENT</Text>
-                  <Text size="xxs" fw={700} style={{ color: "var(--text-muted)", width: 140, textAlign: "center" }}></Text>
-                  <Text size="xxs" fw={700} style={{ color: "var(--text-muted)", width: 60, textAlign: "right" }}>TIME</Text>
+                  <Text size="xxs" fw={700} style={{ color: "var(--text-muted)", width: 110 }}>
+                    EVENT
+                  </Text>
+                  <Text
+                    size="xxs"
+                    fw={700}
+                    style={{ color: "var(--text-muted)", width: 140, textAlign: "center" }}
+                  ></Text>
+                  <Text
+                    size="xxs"
+                    fw={700}
+                    style={{ color: "var(--text-muted)", width: 60, textAlign: "right" }}
+                  >
+                    TIME
+                  </Text>
                 </Box>
 
                 {/* Event list */}
@@ -238,7 +278,7 @@ export default function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>)
                     <Box
                       key={phase.label}
                       className={classes.timeRow}
-                      style={{ opacity: (phase.isMuted || phase.isCached) ? 0.5 : 1 }}
+                      style={{ opacity: phase.isMuted || phase.isCached ? 0.5 : 1 }}
                     >
                       <Text size="xs" className={classes.timeEventCell}>
                         {phase.label}
@@ -247,7 +287,9 @@ export default function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>)
                         <Box className={classes.waterfallTrack}>
                           {phase.width > 0 && (
                             <Box
-                              className={phase.isMuted ? classes.waterfallBarGrey : classes.waterfallBar}
+                              className={
+                                phase.isMuted ? classes.waterfallBarGrey : classes.waterfallBar
+                              }
                               style={{
                                 left: `${phase.left}%`,
                                 width: `${phase.width}%`,
@@ -264,8 +306,8 @@ export default function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>)
                         {phase.isCached
                           ? "Cache"
                           : phase.duration >= 100
-                          ? `${phase.duration.toFixed(0)} ms`
-                          : `${phase.duration.toFixed(2)} ms`}
+                            ? `${phase.duration.toFixed(0)} ms`
+                            : `${phase.duration.toFixed(2)} ms`}
                       </Text>
                     </Box>
                   ))}
@@ -279,13 +321,22 @@ export default function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>)
                   </Text>
                   <Box className={classes.timeTimelineCell}></Box>
                   <Text size="xs" fw={700} className={classes.timeTotalValue}>
-                    {calculatedTotalMs >= 100 ? `${calculatedTotalMs.toFixed(0)} ms` : `${calculatedTotalMs.toFixed(2)} ms`}
+                    {calculatedTotalMs >= 100
+                      ? `${calculatedTotalMs.toFixed(0)} ms`
+                      : `${calculatedTotalMs.toFixed(2)} ms`}
                   </Text>
                 </Box>
               </HoverCard.Dropdown>
             </HoverCard>
 
-            <HoverCard width={280} position="bottom-end" withArrow shadow="md" openDelay={200} closeDelay={200}>
+            <HoverCard
+              width={280}
+              position="bottom-end"
+              withArrow
+              shadow="md"
+              openDelay={200}
+              closeDelay={200}
+            >
               <HoverCard.Target>
                 <Group gap={4} wrap="nowrap" className={classes.metricLabelInteractive}>
                   <span>Size:</span>
@@ -303,21 +354,37 @@ export default function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>)
                     <Text size="xs" fw={700} className={classes.popoverTitleText}>
                       Response Size
                     </Text>
-                    <Text size="xs" fw={700} style={{ marginLeft: "auto", color: "var(--text-primary)" }}>
+                    <Text
+                      size="xs"
+                      fw={700}
+                      style={{ marginLeft: "auto", color: "var(--text-primary)" }}
+                    >
                       {formatSize(responseTotalSize)}
                     </Text>
                   </Box>
                   <Box className={classes.popoverSubRow}>
-                    <Text size="xs" style={{ color: "var(--text-muted)" }}>Headers</Text>
-                    <Text size="xs" style={{ marginLeft: "auto", color: "var(--text-muted)" }}>{formatSize(responseHeadersSize)}</Text>
+                    <Text size="xs" style={{ color: "var(--text-muted)" }}>
+                      Headers
+                    </Text>
+                    <Text size="xs" style={{ marginLeft: "auto", color: "var(--text-muted)" }}>
+                      {formatSize(responseHeadersSize)}
+                    </Text>
                   </Box>
                   <Box className={classes.popoverSubRow}>
-                    <Text size="xs" style={{ color: "var(--text-muted)" }}>Body</Text>
-                    <Text size="xs" style={{ marginLeft: "auto", color: "var(--text-muted)" }}>{formatSize(responseBodySize)}</Text>
+                    <Text size="xs" style={{ color: "var(--text-muted)" }}>
+                      Body
+                    </Text>
+                    <Text size="xs" style={{ marginLeft: "auto", color: "var(--text-muted)" }}>
+                      {formatSize(responseBodySize)}
+                    </Text>
                   </Box>
                   <Box className={classes.popoverSubRow} style={{ opacity: 0.6 }}>
-                    <Text size="xs" style={{ color: "var(--text-muted)" }}>Uncompressed</Text>
-                    <Text size="xs" style={{ marginLeft: "auto", color: "var(--text-muted)" }}>{formatSize(responseBodySize)}</Text>
+                    <Text size="xs" style={{ color: "var(--text-muted)" }}>
+                      Uncompressed
+                    </Text>
+                    <Text size="xs" style={{ marginLeft: "auto", color: "var(--text-muted)" }}>
+                      {formatSize(responseBodySize)}
+                    </Text>
                   </Box>
                 </Box>
 
@@ -329,22 +396,37 @@ export default function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>)
                     <Text size="xs" fw={700} className={classes.popoverTitleText}>
                       Request Size
                     </Text>
-                    <Text size="xs" fw={700} style={{ marginLeft: "auto", color: "var(--text-primary)" }}>
+                    <Text
+                      size="xs"
+                      fw={700}
+                      style={{ marginLeft: "auto", color: "var(--text-primary)" }}
+                    >
                       {formatSize(requestTotalSize)}
                     </Text>
                   </Box>
                   <Box className={classes.popoverSubRow}>
-                    <Text size="xs" style={{ color: "var(--text-muted)" }}>Headers</Text>
-                    <Text size="xs" style={{ marginLeft: "auto", color: "var(--text-muted)" }}>{formatSize(requestHeadersSize)}</Text>
+                    <Text size="xs" style={{ color: "var(--text-muted)" }}>
+                      Headers
+                    </Text>
+                    <Text size="xs" style={{ marginLeft: "auto", color: "var(--text-muted)" }}>
+                      {formatSize(requestHeadersSize)}
+                    </Text>
                   </Box>
                   <Box className={classes.popoverSubRow}>
-                    <Text size="xs" style={{ color: "var(--text-muted)" }}>Body</Text>
-                    <Text size="xs" style={{ marginLeft: "auto", color: "var(--text-muted)" }}>{formatSize(requestBodySize)}</Text>
+                    <Text size="xs" style={{ color: "var(--text-muted)" }}>
+                      Body
+                    </Text>
+                    <Text size="xs" style={{ marginLeft: "auto", color: "var(--text-muted)" }}>
+                      {formatSize(requestBodySize)}
+                    </Text>
                   </Box>
                 </Box>
 
                 <Box className={classes.popoverFooter}>
-                  <Text size="xxs" style={{ color: "var(--text-muted)", fontStyle: "italic", fontSize: 10 }}>
+                  <Text
+                    size="xxs"
+                    style={{ color: "var(--text-muted)", fontStyle: "italic", fontSize: 10 }}
+                  >
                     All size calculations are approximate
                   </Text>
                 </Box>

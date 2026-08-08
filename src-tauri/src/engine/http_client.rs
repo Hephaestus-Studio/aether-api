@@ -3,15 +3,15 @@ use crate::models::request::{
     AuthConfig, HttpMethod, KeyValuePair, MultipartFieldType, Request, RequestBody, RequestSettings,
 };
 use crate::models::response::{HttpResponse, ResponseBodyType, TimingMetrics};
+use reqwest::dns::{Name, Resolve, Resolving};
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue, CONTENT_TYPE};
 use reqwest::multipart;
-use reqwest::dns::{Name, Resolve, Resolving};
 use std::collections::HashMap;
 use std::future::Future;
+use std::net::{SocketAddr, ToSocketAddrs};
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
-use std::net::{SocketAddr, ToSocketAddrs};
 use std::time::Duration;
 use tokio::sync::Mutex;
 use tokio::time::Instant;
@@ -48,17 +48,18 @@ impl Resolve for TimingResolver {
         Box::pin(async move {
             let start = Instant::now();
             let host_string = name.as_str().to_string();
-            
+
             let addrs_res = tokio::task::spawn_blocking(move || {
                 let query = format!("{}:0", host_string);
                 query.to_socket_addrs().map(|iter| {
                     let vec: Vec<SocketAddr> = iter.collect();
                     vec
                 })
-            }).await;
+            })
+            .await;
 
             let elapsed = start.elapsed().as_secs_f64() * 1000.0;
-            
+
             if let Ok(current) = CURRENT_TIMING.try_with(|current| current.clone()) {
                 let mut guard = current.lock().await;
                 guard.dns_lookup_ms = elapsed;
@@ -112,17 +113,17 @@ where
         let mut inner = self.inner.clone();
         let start = Instant::now();
         let fut = inner.call(req);
-        
+
         Box::pin(async move {
             let res = fut.await;
             let elapsed = start.elapsed().as_secs_f64() * 1000.0;
-            
+
             if let Ok(current) = CURRENT_TIMING.try_with(|current| current.clone()) {
                 let mut guard = current.lock().await;
                 let is_https = guard.is_https;
                 let dns_time = guard.dns_lookup_ms;
                 let net_time = (elapsed - dns_time).max(0.0);
-                
+
                 if is_https {
                     guard.tcp_handshake_ms = net_time * 0.40;
                     guard.ssl_handshake_ms = net_time * 0.60;
@@ -174,9 +175,11 @@ impl HttpExecutor {
         let timing_collector = Arc::new(Mutex::new(TimingCollector::new(is_https)));
         let collector_clone = timing_collector.clone();
 
-        let response_res = CURRENT_TIMING.scope(collector_clone, async {
-            self.execute_inner(req_data, cancel_token).await
-        }).await;
+        let response_res = CURRENT_TIMING
+            .scope(collector_clone, async {
+                self.execute_inner(req_data, cancel_token).await
+            })
+            .await;
 
         match response_res {
             Ok(mut res) => {

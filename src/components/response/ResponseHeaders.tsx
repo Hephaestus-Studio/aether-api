@@ -17,8 +17,26 @@ export default function ResponseHeaders({ headers }: Readonly<ResponseHeadersPro
         <Table.Tbody>
           {headers.map(([k, v]) => (
             <Table.Tr key={`${k}-${v}`}>
-              <Table.Td style={{ fontWeight: 600, fontSize: 13, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)" }}>{k}</Table.Td>
-              <Table.Td style={{ fontSize: 13, fontFamily: "JetBrains Mono, monospace", color: "var(--text-muted)", wordBreak: "break-all" }}>{v}</Table.Td>
+              <Table.Td
+                style={{
+                  fontWeight: 600,
+                  fontSize: 13,
+                  fontFamily: "JetBrains Mono, monospace",
+                  color: "var(--text-primary)",
+                }}
+              >
+                {k}
+              </Table.Td>
+              <Table.Td
+                style={{
+                  fontSize: 13,
+                  fontFamily: "JetBrains Mono, monospace",
+                  color: "var(--text-muted)",
+                  wordBreak: "break-all",
+                }}
+              >
+                {v}
+              </Table.Td>
             </Table.Tr>
           ))}
         </Table.Tbody>

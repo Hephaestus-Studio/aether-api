@@ -41,6 +41,7 @@ fn main() {
             commands::workspace::save_workspace_state,
             commands::workspace::get_git_status,
             commands::workspace::get_git_diff,
+            commands::workspace::run_terminal_command,
             commands::collection::create_collection,
             commands::collection::create_folder,
             commands::collection::rename_item,
@@ -65,8 +66,8 @@ fn main() {
             let log_dir = app.path().app_log_dir().unwrap();
             let file_appender = tracing_appender::rolling::daily(log_dir, "aether.log");
 
-            let env_filter = EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| EnvFilter::new("info"));
+            let env_filter =
+                EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
 
             let stdout_layer = tracing_subscriber::fmt::layer().with_writer(std::io::stdout);
             let file_layer = tracing_subscriber::fmt::layer().with_writer(file_appender);

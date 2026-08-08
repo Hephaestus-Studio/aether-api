@@ -51,7 +51,9 @@ export default function AuthEditor({ auth, onChange }: Readonly<AuthEditorProps>
       {/* Left Column: Select Type & Info */}
       <Box className={classes.leftCol}>
         <Box>
-          <Text className={classes.label} mb={6}>Type</Text>
+          <Text className={classes.label} mb={6}>
+            Type
+          </Text>
           <Select
             value={selectedType}
             onChange={(val) => handleTypeChange(val || "none")}
@@ -211,7 +213,8 @@ export default function AuthEditor({ auth, onChange }: Readonly<AuthEditorProps>
               {authTypes.find((t) => t.value === selectedType)?.label || selectedType} Parameters
             </Text>
             <Text className={classes.helpText} style={{ maxWidth: 450 }}>
-              Configuration panel for advanced auth methods is simulated locally. Vault storage is active for keys and endpoints.
+              Configuration panel for advanced auth methods is simulated locally. Vault storage is
+              active for keys and endpoints.
             </Text>
             <Box className={classes.vaultBanner}>
               <Text className={classes.vaultText}>

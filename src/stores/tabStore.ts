@@ -20,6 +20,8 @@ interface TabState {
   setResponse: (tabId: string, response: any) => void;
   setLoading: (tabId: string, loading: boolean) => void;
   setProtocol: (tabId: string, protocol: string) => void;
+  terminalOpened: boolean;
+  toggleTerminal: () => void;
 }
 
 export const useTabStore = create<TabState>((set, get) => ({
@@ -92,7 +94,8 @@ export const useTabStore = create<TabState>((set, get) => ({
     set({ closedTabsHistory: closedTabsHistory.slice(0, -1) });
   },
 
-  closeAllTabs: () => set({ tabs: [], activeTabId: null, responses: {}, loadingStates: {}, protocols: {} }),
+  closeAllTabs: () =>
+    set({ tabs: [], activeTabId: null, responses: {}, loadingStates: {}, protocols: {} }),
 
   closeOtherTabs: (tabId) => {
     const { tabs, responses, loadingStates, protocols } = get();
@@ -111,7 +114,7 @@ export const useTabStore = create<TabState>((set, get) => ({
   setResponse: (tabId, response) => {
     set({
       responses: {
-         ...get().responses,
+        ...get().responses,
         [tabId]: response,
       },
     });
@@ -132,6 +135,13 @@ export const useTabStore = create<TabState>((set, get) => ({
         ...get().protocols,
         [tabId]: protocol,
       },
+    });
+  },
+
+  terminalOpened: false,
+  toggleTerminal: () => {
+    set({
+      terminalOpened: !get().terminalOpened,
     });
   },
 }));

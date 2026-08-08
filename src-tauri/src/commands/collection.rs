@@ -37,7 +37,11 @@ pub async fn create_collection(
     let collection_dir = ws_state.path.join("collections").join(&clean_name);
 
     if collection_dir.exists() {
-        tracing::warn!("Collection '{}' already exists at {}", clean_name, collection_dir.display());
+        tracing::warn!(
+            "Collection '{}' already exists at {}",
+            clean_name,
+            collection_dir.display()
+        );
         return Err(AppError::DuplicateItem(format!(
             "Collection '{}' already exists",
             clean_name
@@ -115,7 +119,11 @@ pub async fn create_folder(
     let folder_dir = parent_abs.join(&clean_name);
 
     if folder_dir.exists() {
-        tracing::warn!("Folder '{}' already exists at {}", clean_name, folder_dir.display());
+        tracing::warn!(
+            "Folder '{}' already exists at {}",
+            clean_name,
+            folder_dir.display()
+        );
         return Err(AppError::DuplicateItem(format!(
             "Folder '{}' already exists",
             clean_name

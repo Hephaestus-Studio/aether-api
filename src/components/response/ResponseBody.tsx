@@ -131,11 +131,26 @@ export default function ResponseBody({ response }: Readonly<ResponseBodyProps>) 
 
   if (isBinary) {
     return (
-      <Box style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", padding: 32 }}>
+      <Box
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+          padding: 32,
+        }}
+      >
         <Text size="sm" mb={12} style={{ color: "var(--text-muted)" }}>
           Binary response or format not supported by the previewer.
         </Text>
-        <Button variant="light" size="xs" color="indigo" leftSection={<IconDownload size={14} />} onClick={handleDownloadResponse}>
+        <Button
+          variant="light"
+          size="xs"
+          color="indigo"
+          leftSection={<IconDownload size={14} />}
+          onClick={handleDownloadResponse}
+        >
           Download Response
         </Button>
       </Box>
@@ -173,7 +188,9 @@ export default function ResponseBody({ response }: Readonly<ResponseBodyProps>) 
                     rightSection={<IconChevronDown size={12} />}
                     style={{ fontSize: 12, height: 26, padding: "0 8px" }}
                   >
-                    {(language === "auto" ? `Auto (${initialLanguage.toUpperCase()})` : language.toUpperCase())}
+                    {language === "auto"
+                      ? `Auto (${initialLanguage.toUpperCase()})`
+                      : language.toUpperCase()}
                   </Button>
                 </Menu.Target>
                 <Menu.Dropdown>
@@ -185,7 +202,13 @@ export default function ResponseBody({ response }: Readonly<ResponseBodyProps>) 
                 </Menu.Dropdown>
               </Menu>
 
-              <ActionIcon variant="subtle" color="gray" size="sm" onClick={handlePrettify} title="Prettify code">
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="sm"
+                onClick={handlePrettify}
+                title="Prettify code"
+              >
                 <IconCode size={16} />
               </ActionIcon>
             </Group>
@@ -193,11 +216,23 @@ export default function ResponseBody({ response }: Readonly<ResponseBodyProps>) 
         </Box>
 
         <Box className={classes.bodyControlRight}>
-          <ActionIcon variant="subtle" color="gray" size="sm" onClick={handleCopy} title="Copy response body">
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            size="sm"
+            onClick={handleCopy}
+            title="Copy response body"
+          >
             <IconCopy size={16} />
           </ActionIcon>
           {(mode === "pretty" || mode === "raw") && (
-            <ActionIcon variant="subtle" color="gray" size="sm" onClick={handleSearch} title="Search content">
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              size="sm"
+              onClick={handleSearch}
+              title="Search content"
+            >
               <IconSearch size={16} />
             </ActionIcon>
           )}
@@ -208,7 +243,13 @@ export default function ResponseBody({ response }: Readonly<ResponseBodyProps>) 
         {(mode === "pretty" || mode === "raw") && (
           <Editor
             height="100%"
-            language={mode === "raw" ? "plaintext" : (editorLanguage === "text" ? "plaintext" : editorLanguage)}
+            language={
+              mode === "raw"
+                ? "plaintext"
+                : editorLanguage === "text"
+                  ? "plaintext"
+                  : editorLanguage
+            }
             theme="aether-dark"
             value={mode === "raw" ? response.body : formattedContent}
             beforeMount={(monaco) => {
@@ -225,7 +266,15 @@ export default function ResponseBody({ response }: Readonly<ResponseBodyProps>) 
               editorRef.current = editor;
             }}
             loading={
-              <Box style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--text-muted)" }}>
+              <Box
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: "100%",
+                  color: "var(--text-muted)",
+                }}
+              >
                 Loading editor...
               </Box>
             }
@@ -247,7 +296,9 @@ export default function ResponseBody({ response }: Readonly<ResponseBodyProps>) 
         )}
 
         {mode === "preview" && (
-          <Box style={{ height: "100%", width: "100%", backgroundColor: "#fff", overflow: "hidden" }}>
+          <Box
+            style={{ height: "100%", width: "100%", backgroundColor: "#fff", overflow: "hidden" }}
+          >
             {editorLanguage === "html" ? (
               <iframe
                 srcDoc={response.body}
@@ -255,7 +306,15 @@ export default function ResponseBody({ response }: Readonly<ResponseBodyProps>) 
                 style={{ width: "100%", height: "100%", border: "none" }}
               />
             ) : (
-              <Box style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#000" }}>
+              <Box
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: "100%",
+                  color: "#000",
+                }}
+              >
                 Preview is only supported for HTML responses.
               </Box>
             )}
@@ -263,7 +322,16 @@ export default function ResponseBody({ response }: Readonly<ResponseBodyProps>) 
         )}
 
         {mode === "visualize" && (
-          <Box p={16} style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--text-muted)" }}>
+          <Box
+            p={16}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              color: "var(--text-muted)",
+            }}
+          >
             Visualize mode allows rendering custom templates (coming soon).
           </Box>
         )}

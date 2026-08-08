@@ -17,7 +17,9 @@ body {
   user-select: none;
 }
 
-*:not(input):not(textarea):not(pre):not(code):not([contenteditable="true"]):not(.selectable):not(.monaco-editor *) {
+*:not(input):not(textarea):not(pre):not(code):not([contenteditable="true"]):not(.selectable):not(
+    .monaco-editor *
+  ) {
   -webkit-user-select: none;
   -moz-user-select: none;
   user-select: none;

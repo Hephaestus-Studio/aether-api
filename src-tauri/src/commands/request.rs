@@ -54,7 +54,10 @@ pub async fn update_request(
     };
     request_details.updated_at = chrono::Utc::now();
     crate::engine::yaml_parser::atomic_write_yaml(&file_path, &request_details)?;
-    tracing::debug!("Successfully wrote updated request to {}", file_path.display());
+    tracing::debug!(
+        "Successfully wrote updated request to {}",
+        file_path.display()
+    );
     Ok(())
 }
 

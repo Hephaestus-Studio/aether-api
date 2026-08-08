@@ -7,6 +7,7 @@ import Sidebar from "./Sidebar";
 import EditorTabs from "./EditorTabs";
 import StatusBar from "./StatusBar";
 import SplitPane from "./SplitPane";
+import TerminalPanel from "./TerminalPanel";
 import RequestEditor from "@/components/editor/RequestEditor";
 import ResponseViewer from "@/components/response/ResponseViewer";
 import QuickOpen from "@/components/tools/QuickOpen";
@@ -20,6 +21,7 @@ export default function AppShell() {
   const [commandPaletteOpened, setCommandPaletteOpened] = useState(false);
 
   const activeTabId = useTabStore((s) => s.activeTabId);
+  const terminalOpened = useTabStore((s) => s.terminalOpened);
 
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     return workspaceInfo?.settings?.sidebarWidth || 280;
@@ -131,10 +133,29 @@ export default function AppShell() {
       <MantineAppShell.Main className={classes.main}>
         <EditorTabs />
         <Box className={classes.editorWrapper}>
-          {activeTabId ? (
+          {terminalOpened ? (
+            <SplitPane
+              topPanel={
+                activeTabId ? (
+                  <SplitPane
+                    topPanel={<RequestEditor tabId={activeTabId} />}
+                    bottomPanel={<ResponseViewer tabId={activeTabId} />}
+                    orientation="horizontal"
+                  />
+                ) : (
+                  <Box className={classes.emptyState}>
+                    Select a request from explorer or press Ctrl+P to search
+                  </Box>
+                )
+              }
+              bottomPanel={<TerminalPanel />}
+              orientation="vertical"
+            />
+          ) : activeTabId ? (
             <SplitPane
               topPanel={<RequestEditor tabId={activeTabId} />}
               bottomPanel={<ResponseViewer tabId={activeTabId} />}
+              orientation="horizontal"
             />
           ) : (
             <Box className={classes.emptyState}>
