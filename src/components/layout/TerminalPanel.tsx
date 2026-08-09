@@ -16,12 +16,7 @@ export default function TerminalPanel() {
   const toggleTerminal = useTabStore((s) => s.toggleTerminal);
   const [terminalCwd, setTerminalCwd] = useState<string>(".");
   const [inputVal, setInputVal] = useState<string>("");
-  const [history, setHistory] = useState<HistoryItem[]>([
-    {
-      type: "info",
-      text: "Welcome to Aether API Terminal.\nType standard shell commands (ls, git status, cargo check, pnpm dev) to execute them. Type 'clear' or 'cls' to clear history.",
-    },
-  ]);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
   const [tempInput, setTempInput] = useState<string>("");
@@ -75,12 +70,7 @@ export default function TerminalPanel() {
 
     // Handle locally processed command session resets first
     if (command === "exit") {
-      setHistory([
-        {
-          type: "info",
-          text: "Welcome to Aether API Terminal.\nType standard shell commands (ls, git status, cargo check, pnpm dev) to execute them. Type 'clear' or 'cls' to clear history.",
-        },
-      ]);
+      setHistory([]);
       setInputVal("");
       setHistoryIndex(-1);
       setTempInput("");

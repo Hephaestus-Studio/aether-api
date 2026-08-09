@@ -1,8 +1,10 @@
 import { useEffect } from "react";
 import { MantineProvider, createTheme } from "@mantine/core";
 import { useWorkspaceStore } from "./stores/workspaceStore";
+import { useTabStore } from "./stores/tabStore";
 import { useEnvStore } from "./stores/envStore";
 import { useFsWatcher } from "./hooks/useFsWatcher";
+import { restoreWorkspaceSession } from "./utils/workspaceSession";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api/core";
 import AppShell from "./components/layout/AppShell";
@@ -72,6 +74,11 @@ export default function App() {
             useWorkspaceStore.getState().setWorkspacePath(info.path);
             useWorkspaceStore.getState().setTreeData(tree.children);
             useWorkspaceStore.getState().setWorkspaceInfo(info);
+
+            const session = await restoreWorkspaceSession(info.path);
+            if (session && isMounted) {
+              useTabStore.getState().restoreSession(session);
+            }
           } catch (err) {
             console.error("Failed to restore workspace session:", err);
           }
@@ -105,11 +112,19 @@ export default function App() {
 
           const git = await invoke<any>("get_git_status");
           setGitStatus(git);
+
+          const session = await restoreWorkspaceSession(path);
+          if (session) {
+            useTabStore.getState().restoreSession(session);
+          } else {
+            useTabStore.getState().closeAllTabs();
+          }
         } catch (err) {
           console.error("Failed to sync workspace in main window:", err);
         }
       } else {
         reset();
+        useTabStore.getState().closeAllTabs();
       }
     };
 

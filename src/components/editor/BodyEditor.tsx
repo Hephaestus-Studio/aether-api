@@ -1,10 +1,22 @@
 import { useState, useEffect } from "react";
-import { Box, Radio, Group, Select, Checkbox, TextInput, ActionIcon, Text } from "@mantine/core";
-import { IconTrash } from "@tabler/icons-react";
+import {
+  Box,
+  Radio,
+  Group,
+  Select,
+  Checkbox,
+  TextInput,
+  ActionIcon,
+  Text,
+  Menu,
+  Button,
+} from "@mantine/core";
+import { IconTrash, IconChevronDown } from "@tabler/icons-react";
 import MonacoEditor from "@/components/common/MonacoEditor";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useConfigStore } from "@/stores/configStore";
 import MonacoErrorBoundary from "@/components/common/MonacoErrorBoundary";
+import { useCollision } from "@/hooks/useCollision";
 import type { RequestBody, KeyValuePair, MultipartField } from "@/types/request";
 import classes from "./BodyEditor.module.css";
 
@@ -14,6 +26,14 @@ interface BodyEditorProps {
 }
 
 export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>) {
+  const {
+    containerRef: typeRowRef,
+    leftRef: radiosRef,
+    rightRef: langSelectRef,
+    isColliding: isBodyColliding,
+  } = useCollision<HTMLDivElement>({ gap: 16, minExpandedWidth: 590, hysteresis: 8 });
+
+  const isCompact = isBodyColliding;
   const { config } = useConfigStore();
   // Translate RequestBody types to Postman body types: none, multipartForm, formUrlencoded, raw, binary
   const [bodyType, setBodyType] = useState<string>(() => {
@@ -220,39 +240,160 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
     return "plaintext";
   };
 
+  const getBodyTypeLabel = (type: string) => {
+    switch (type) {
+      case "none":
+        return "none";
+      case "multipartForm":
+        return "form-data";
+      case "formUrlencoded":
+        return "x-www-form-urlencoded";
+      case "raw":
+        return "raw";
+      case "binary":
+        return "binary";
+      default:
+        return type;
+    }
+  };
+
+  const getRawLangLabel = (lang: string) => {
+    switch (lang) {
+      case "json":
+        return "JSON";
+      case "xml":
+        return "XML";
+      case "javascript":
+        return "JavaScript";
+      case "html":
+        return "HTML";
+      default:
+        return "Text";
+    }
+  };
+
+  const handleBeautify = () => {
+    if (bodyType === "raw") {
+      const content =
+        body.type === "json" || body.type === "xml" || body.type === "text" || body.type === "yaml"
+          ? body.content
+          : "";
+      if (rawLang === "json" && content) {
+        try {
+          const parsed = JSON.parse(content);
+          onChange({ type: "json", content: JSON.stringify(parsed, null, 2) });
+        } catch {
+          // ignore invalid json formatting errors
+        }
+      }
+    }
+  };
+
   return (
     <Box className={classes.container}>
       {/* Body type selection row */}
-      <Box className={classes.typeRow}>
-        <Radio.Group value={bodyType} onChange={handleTypeChange} className={classes.radioGroup}>
-          <Group>
-            <Radio value="none" label="none" className={classes.radioItem} />
-            <Radio value="multipartForm" label="form-data" className={classes.radioItem} />
-            <Radio
-              value="formUrlencoded"
-              label="x-www-form-urlencoded"
-              className={classes.radioItem}
-            />
-            <Radio value="raw" label="raw" className={classes.radioItem} />
-            <Radio value="binary" label="binary" className={classes.radioItem} />
-          </Group>
-        </Radio.Group>
+      {isCompact ? (
+        <Box ref={typeRowRef} className={classes.compactTypeRow}>
+          <Group gap={8}>
+            <Menu shadow="md" width={170} position="bottom-start">
+              <Menu.Target>
+                <Button
+                  variant="subtle"
+                  size="xs"
+                  className={classes.compactSelectBtn}
+                  rightSection={<IconChevronDown size={14} />}
+                >
+                  {getBodyTypeLabel(bodyType)}
+                </Button>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item onClick={() => handleTypeChange("none")}>none</Menu.Item>
+                <Menu.Item onClick={() => handleTypeChange("multipartForm")}>form-data</Menu.Item>
+                <Menu.Item onClick={() => handleTypeChange("formUrlencoded")}>
+                  x-www-form-urlencoded
+                </Menu.Item>
+                <Menu.Item onClick={() => handleTypeChange("raw")}>raw</Menu.Item>
+                <Menu.Item onClick={() => handleTypeChange("binary")}>binary</Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
 
-        {bodyType === "raw" && (
-          <Select
-            value={rawLang}
-            onChange={(val) => handleRawLangChange(val || "text")}
-            data={[
-              { label: "Text", value: "text" },
-              { label: "JavaScript", value: "javascript" },
-              { label: "JSON", value: "json" },
-              { label: "HTML", value: "html" },
-              { label: "XML", value: "xml" },
-            ]}
-            className={classes.langSelect}
-          />
-        )}
-      </Box>
+            {bodyType === "raw" && (
+              <Menu shadow="md" width={140} position="bottom-start">
+                <Menu.Target>
+                  <Button
+                    variant="transparent"
+                    size="xs"
+                    className={classes.compactLangBtn}
+                    rightSection={<IconChevronDown size={14} />}
+                  >
+                    {getRawLangLabel(rawLang)}
+                  </Button>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Item onClick={() => handleRawLangChange("text")}>Text</Menu.Item>
+                  <Menu.Item onClick={() => handleRawLangChange("javascript")}>
+                    JavaScript
+                  </Menu.Item>
+                  <Menu.Item onClick={() => handleRawLangChange("json")}>JSON</Menu.Item>
+                  <Menu.Item onClick={() => handleRawLangChange("html")}>HTML</Menu.Item>
+                  <Menu.Item onClick={() => handleRawLangChange("xml")}>XML</Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+            )}
+          </Group>
+
+          {bodyType === "raw" && rawLang === "json" && (
+            <Button
+              variant="transparent"
+              size="xs"
+              color="blue"
+              onClick={handleBeautify}
+              className={classes.beautifyBtn}
+            >
+              Beautify
+            </Button>
+          )}
+        </Box>
+      ) : (
+        <Box ref={typeRowRef} className={classes.typeRow}>
+          <div ref={radiosRef}>
+            <Radio.Group
+              value={bodyType}
+              onChange={handleTypeChange}
+              className={classes.radioGroup}
+            >
+              <Group>
+                <Radio value="none" label="none" className={classes.radioItem} />
+                <Radio value="multipartForm" label="form-data" className={classes.radioItem} />
+                <Radio
+                  value="formUrlencoded"
+                  label="x-www-form-urlencoded"
+                  className={classes.radioItem}
+                />
+                <Radio value="raw" label="raw" className={classes.radioItem} />
+                <Radio value="binary" label="binary" className={classes.radioItem} />
+              </Group>
+            </Radio.Group>
+          </div>
+
+          {bodyType === "raw" && (
+            <div ref={langSelectRef}>
+              <Select
+                value={rawLang}
+                onChange={(val) => handleRawLangChange(val || "text")}
+                data={[
+                  { label: "Text", value: "text" },
+                  { label: "JavaScript", value: "javascript" },
+                  { label: "JSON", value: "json" },
+                  { label: "HTML", value: "html" },
+                  { label: "XML", value: "xml" },
+                ]}
+                className={classes.langSelect}
+              />
+            </div>
+          )}
+        </Box>
+      )}
 
       {/* Conditional Rendering of editors */}
       {bodyType === "none" && (

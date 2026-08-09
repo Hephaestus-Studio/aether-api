@@ -7,6 +7,8 @@ interface SplitPaneProps {
   bottomPanel: ReactNode;
   orientation?: "horizontal" | "vertical";
   collapsed?: boolean;
+  minTopSize?: number;
+  minBottomSize?: number;
 }
 
 export default function SplitPane({
@@ -14,10 +16,19 @@ export default function SplitPane({
   bottomPanel,
   orientation = "horizontal",
   collapsed = false,
+  minTopSize,
+  minBottomSize,
 }: Readonly<SplitPaneProps>) {
   const [splitRatio, setSplitRatio] = useState(0.5);
   const containerRef = useRef<HTMLDivElement>(null);
   const splitRatioRef = useRef(splitRatio);
+
+  const isVertical = orientation === "vertical";
+  const defaultMinTop = isVertical ? 150 : 320;
+  const defaultMinBottom = isVertical ? 100 : 280;
+
+  const minTop = minTopSize ?? defaultMinTop;
+  const minBottom = minBottomSize ?? defaultMinBottom;
 
   useEffect(() => {
     splitRatioRef.current = splitRatio;
@@ -31,17 +42,20 @@ export default function SplitPane({
     e.preventDefault();
     if (!containerRef.current) return;
 
-    const isVertical = orientation === "vertical";
     const boundingClientRect = containerRef.current.getBoundingClientRect();
     const containerSize = isVertical ? boundingClientRect.height : boundingClientRect.width;
     const startPos = isVertical ? e.clientY : e.clientX;
     const startRatio = splitRatioRef.current;
 
+    const minRatio = containerSize > minTop + minBottom ? minTop / containerSize : 0.15;
+    const maxRatio =
+      containerSize > minTop + minBottom ? (containerSize - minBottom) / containerSize : 0.85;
+
     const handleMouseMove = (moveEvent: MouseEvent) => {
       const currentPos = isVertical ? moveEvent.clientY : moveEvent.clientX;
       const delta = currentPos - startPos;
       const ratioDelta = delta / containerSize;
-      const newRatio = Math.max(0.15, Math.min(0.85, startRatio + ratioDelta));
+      const newRatio = Math.max(minRatio, Math.min(maxRatio, startRatio + ratioDelta));
       setSplitRatio(newRatio);
     };
 
@@ -54,8 +68,6 @@ export default function SplitPane({
     document.addEventListener("mouseup", handleMouseUp);
   };
 
-  const isVertical = orientation === "vertical";
-
   return (
     <Box
       ref={containerRef}
@@ -66,7 +78,9 @@ export default function SplitPane({
         style={{
           height: collapsed ? "100%" : isVertical ? `calc(${splitRatio * 100}% - 2px)` : "100%",
           width: collapsed ? "100%" : isVertical ? "100%" : `calc(${splitRatio * 100}% - 2px)`,
-          overflow: "auto",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
           flexShrink: 0,
         }}
         className={classes.panel}
@@ -87,10 +101,11 @@ export default function SplitPane({
       />
       <Box
         style={{
-          display: collapsed ? "none" : "block",
+          display: collapsed ? "none" : "flex",
           height: isVertical ? `calc(${(1 - splitRatio) * 100}% - 2px)` : "100%",
           width: isVertical ? "100%" : `calc(${(1 - splitRatio) * 100}% - 2px)`,
-          overflow: "auto",
+          overflow: "hidden",
+          flexDirection: "column",
           flexShrink: 0,
         }}
         className={classes.panel}

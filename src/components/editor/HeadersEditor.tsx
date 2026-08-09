@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Box, Table, TextInput, Checkbox, ActionIcon, Text, Textarea } from "@mantine/core";
+import { Box, Table, TextInput, Checkbox, ActionIcon, Text, ScrollArea } from "@mantine/core";
+import { useElementSize } from "@mantine/hooks";
 import { IconTrash, IconInfoCircle, IconEye, IconEyeOff } from "@tabler/icons-react";
 import type { KeyValuePair } from "@/types/request";
 
@@ -11,7 +12,7 @@ interface HeadersEditorProps {
 const AUTO_GENERATED_HEADERS = [
   {
     key: "User-Agent",
-    value: "PostmanRuntime/7.56.0",
+    value: "AetherAPI/1.0.0",
     enabled: true,
     description: "Default user agent",
   },
@@ -31,9 +32,9 @@ const AUTO_GENERATED_HEADERS = [
 ];
 
 export default function HeadersEditor({ headers, onChange }: Readonly<HeadersEditorProps>) {
-  const [isBulk, setIsBulk] = useState(false);
-  const [bulkText, setBulkText] = useState("");
   const [showAutoHeaders, setShowAutoHeaders] = useState(true);
+  const { ref: containerRef, width } = useElementSize();
+  const showDescription = width >= 500 || width === 0;
 
   // Automatically ensure there is always one blank row at the bottom of the custom headers list
   useEffect(() => {
@@ -45,13 +46,6 @@ export default function HeadersEditor({ headers, onChange }: Readonly<HeadersEdi
       onChange([...headers, { key: "", value: "", enabled: true, description: "" }]);
     }
   }, [headers, onChange]);
-
-  // Keep bulk text synced with external updates
-  useEffect(() => {
-    if (isBulk) {
-      setBulkText(formatBulkText(headers));
-    }
-  }, [headers, isBulk]);
 
   const handleItemChange = (index: number, fields: Partial<KeyValuePair>) => {
     const next = [...headers];
@@ -67,50 +61,11 @@ export default function HeadersEditor({ headers, onChange }: Readonly<HeadersEdi
     onChange(headers.filter((_, i) => i !== index));
   };
 
-  const toggleBulkMode = () => {
-    if (isBulk) {
-      const parsed = parseBulkText(bulkText);
-      onChange(parsed);
-      setIsBulk(false);
-    } else {
-      setBulkText(formatBulkText(headers));
-      setIsBulk(true);
-    }
-  };
-
-  const handleBulkChange = (text: string) => {
-    setBulkText(text);
-  };
-
-  const parseBulkText = (text: string): KeyValuePair[] => {
-    const lines = text.split("\n");
-    const parsed: KeyValuePair[] = [];
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (trimmed === "") continue;
-      const index = trimmed.indexOf(":");
-      if (index !== -1) {
-        const key = trimmed.substring(0, index).trim();
-        const value = trimmed.substring(index + 1).trim();
-        parsed.push({ key, value, enabled: true, description: "" });
-      } else {
-        parsed.push({ key: trimmed, value: "", enabled: true, description: "" });
-      }
-    }
-    // Always append an empty row
-    parsed.push({ key: "", value: "", enabled: true, description: "" });
-    return parsed;
-  };
-
-  const formatBulkText = (items: KeyValuePair[]): string => {
-    return items
-      .filter((item) => item.key.trim() !== "" || item.value.trim() !== "")
-      .map((item) => `${item.key}: ${item.value}`)
-      .join("\n");
-  };
-
   return (
-    <Box style={{ border: "1px solid var(--border-color)", borderRadius: 4, overflow: "hidden" }}>
+    <Box
+      ref={containerRef}
+      style={{ border: "1px solid var(--border-color)", borderRadius: 4, overflow: "hidden" }}
+    >
       <div
         style={{
           padding: "8px 12px",
@@ -130,72 +85,38 @@ export default function HeadersEditor({ headers, onChange }: Readonly<HeadersEdi
           >
             Headers
           </Text>
-          {!isBulk && (
-            <button
-              type="button"
-              onClick={() => setShowAutoHeaders(!showAutoHeaders)}
-              style={{
-                background: "none",
-                border: "none",
-                color: "var(--text-muted)",
-                fontSize: 11,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-              }}
-            >
-              {showAutoHeaders ? <IconEyeOff size={12} /> : <IconEye size={12} />}
-              {showAutoHeaders ? "Hide auto-generated headers" : "Show auto-generated headers"}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setShowAutoHeaders(!showAutoHeaders)}
+            style={{
+              background: "none",
+              border: "none",
+              color: "var(--text-muted)",
+              fontSize: 11,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            {showAutoHeaders ? <IconEyeOff size={12} /> : <IconEye size={12} />}
+            {showAutoHeaders ? "Hide auto-generated headers" : "Show auto-generated headers"}
+          </button>
         </div>
-        <Text
-          size="xs"
-          onClick={toggleBulkMode}
-          style={{
-            color: "var(--aether-color-primary-base)",
-            cursor: "pointer",
-            fontWeight: 500,
-          }}
-        >
-          {isBulk ? "Key-Value Edit" : "Bulk Edit"}
-        </Text>
       </div>
 
-      {isBulk ? (
-        <Box style={{ padding: 12 }}>
-          <Textarea
-            value={bulkText}
-            onChange={(e) => handleBulkChange(e.target.value)}
-            placeholder="key: value&#10;anotherKey: anotherValue"
-            minRows={6}
-            maxRows={12}
-            autosize
-            styles={{
-              input: {
-                fontFamily: "var(--aether-font-mono)",
-                fontSize: "var(--aether-editor-font-size, var(--aether-font-size-md))",
-                lineHeight: "var(--aether-line-height-base)",
-                backgroundColor: "var(--bg-sidebar)",
-                borderColor: "var(--border-color)",
-                color: "var(--text-primary)",
-              },
-            }}
-          />
-        </Box>
-      ) : (
+      <ScrollArea type="hover" offsetScrollbars={false}>
         <Table
           withRowBorders
           withColumnBorders={false}
-          style={{ tableLayout: "fixed", width: "100%" }}
+          style={{ tableLayout: "fixed", width: "100%", minWidth: showDescription ? 420 : "100%" }}
         >
           <Table.Thead>
             <Table.Tr style={{ backgroundColor: "var(--bg-tab-inactive)" }}>
-              <Table.Th style={{ width: 40, textAlign: "center", padding: 0 }}></Table.Th>
+              <Table.Th style={{ width: 36, textAlign: "center", padding: 0 }}></Table.Th>
               <Table.Th
                 style={{
-                  width: "30%",
+                  width: showDescription ? "35%" : undefined,
                   fontSize: 11,
                   textTransform: "uppercase",
                   color: "var(--text-muted)",
@@ -206,7 +127,7 @@ export default function HeadersEditor({ headers, onChange }: Readonly<HeadersEdi
               </Table.Th>
               <Table.Th
                 style={{
-                  width: "30%",
+                  width: showDescription ? "35%" : undefined,
                   fontSize: 11,
                   textTransform: "uppercase",
                   color: "var(--text-muted)",
@@ -215,17 +136,19 @@ export default function HeadersEditor({ headers, onChange }: Readonly<HeadersEdi
               >
                 Value
               </Table.Th>
-              <Table.Th
-                style={{
-                  fontSize: 11,
-                  textTransform: "uppercase",
-                  color: "var(--text-muted)",
-                  padding: "6px 8px",
-                }}
-              >
-                Description
-              </Table.Th>
-              <Table.Th style={{ width: 40, padding: 0 }}></Table.Th>
+              {showDescription && (
+                <Table.Th
+                  style={{
+                    fontSize: 11,
+                    textTransform: "uppercase",
+                    color: "var(--text-muted)",
+                    padding: "6px 8px",
+                  }}
+                >
+                  Description
+                </Table.Th>
+              )}
+              <Table.Th style={{ width: 36, padding: 0 }}></Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -248,59 +171,56 @@ export default function HeadersEditor({ headers, onChange }: Readonly<HeadersEdi
                       style={{
                         display: "flex",
                         alignItems: "center",
-                        gap: 6,
-                        height: "100%",
+                        height: 32,
                         padding: "0 8px",
+                        fontSize: 13,
+                        color: "var(--text-muted)",
+                        fontFamily: "var(--aether-font-mono)",
+                        gap: 4,
                       }}
                     >
-                      <Text size="xs" style={{ fontSize: 13, color: "var(--text-muted)" }}>
-                        {h.key}
-                      </Text>
-                      <IconInfoCircle
-                        size={12}
-                        style={{ color: "var(--text-muted)", opacity: 0.8 }}
-                      />
+                      <span style={{ flex: 1 }}>{h.key}</span>
+                      <IconInfoCircle size={12} style={{ opacity: 0.7 }} />
                     </div>
                   </Table.Td>
                   <Table.Td style={{ padding: 0, height: 32 }}>
-                    <TextInput
-                      value={h.value}
-                      disabled
-                      variant="unstyled"
-                      styles={{
-                        input: {
-                          height: 32,
-                          fontSize: 13,
-                          padding: "0 8px",
-                          color: "var(--text-muted)",
-                          cursor: "not-allowed",
-                        },
+                    <div
+                      style={{
+                        height: 32,
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "0 8px",
+                        fontSize: 13,
+                        color: "var(--text-muted)",
+                        fontFamily: "var(--aether-font-mono)",
                       }}
-                    />
+                    >
+                      {h.value}
+                    </div>
                   </Table.Td>
-                  <Table.Td style={{ padding: 0, height: 32 }}>
-                    <TextInput
-                      value={h.description}
-                      disabled
-                      variant="unstyled"
-                      styles={{
-                        input: {
+                  {showDescription && (
+                    <Table.Td style={{ padding: 0, height: 32 }}>
+                      <div
+                        style={{
                           height: 32,
-                          fontSize: 13,
+                          display: "flex",
+                          alignItems: "center",
                           padding: "0 8px",
+                          fontSize: 13,
                           color: "var(--text-muted)",
-                          cursor: "not-allowed",
-                        },
-                      }}
-                    />
-                  </Table.Td>
-                  <Table.Td style={{ textAlign: "center", padding: 0, height: 32 }}></Table.Td>
+                        }}
+                      >
+                        {h.description}
+                      </div>
+                    </Table.Td>
+                  )}
+                  <Table.Td style={{ width: 36, padding: 0 }}></Table.Td>
                 </Table.Tr>
               ))}
 
-            {/* 2. Show Custom User Headers */}
+            {/* 2. User editable headers */}
             {headers.map((h, idx) => (
-              <Table.Tr key={`custom-${idx}`}>
+              <Table.Tr key={idx}>
                 <Table.Td style={{ textAlign: "center", padding: 0, height: 32 }}>
                   <Checkbox
                     checked={h.enabled}
@@ -326,15 +246,17 @@ export default function HeadersEditor({ headers, onChange }: Readonly<HeadersEdi
                     styles={{ input: { height: 32, fontSize: 13, padding: "0 8px" } }}
                   />
                 </Table.Td>
-                <Table.Td style={{ padding: 0, height: 32 }}>
-                  <TextInput
-                    value={h.description || ""}
-                    onChange={(e) => handleItemChange(idx, { description: e.target.value })}
-                    placeholder="Description"
-                    variant="unstyled"
-                    styles={{ input: { height: 32, fontSize: 13, padding: "0 8px" } }}
-                  />
-                </Table.Td>
+                {showDescription && (
+                  <Table.Td style={{ padding: 0, height: 32 }}>
+                    <TextInput
+                      value={h.description || ""}
+                      onChange={(e) => handleItemChange(idx, { description: e.target.value })}
+                      placeholder="Description"
+                      variant="unstyled"
+                      styles={{ input: { height: 32, fontSize: 13, padding: "0 8px" } }}
+                    />
+                  </Table.Td>
+                )}
                 <Table.Td style={{ textAlign: "center", padding: 0, height: 32 }}>
                   {h.key || h.value || h.description ? (
                     <ActionIcon
@@ -351,7 +273,7 @@ export default function HeadersEditor({ headers, onChange }: Readonly<HeadersEdi
             ))}
           </Table.Tbody>
         </Table>
-      )}
+      </ScrollArea>
     </Box>
   );
 }

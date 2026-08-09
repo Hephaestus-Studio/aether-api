@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import type { TabItem } from "@/types/request";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { saveWorkspaceSession } from "@/utils/workspaceSession";
 
 interface TabState {
   tabs: TabItem[];
@@ -12,6 +14,13 @@ interface TabState {
   openTab: (tab: TabItem) => void;
   closeTab: (tabId: string) => void;
   setActiveTab: (tabId: string | null) => void;
+  restoreSession: (session: {
+    tabs: TabItem[];
+    activeTabId: string | null;
+    protocols?: Record<string, string>;
+    terminalOpened?: boolean;
+    layoutOrientation?: "horizontal" | "vertical";
+  }) => void;
   markDirty: (tabId: string) => void;
   markClean: (tabId: string) => void;
   updateTab: (tabId: string, updates: Partial<TabItem>) => void;
@@ -23,9 +32,13 @@ interface TabState {
   setProtocol: (tabId: string, protocol: string) => void;
   terminalOpened: boolean;
   toggleTerminal: () => void;
+  setTerminalOpened: (opened: boolean) => void;
   responsePanelOpened: boolean;
   toggleResponsePanel: () => void;
   setResponsePanelOpened: (opened: boolean) => void;
+  layoutOrientation: "horizontal" | "vertical";
+  toggleLayoutOrientation: () => void;
+  setLayoutOrientation: (orientation: "horizontal" | "vertical") => void;
 }
 
 export const useTabStore = create<TabState>((set, get) => ({
@@ -95,6 +108,23 @@ export const useTabStore = create<TabState>((set, get) => ({
     } else {
       set({ activeTabId: tabId });
     }
+  },
+
+  restoreSession: ({
+    tabs,
+    activeTabId,
+    protocols = {},
+    terminalOpened = false,
+    layoutOrientation = "horizontal",
+  }) => {
+    set({
+      tabs,
+      activeTabId,
+      protocols,
+      responsePanelOpened: false,
+      terminalOpened,
+      layoutOrientation,
+    });
   },
 
   markDirty: (tabId) => {
@@ -173,6 +203,11 @@ export const useTabStore = create<TabState>((set, get) => ({
       terminalOpened: !get().terminalOpened,
     });
   },
+  setTerminalOpened: (opened: boolean) => {
+    set({
+      terminalOpened: opened,
+    });
+  },
   responsePanelOpened: true,
   toggleResponsePanel: () => {
     set({
@@ -184,4 +219,31 @@ export const useTabStore = create<TabState>((set, get) => ({
       responsePanelOpened: opened,
     });
   },
+  layoutOrientation: "horizontal",
+  toggleLayoutOrientation: () => {
+    set({
+      layoutOrientation: get().layoutOrientation === "horizontal" ? "vertical" : "horizontal",
+    });
+  },
+  setLayoutOrientation: (orientation: "horizontal" | "vertical") => {
+    set({
+      layoutOrientation: orientation,
+    });
+  },
 }));
+
+// Automatically persist workspace tab session changes
+if (typeof window !== "undefined") {
+  useTabStore.subscribe((state) => {
+    const workspacePath = useWorkspaceStore.getState().workspacePath;
+    if (workspacePath) {
+      saveWorkspaceSession(workspacePath, {
+        tabs: state.tabs,
+        activeTabId: state.activeTabId,
+        protocols: state.protocols,
+        terminalOpened: state.terminalOpened,
+        layoutOrientation: state.layoutOrientation,
+      });
+    }
+  });
+}

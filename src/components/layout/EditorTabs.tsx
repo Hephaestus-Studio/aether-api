@@ -8,7 +8,12 @@ import {
   ActionIcon,
   Tooltip,
 } from "@mantine/core";
-import { IconLayoutSidebarRightCollapse, IconLayoutSidebarRightExpand } from "@tabler/icons-react";
+import {
+  IconLayoutSidebarRightCollapse,
+  IconLayoutSidebarRightExpand,
+  IconLayoutColumns,
+  IconLayoutRows,
+} from "@tabler/icons-react";
 import { useTabStore } from "@/stores/tabStore";
 import { getMethodColor } from "@/utils/httpMethods";
 import classes from "./EditorTabs.module.css";
@@ -17,6 +22,8 @@ export default function EditorTabs() {
   const { tabs, activeTabId, setActiveTab, closeTab, closeOtherTabs, closeAllTabs } = useTabStore();
   const responsePanelOpened = useTabStore((s) => s.responsePanelOpened);
   const toggleResponsePanel = useTabStore((s) => s.toggleResponsePanel);
+  const layoutOrientation = useTabStore((s) => s.layoutOrientation);
+  const toggleLayoutOrientation = useTabStore((s) => s.toggleLayoutOrientation);
 
   return (
     <Box className={classes.tabBar}>
@@ -65,6 +72,32 @@ export default function EditorTabs() {
       </ScrollArea>
       {tabs.length > 0 && (
         <Group gap={6} px="xs" className={classes.actionsGroup}>
+          {responsePanelOpened && (
+            <Tooltip
+              label={
+                layoutOrientation === "horizontal"
+                  ? "Switch to Top/Bottom layout"
+                  : "Switch to Side-by-Side layout"
+              }
+              position="bottom-end"
+              withArrow
+            >
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="md"
+                onClick={toggleLayoutOrientation}
+                className={classes.actionBtn}
+              >
+                {layoutOrientation === "horizontal" ? (
+                  <IconLayoutRows size={16} />
+                ) : (
+                  <IconLayoutColumns size={16} />
+                )}
+              </ActionIcon>
+            </Tooltip>
+          )}
+
           <Tooltip
             label={responsePanelOpened ? "Hide Response Panel" : "Show Response Panel"}
             position="bottom-end"

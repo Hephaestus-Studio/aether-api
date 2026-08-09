@@ -10,16 +10,76 @@
   gap: 16px;
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 12px;
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
+}
+
+.compactTypeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
+}
+
+.compactSelectBtn {
+  background-color: var(--bg-sidebar);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-weight: 500;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.compactSelectBtn:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.compactLangBtn {
+  color: #0084ff;
+  font-weight: 600;
+  font-size: 12px;
+  height: 26px;
+  padding: 0 6px;
+}
+
+.compactLangBtn:hover {
+  background-color: rgba(0, 132, 255, 0.1);
+}
+
+.beautifyBtn {
+  color: #0084ff;
+  font-size: 12px;
+  font-weight: 500;
+  height: 26px;
+  padding: 0 8px;
+}
+
+.beautifyBtn:hover {
+  background-color: rgba(0, 132, 255, 0.1);
 }
 
 .radioGroup :global(.mantine-RadioGroup-root) {
   display: flex;
   align-items: center;
+  flex-wrap: nowrap !important;
 }
 
 .radioGroup :global(.mantine-Group-root) {
   display: flex;
   gap: 16px;
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
+}
+
+.radioItem {
+  white-space: nowrap !important;
+  flex-shrink: 0;
 }
 
 .radioItem :global(.mantine-Radio-label) {

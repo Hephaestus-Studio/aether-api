@@ -94,10 +94,14 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .panel {
   flex: 1;
+  min-height: 0;
+  overflow: auto;
   padding-top: 12px;
 }
 
@@ -107,10 +111,21 @@
   align-items: center;
   border-bottom: 1px solid var(--border-color);
   margin-bottom: 8px;
+  min-width: 0;
+  gap: 8px;
+  flex-wrap: nowrap !important;
+}
+
+.tabScrollArea {
+  flex: 1;
+  min-width: 0;
 }
 
 .tabList {
   border-bottom: none !important;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
 }
 
 .tabList :global(.mantine-Tabs-tab) {
@@ -119,11 +134,84 @@
   color: var(--text-muted);
   border-bottom: 2px solid transparent;
   padding: 8px 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .tabList :global(.mantine-Tabs-tab[data-active]) {
   color: var(--text-primary);
   border-bottom-color: var(--aether-color-primary-base);
+}
+
+.cookiesBtn {
+  flex-shrink: 0;
+}
+
+.moreBtn {
+  color: var(--text-muted);
+}
+
+.moreBtn:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.compactTabHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding: 4px 0 8px 0;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+
+.compactTabSelectBtn {
+  background-color: var(--bg-sidebar);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-weight: 500;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+}
+
+.compactTabSelectBtn:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.compactTabLabel {
+  color: var(--text-primary);
+  font-size: var(--aether-font-size-sm);
+  font-weight: 600;
+}
+
+.compactTabDropdown {
+  background-color: var(--bg-sidebar) !important;
+  border: 1px solid var(--border-color) !important;
+  padding: 4px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45) !important;
+}
+
+.compactTabDropdown :global(.mantine-Menu-item) {
+  font-size: var(--aether-font-size-sm);
+  color: var(--text-muted);
+  border-radius: 4px;
+  padding: 6px 10px;
+}
+
+.compactTabDropdown :global(.mantine-Menu-item:hover) {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.compactItemActive {
+  color: var(--aether-color-primary-base) !important;
+  background-color: rgba(34, 139, 230, 0.1) !important;
+  font-weight: 600;
 }
 
 .protocolBadge {

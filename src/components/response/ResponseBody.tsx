@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { Box, Group, SegmentedControl, Menu, Button, ActionIcon, Text } from "@mantine/core";
-import { IconChevronDown, IconCode, IconCopy, IconSearch, IconDownload } from "@tabler/icons-react";
+import { Box, SegmentedControl, Menu, Button, ActionIcon, Text } from "@mantine/core";
+import { useElementSize } from "@mantine/hooks";
+import { IconChevronDown, IconCopy, IconSearch, IconDownload } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import MonacoEditor from "@/components/common/MonacoEditor";
 import { useConfigStore } from "@/stores/configStore";
@@ -47,6 +48,9 @@ const formatXML = (text: string) => {
 };
 
 export default function ResponseBody({ response, isActive = true }: Readonly<ResponseBodyProps>) {
+  const { ref: containerRef, width: bodyWidth } = useElementSize();
+  const isCompact = bodyWidth > 0 && bodyWidth < 520;
+
   const { config } = useConfigStore();
   const [mode, setMode] = useState<string>("pretty");
   const [language, setLanguage] = useState<string>("auto");
@@ -104,40 +108,6 @@ export default function ResponseBody({ response, isActive = true }: Readonly<Res
     a.download = `response-${Date.now()}.txt`;
     a.click();
     URL.revokeObjectURL(url);
-  };
-
-  const handlePrettify = () => {
-    const rawBody = response?.body || "";
-    const activeLang = language === "auto" ? initialLanguage : language;
-    if (activeLang === "json") {
-      try {
-        const parsed = JSON.parse(rawBody);
-        setFormattedContent(JSON.stringify(parsed, null, 2));
-        notifications.show({
-          title: "Prettified",
-          message: "JSON content formatted successfully.",
-          color: "green",
-        });
-      } catch (err) {
-        notifications.show({
-          title: "Formatting Failed",
-          message: "Invalid JSON format: " + (err as Error).message,
-          color: "red",
-        });
-      }
-    } else if (activeLang === "xml") {
-      setFormattedContent(formatXML(rawBody));
-      notifications.show({
-        title: "Prettified",
-        message: "XML content formatted successfully.",
-        color: "green",
-      });
-    } else {
-      notifications.show({
-        message: "Prettify is only supported for JSON and XML formats currently.",
-        color: "blue",
-      });
-    }
   };
 
   const handleCopy = () => {
@@ -210,58 +180,82 @@ export default function ResponseBody({ response, isActive = true }: Readonly<Res
   };
 
   return (
-    <Box style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+    <Box
+      ref={containerRef}
+      style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}
+    >
       {/* Sub-control bar */}
       <Box className={classes.bodyControlBar}>
         <Box className={classes.bodyControlLeft}>
-          <SegmentedControl
-            size="xs"
-            value={mode}
-            onChange={setMode}
-            style={{ width: 320 }}
-            data={[
-              { label: "Pretty", value: "pretty" },
-              { label: "Raw", value: "raw" },
-              { label: "Preview", value: "preview" },
-              { label: "Visualize", value: "visualize" },
-            ]}
-          />
+          {isCompact ? (
+            <Menu shadow="md" width={120}>
+              <Menu.Target>
+                <Button
+                  variant="subtle"
+                  size="xs"
+                  className={classes.modeSelectBtn}
+                  rightSection={<IconChevronDown size={12} />}
+                >
+                  {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                </Button>
+              </Menu.Target>
+              <Menu.Dropdown className={classes.compactTabDropdown}>
+                <Menu.Item
+                  onClick={() => setMode("pretty")}
+                  className={mode === "pretty" ? classes.compactItemActive : ""}
+                >
+                  Pretty
+                </Menu.Item>
+                <Menu.Item
+                  onClick={() => setMode("raw")}
+                  className={mode === "raw" ? classes.compactItemActive : ""}
+                >
+                  Raw
+                </Menu.Item>
+                <Menu.Item
+                  onClick={() => setMode("preview")}
+                  className={mode === "preview" ? classes.compactItemActive : ""}
+                >
+                  Preview
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          ) : (
+            <SegmentedControl
+              size="xs"
+              value={mode}
+              onChange={setMode}
+              style={{ width: 230 }}
+              data={[
+                { label: "Pretty", value: "pretty" },
+                { label: "Raw", value: "raw" },
+                { label: "Preview", value: "preview" },
+              ]}
+            />
+          )}
 
           {mode === "pretty" && (
-            <Group gap={4}>
-              <Menu shadow="md" width={120}>
-                <Menu.Target>
-                  <Button
-                    variant="subtle"
-                    size="xs"
-                    color="gray"
-                    rightSection={<IconChevronDown size={12} />}
-                    style={{ fontSize: 12, height: 26, padding: "0 8px" }}
-                  >
-                    {language === "auto"
-                      ? `Auto (${initialLanguage.toUpperCase()})`
-                      : language.toUpperCase()}
-                  </Button>
-                </Menu.Target>
-                <Menu.Dropdown>
-                  <Menu.Item onClick={() => setLanguage("json")}>JSON</Menu.Item>
-                  <Menu.Item onClick={() => setLanguage("xml")}>XML</Menu.Item>
-                  <Menu.Item onClick={() => setLanguage("html")}>HTML</Menu.Item>
-                  <Menu.Item onClick={() => setLanguage("text")}>TEXT</Menu.Item>
-                  <Menu.Item onClick={() => setLanguage("auto")}>Auto Detect</Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
-
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                size="sm"
-                onClick={handlePrettify}
-                title="Prettify code"
-              >
-                <IconCode size={16} />
-              </ActionIcon>
-            </Group>
+            <Menu shadow="md" width={120}>
+              <Menu.Target>
+                <Button
+                  variant="subtle"
+                  size="xs"
+                  className={classes.modeSelectBtn}
+                  rightSection={<IconChevronDown size={12} />}
+                >
+                  {language === "auto"
+                    ? `Auto (${initialLanguage.toUpperCase()})`
+                    : language.toUpperCase()}
+                </Button>
+              </Menu.Target>
+              <Menu.Dropdown className={classes.compactTabDropdown}>
+                <Menu.Item onClick={() => setLanguage("json")}>JSON</Menu.Item>
+                <Menu.Item onClick={() => setLanguage("xml")}>XML</Menu.Item>
+                <Menu.Item onClick={() => setLanguage("html")}>HTML</Menu.Item>
+                <Menu.Item onClick={() => setLanguage("text")}>TEXT</Menu.Item>
+                <Menu.Item onClick={() => setLanguage("auto")}>Auto Detect</Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
           )}
         </Box>
 
@@ -347,14 +341,14 @@ export default function ResponseBody({ response, isActive = true }: Readonly<Res
       {mode === "preview" && (
         <Box
           className={classes.editorContainer}
-          style={{ backgroundColor: "#fff", overflow: "hidden" }}
+          style={{ backgroundColor: "var(--bg-panel)", overflow: "hidden", height: "100%" }}
         >
           {editorLanguage === "html" ? (
             <iframe
               srcDoc={rawBody}
               sandbox="allow-same-origin"
               title="Response Preview"
-              style={{ width: "100%", height: "100%", border: "none" }}
+              style={{ width: "100%", height: "100%", border: "none", backgroundColor: "#ffffff" }}
             />
           ) : (
             <Box
@@ -363,31 +357,13 @@ export default function ResponseBody({ response, isActive = true }: Readonly<Res
                 alignItems: "center",
                 justifyContent: "center",
                 height: "100%",
-                color: "#333",
+                color: "var(--text-muted)",
                 fontSize: 13,
               }}
             >
               Preview is only supported for HTML responses.
             </Box>
           )}
-        </Box>
-      )}
-
-      {/* Visualize Mode */}
-      {mode === "visualize" && (
-        <Box
-          className={classes.editorContainer}
-          p={16}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            height: "100%",
-            color: "var(--text-muted)",
-            fontSize: 13,
-          }}
-        >
-          Visualize mode allows rendering custom templates (coming soon).
         </Box>
       )}
     </Box>

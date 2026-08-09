@@ -274,10 +274,7 @@ impl HttpExecutor {
             .to_string();
         let body_type = HttpResponse::detect_body_type(&content_type);
 
-        let body_bytes = response
-            .bytes()
-            .await
-            .map_err(AppError::NetworkError)?;
+        let body_bytes = response.bytes().await.map_err(AppError::NetworkError)?;
         let total_ms = start_time.elapsed().as_secs_f64() * 1000.0;
         let download_ms = total_ms - ttfb_ms;
         let size_bytes = body_bytes.len() as u64;
@@ -353,8 +350,9 @@ impl HttpExecutor {
             HttpMethod::Delete => reqwest::Method::DELETE,
             HttpMethod::Head => reqwest::Method::HEAD,
             HttpMethod::Options => reqwest::Method::OPTIONS,
-            HttpMethod::Custom(m) => reqwest::Method::from_bytes(m.as_bytes())
-                .unwrap_or(reqwest::Method::GET),
+            HttpMethod::Custom(m) => {
+                reqwest::Method::from_bytes(m.as_bytes()).unwrap_or(reqwest::Method::GET)
+            }
         }
     }
 
@@ -431,9 +429,8 @@ impl HttpExecutor {
                             form = form.text(field.key.clone(), field.value.clone());
                         }
                         MultipartFieldType::File => {
-                            let file_bytes = tokio::fs::read(&field.value)
-                                .await
-                                .map_err(AppError::Io)?;
+                            let file_bytes =
+                                tokio::fs::read(&field.value).await.map_err(AppError::Io)?;
                             let file_name = std::path::Path::new(&field.value)
                                 .file_name()
                                 .and_then(|n| n.to_str())

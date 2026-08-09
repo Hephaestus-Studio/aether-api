@@ -23,6 +23,7 @@ export default function AppShell() {
   const activeTabId = useTabStore((s) => s.activeTabId);
   const terminalOpened = useTabStore((s) => s.terminalOpened);
   const responsePanelOpened = useTabStore((s) => s.responsePanelOpened);
+  const layoutOrientation = useTabStore((s) => s.layoutOrientation);
 
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     return workspaceInfo?.settings?.sidebarWidth || 280;
@@ -142,7 +143,9 @@ export default function AppShell() {
                   collapsed={!responsePanelOpened}
                   topPanel={<RequestEditor tabId={activeTabId} />}
                   bottomPanel={<ResponseViewer tabId={activeTabId} />}
-                  orientation="horizontal"
+                  orientation={layoutOrientation}
+                  minTopSize={layoutOrientation === "horizontal" ? 320 : 180}
+                  minBottomSize={layoutOrientation === "horizontal" ? 280 : 160}
                 />
               ) : (
                 <Box className={classes.emptyState}>

@@ -1,5 +1,15 @@
 import { useState, useEffect } from "react";
-import { Box, TextInput, Button, Tabs, Menu, Text } from "@mantine/core";
+import {
+  Box,
+  TextInput,
+  Button,
+  Tabs,
+  Menu,
+  Text,
+  ScrollArea,
+  ActionIcon,
+  Tooltip,
+} from "@mantine/core";
 import { invoke } from "@tauri-apps/api/core";
 import {
   IconDeviceFloppy,
@@ -10,10 +20,12 @@ import {
   IconAtom,
   IconArrowsExchange,
   IconBroadcast,
+  IconDots,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useTabStore } from "@/stores/tabStore";
 import { useEnvStore } from "@/stores/envStore";
+import { useCollision } from "@/hooks/useCollision";
 import MethodSelector from "./MethodSelector";
 import ParamsEditor from "./ParamsEditor";
 import HeadersEditor from "./HeadersEditor";
@@ -27,6 +39,16 @@ interface RequestEditorProps {
 }
 
 export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
+  const {
+    containerRef: tabsHeaderRef,
+    leftRef: tabsListRef,
+    rightRef: cookiesBtnRef,
+    isColliding: isTabsColliding,
+  } = useCollision<HTMLDivElement>({ gap: 12, minExpandedWidth: 460, hysteresis: 8 });
+
+  const [activeTab, setActiveTab] = useState<string | null>("params");
+  const isCompact = isTabsColliding;
+
   const [request, setRequest] = useState<HttpRequestDetails | null>(null);
   const [loading, setLoading] = useState(false);
   const activeEnvironmentName = useEnvStore((s) => s.activeEnvironmentName);
@@ -133,24 +155,44 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
 
   const activeHeadersCount = request.headers.filter((h) => h.enabled && h.key.trim() !== "").length;
 
+  const getTabLabel = (val: string | null) => {
+    switch (val) {
+      case "params":
+        return "Params";
+      case "auth":
+        return "Authorization";
+      case "headers":
+        return `Headers${activeHeadersCount > 0 ? ` (${activeHeadersCount})` : ""}`;
+      case "body":
+        return "Body";
+      default:
+        return "Params";
+    }
+  };
+
   return (
     <Box className={classes.container}>
       {/* Title Row */}
       <div className={classes.titleRow}>
         <div className={classes.requestTitleGroup}>
           <Menu shadow="md" width={150}>
-            <Menu.Target>
-              <Box
-                className={classes.protocolBadge}
-                style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
-              >
-                {getProtocolIcon(activeProtocol)}
-                <Text size="xs" fw={700} style={{ color: "var(--text-primary)" }}>
-                  {activeProtocol.toUpperCase()}
-                </Text>
-                <IconChevronDown size={12} style={{ color: "var(--text-muted)", marginLeft: 2 }} />
-              </Box>
-            </Menu.Target>
+            <Tooltip label="Switch request type" position="bottom-start" withArrow>
+              <Menu.Target>
+                <Box
+                  className={classes.protocolBadge}
+                  style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
+                >
+                  {getProtocolIcon(activeProtocol)}
+                  <Text size="xs" fw={700} style={{ color: "var(--text-primary)" }}>
+                    {activeProtocol.toUpperCase()}
+                  </Text>
+                  <IconChevronDown
+                    size={12}
+                    style={{ color: "var(--text-muted)", marginLeft: 2 }}
+                  />
+                </Box>
+              </Menu.Target>
+            </Tooltip>
             <Menu.Dropdown className={classes.protocolDropdownDropdown}>
               <Menu.Item
                 leftSection={<IconGlobe size={16} color="#00b4d8" />}
@@ -242,30 +284,92 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
         </Button>
       </div>
 
-      {/* Postman Style Tabs */}
-      <Tabs defaultValue="params" className={classes.tabs}>
-        <div className={classes.tabListContainer}>
-          <Tabs.List className={classes.tabList}>
-            <Tabs.Tab value="params">Params</Tabs.Tab>
-            <Tabs.Tab value="auth">Authorization</Tabs.Tab>
-            <Tabs.Tab value="headers">
-              Headers{activeHeadersCount > 0 ? ` (${activeHeadersCount})` : ""}
-            </Tabs.Tab>
-            <Tabs.Tab value="body">Body</Tabs.Tab>
-            <Tabs.Tab value="pre-script" disabled>
-              Pre-request Script
-            </Tabs.Tab>
-            <Tabs.Tab value="tests" disabled>
-              Tests
-            </Tabs.Tab>
-            <Tabs.Tab value="settings" disabled>
-              Settings
-            </Tabs.Tab>
-          </Tabs.List>
-          <Button variant="transparent" size="xs" color="blue" style={{ fontWeight: 500 }}>
-            Cookies
-          </Button>
-        </div>
+      {/* Postman Style Tabs with Responsive Dropdown Fallback */}
+      <Tabs value={activeTab} onChange={setActiveTab} className={classes.tabs}>
+        {isCompact ? (
+          <div ref={tabsHeaderRef} className={classes.compactTabHeader}>
+            <Menu shadow="md" width={180} position="bottom-start">
+              <Menu.Target>
+                <Button
+                  variant="subtle"
+                  size="sm"
+                  className={classes.compactTabSelectBtn}
+                  rightSection={<IconChevronDown size={14} />}
+                >
+                  <span className={classes.compactTabLabel}>{getTabLabel(activeTab)}</span>
+                </Button>
+              </Menu.Target>
+              <Menu.Dropdown className={classes.compactTabDropdown}>
+                <Menu.Item
+                  onClick={() => setActiveTab("params")}
+                  className={activeTab === "params" ? classes.compactItemActive : ""}
+                >
+                  Params
+                </Menu.Item>
+                <Menu.Item
+                  onClick={() => setActiveTab("auth")}
+                  className={activeTab === "auth" ? classes.compactItemActive : ""}
+                >
+                  Authorization
+                </Menu.Item>
+                <Menu.Item
+                  onClick={() => setActiveTab("headers")}
+                  className={activeTab === "headers" ? classes.compactItemActive : ""}
+                >
+                  Headers{activeHeadersCount > 0 ? ` (${activeHeadersCount})` : ""}
+                </Menu.Item>
+                <Menu.Item
+                  onClick={() => setActiveTab("body")}
+                  className={activeTab === "body" ? classes.compactItemActive : ""}
+                >
+                  Body
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+
+            <Menu shadow="md" width={140} position="bottom-end">
+              <Menu.Target>
+                <ActionIcon variant="subtle" color="gray" size="sm" className={classes.moreBtn}>
+                  <IconDots size={16} />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item>Cookies</Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          </div>
+        ) : (
+          <div ref={tabsHeaderRef} className={classes.tabListContainer}>
+            <div ref={tabsListRef} style={{ flex: 1, minWidth: 0 }}>
+              <ScrollArea
+                scrollbars="x"
+                className={classes.tabScrollArea}
+                type="never"
+                offsetScrollbars={false}
+              >
+                <Tabs.List className={classes.tabList}>
+                  <Tabs.Tab value="params">Params</Tabs.Tab>
+                  <Tabs.Tab value="auth">Authorization</Tabs.Tab>
+                  <Tabs.Tab value="headers">
+                    Headers{activeHeadersCount > 0 ? ` (${activeHeadersCount})` : ""}
+                  </Tabs.Tab>
+                  <Tabs.Tab value="body">Body</Tabs.Tab>
+                </Tabs.List>
+              </ScrollArea>
+            </div>
+            <div ref={cookiesBtnRef}>
+              <Button
+                variant="transparent"
+                size="xs"
+                color="blue"
+                className={classes.cookiesBtn}
+                style={{ fontWeight: 500 }}
+              >
+                Cookies
+              </Button>
+            </div>
+          </div>
+        )}
 
         <Tabs.Panel value="params" className={classes.panel}>
           <ParamsEditor params={request.params} onChange={(val) => handleChange({ params: val })} />

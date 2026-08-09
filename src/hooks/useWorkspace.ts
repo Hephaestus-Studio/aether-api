@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useTabStore } from "@/stores/tabStore";
+import { restoreWorkspaceSession } from "@/utils/workspaceSession";
 import type { WorkspaceTree } from "@/types/workspace";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { emit } from "@tauri-apps/api/event";
@@ -40,6 +41,18 @@ export function useWorkspace() {
             store.setGitStatus(git);
           } catch (gitErr) {
             console.error("Failed to load initial git status:", gitErr);
+          }
+
+          try {
+            const restored = await restoreWorkspaceSession(path);
+            if (restored) {
+              tabStore.restoreSession(restored);
+            } else {
+              tabStore.closeAllTabs();
+            }
+          } catch (sessionErr) {
+            console.error("Failed to restore tab session:", sessionErr);
+            tabStore.closeAllTabs();
           }
 
           await emit("workspace-changed", path);

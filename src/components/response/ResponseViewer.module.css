@@ -2,6 +2,8 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
+  overflow: hidden;
 }
 
 .tabs {
@@ -9,21 +11,29 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .topHeader {
+  flex-shrink: 0;
   display: flex;
-  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid var(--border-color);
-  padding: 4px 16px;
+  padding: 4px 12px;
   background-color: var(--bg-sidebar);
   gap: 8px;
+  min-height: 38px;
+  flex-wrap: nowrap !important;
+  overflow: hidden;
 }
 
 .tabsList {
   border-bottom: none !important;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
 }
 
 .tabItem {
@@ -34,6 +44,8 @@
   border-bottom: 2px solid transparent !important;
   color: var(--text-muted);
   background-color: transparent !important;
+  white-space: nowrap !important;
+  flex-shrink: 0;
 }
 
 .tabItem[data-active] {
@@ -47,29 +59,114 @@
   margin-left: 4px;
 }
 
+.compactTabSelectBtn {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-primary) !important;
+  font-weight: 600;
+  height: 28px;
+  padding: 0 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.compactTabSelectBtn:hover {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.compactTabLabel {
+  color: #ffffff;
+  font-size: var(--aether-font-size-md);
+  font-weight: 600;
+}
+
+.compactTabDropdown {
+  background-color: var(--bg-sidebar) !important;
+  border: 1px solid var(--border-color) !important;
+  padding: 4px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45) !important;
+}
+
+.compactTabDropdown :global(.mantine-Menu-item) {
+  font-size: var(--aether-font-size-sm);
+  color: var(--text-muted);
+  border-radius: 4px;
+  padding: 6px 10px;
+}
+
+.compactTabDropdown :global(.mantine-Menu-item:hover) {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.compactItemActive {
+  color: var(--aether-color-primary-base) !important;
+  background-color: rgba(34, 139, 230, 0.1) !important;
+  font-weight: 600;
+}
+
 .metricsGroup {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
   gap: 12px;
-  margin: 6px 0;
+  flex-shrink: 0;
+}
+
+.metricItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .metricLabel {
-  font-size: var(--aether-font-size-sm);
+  font-size: var(--aether-font-size-xs);
   color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .metricValueGreen {
-  color: var(--mantine-color-green-5);
-  font-weight: var(--aether-font-weight-semibold);
+  color: #22c55e;
+  font-weight: 600;
+  font-size: var(--aether-font-size-xs);
+  white-space: nowrap;
 }
 
-.saveBtn {
-  font-size: var(--aether-font-size-sm);
-  font-weight: var(--aether-font-weight-medium);
-  padding: 0 4px;
-  color: var(--mantine-color-indigo-light-color);
+.metricValueGreenUnderlined {
+  color: #22c55e;
+  font-weight: 600;
+  font-size: var(--aether-font-size-xs);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.metricValueGreenUnderlined:hover {
+  text-decoration: underline;
+}
+
+.modeSelectBtn {
+  background-color: var(--bg-sidebar);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-weight: 500;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.modeSelectBtn:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.controlActionIcon {
+  color: var(--text-muted);
+}
+
+.controlActionIcon:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
 }
 
 .panel {
@@ -89,7 +186,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 16px;
+  padding: 6px 12px;
   background-color: var(--bg-app);
   border-bottom: 1px solid var(--border-color);
 }
@@ -97,7 +194,7 @@
 .bodyControlLeft {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .bodyControlRight {
@@ -137,8 +234,9 @@
 .sizePopoverDropdown {
   background-color: var(--bg-sidebar) !important;
   border: 1px solid var(--border-color) !important;
-  border-radius: 6px;
-  padding: 12px !important;
+  border-radius: var(--aether-radius-md);
+  padding: 12px 14px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
 }
 
 .popoverSection {
@@ -156,12 +254,36 @@
 
 .popoverTitleText {
   color: var(--text-primary);
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+.popoverTitleValue {
+  margin-left: auto;
+  color: var(--text-primary);
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  font-family: var(--aether-font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .popoverSubRow {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding-left: 24px;
+}
+
+.popoverSubRowText {
+  font-size: 12px !important;
+  color: var(--text-muted);
+}
+
+.popoverSubRowValue {
+  font-size: 12px !important;
+  color: var(--text-muted);
+  font-family: var(--aether-font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .arrowBoxBlue {
@@ -194,73 +316,116 @@
 .timePopoverDropdown {
   background-color: var(--bg-sidebar) !important;
   border: 1px solid var(--border-color) !important;
-  border-radius: 6px;
-  padding: 12px !important;
+  border-radius: var(--aether-radius-md);
+  padding: 12px 14px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
 }
 
 .timeHeaderRow {
-  display: flex;
+  display: grid;
+  grid-template-columns: 145px 1fr 85px;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 8px;
   border-bottom: 1px solid var(--border-color);
-  padding-bottom: 4px;
+  padding-bottom: 6px;
+}
+
+.timeColHeader {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.timeColHeaderRight {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  text-align: right;
 }
 
 .timeRow {
-  display: flex;
+  display: grid;
+  grid-template-columns: 145px 1fr 85px;
   align-items: center;
-  margin-bottom: 6px;
+  gap: 8px;
+  margin-bottom: 5px;
+  height: 22px;
 }
 
 .timeEventCell {
-  width: 110px;
-  font-size: var(--aether-font-size-xs);
+  font-size: 12px !important;
   color: var(--text-primary);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .timeTimelineCell {
-  width: 140px;
-  padding: 0 8px;
-}
-
-.timeDurationCell {
-  width: 60px;
-  text-align: right;
-  font-size: var(--aether-font-size-xs);
-  color: var(--text-muted);
+  width: 100%;
+  display: flex;
+  align-items: center;
 }
 
 .waterfallTrack {
   position: relative;
-  background-color: rgba(255, 255, 255, 0.03);
-  height: 8px;
-  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.04);
+  height: 6px;
+  border-radius: 3px;
   width: 100%;
 }
 
 .waterfallBar {
   position: absolute;
-  background-color: var(--mantine-color-green-5);
-  height: 8px;
-  border-radius: 4px;
+  background-color: #22c55e;
+  height: 6px;
+  border-radius: 3px;
 }
 
 .waterfallBarGrey {
   position: absolute;
   background-color: var(--text-disabled);
-  height: 8px;
-  border-radius: 4px;
+  height: 6px;
+  border-radius: 3px;
+}
+
+.timeDurationCell {
+  text-align: right;
+  font-size: 12px !important;
+  font-family: var(--aether-font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .timeDivider {
   border-bottom: 1px solid var(--border-color);
-  margin-top: 8px;
+  margin: 6px 0;
+}
+
+.timeTotalRow {
+  display: grid;
+  grid-template-columns: 145px 1fr 85px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 .timeTotalLabel {
-  color: var(--mantine-color-green-5);
+  color: #22c55e !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
 }
 
 .timeTotalValue {
-  color: var(--mantine-color-green-5);
+  color: #22c55e !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  font-family: var(--aether-font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }

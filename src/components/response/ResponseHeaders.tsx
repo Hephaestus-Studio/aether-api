@@ -1,4 +1,4 @@
-import { Box, Table } from "@mantine/core";
+import { Box, Table, ScrollArea } from "@mantine/core";
 
 interface ResponseHeadersProps {
   headers: string[][];
@@ -6,41 +6,57 @@ interface ResponseHeadersProps {
 
 export default function ResponseHeaders({ headers }: Readonly<ResponseHeadersProps>) {
   return (
-    <Box>
-      <Table>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Header</Table.Th>
-            <Table.Th>Value</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {headers.map(([k, v]) => (
-            <Table.Tr key={`${k}-${v}`}>
-              <Table.Td
+    <Box style={{ height: "100%", width: "100%", overflow: "hidden" }}>
+      <ScrollArea style={{ height: "100%" }} type="hover" offsetScrollbars={false}>
+        <Table stickyHeader withRowBorders>
+          <Table.Thead>
+            <Table.Tr style={{ backgroundColor: "var(--bg-app)" }}>
+              <Table.Th
                 style={{
-                  fontWeight: 600,
-                  fontSize: 13,
-                  fontFamily: "JetBrains Mono, monospace",
-                  color: "var(--text-primary)",
-                }}
-              >
-                {k}
-              </Table.Td>
-              <Table.Td
-                style={{
-                  fontSize: 13,
-                  fontFamily: "JetBrains Mono, monospace",
+                  width: "35%",
                   color: "var(--text-muted)",
-                  wordBreak: "break-all",
+                  fontSize: 12,
+                  padding: "8px 12px",
                 }}
               >
-                {v}
-              </Table.Td>
+                Header
+              </Table.Th>
+              <Table.Th style={{ color: "var(--text-muted)", fontSize: 12, padding: "8px 12px" }}>
+                Value
+              </Table.Th>
             </Table.Tr>
-          ))}
-        </Table.Tbody>
-      </Table>
+          </Table.Thead>
+          <Table.Tbody>
+            {headers.map(([k, v]) => (
+              <Table.Tr key={`${k}-${v}`}>
+                <Table.Td
+                  style={{
+                    fontWeight: 600,
+                    fontSize: 13,
+                    fontFamily: "var(--aether-font-mono)",
+                    color: "var(--text-primary)",
+                    verticalAlign: "top",
+                    padding: "8px 12px",
+                  }}
+                >
+                  {k}
+                </Table.Td>
+                <Table.Td
+                  style={{
+                    fontSize: 13,
+                    fontFamily: "var(--aether-font-mono)",
+                    color: "var(--text-muted)",
+                    wordBreak: "break-all",
+                    padding: "8px 12px",
+                  }}
+                >
+                  {v}
+                </Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      </ScrollArea>
     </Box>
   );
 }
