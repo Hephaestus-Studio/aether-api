@@ -404,21 +404,6 @@ export default function WelcomeScreen() {
                     
                     <div className={classes.settingsRow}>
                       <div className={classes.rowLabel}>
-                        <h4>Color Theme</h4>
-                        <span>Choose the visual appearance of the workspace.</span>
-                      </div>
-                      <select
-                        value={config.theme}
-                        onChange={(e) => updateConfig({ theme: e.target.value })}
-                        className={classes.settingsSelect}
-                      >
-                        <option value="dark">Dark Theme</option>
-                        <option value="light">Light Theme</option>
-                      </select>
-                    </div>
-
-                    <div className={classes.settingsRow}>
-                      <div className={classes.rowLabel}>
                         <h4>UI Font Size</h4>
                         <span>Adjust scale of interface buttons, trees, and labels.</span>
                       </div>

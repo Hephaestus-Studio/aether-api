@@ -172,7 +172,7 @@ export default function App() {
 
   if (windowLabel === "welcome") {
     return (
-      <MantineProvider theme={theme} forceColorScheme={config.theme === "light" ? "light" : "dark"}>
+      <MantineProvider theme={theme} forceColorScheme="dark">
         <Notifications position="top-right" zIndex={1000} />
         <div style={{ height: "100vh", position: "relative", overflow: "hidden" }}>
           <WelcomeScreen />
@@ -183,7 +183,7 @@ export default function App() {
   }
 
   return (
-    <MantineProvider theme={theme} forceColorScheme={config.theme === "light" ? "light" : "dark"}>
+    <MantineProvider theme={theme} forceColorScheme="dark">
       <Notifications position="top-right" zIndex={1000} />
       <div
         style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}
