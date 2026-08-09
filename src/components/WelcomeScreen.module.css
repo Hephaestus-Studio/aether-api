@@ -105,7 +105,7 @@
 }
 
 .version {
-  font-size: 10px;
+  font-size: calc(var(--aether-font-size-base) - 3px);
   color: var(--text-muted);
   display: block;
   margin-top: 1px;
@@ -176,7 +176,7 @@
 }
 
 .copyright {
-  font-size: 10px;
+  font-size: calc(var(--aether-font-size-base) - 3px);
   color: var(--text-disabled);
 }
 
@@ -334,7 +334,7 @@
 }
 
 .cardSubtitle {
-  font-size: 11px;
+  font-size: var(--aether-font-size-xs);
   color: var(--text-disabled);
   overflow: hidden;
   text-overflow: ellipsis;
