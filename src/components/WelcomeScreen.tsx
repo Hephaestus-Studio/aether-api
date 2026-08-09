@@ -293,36 +293,34 @@ export default function WelcomeScreen() {
         <div className={classes.content}>
           {activeTab === "projects" && (
             <div className={classes.tabProjects}>
-              <div className={classes.recentHeader}>
-                <div className={classes.searchBox}>
-                  {recents.length > 0 && (
-                    <>
-                      <IconSearch size={14} className={classes.searchIcon} />
-                      <input
-                        type="text"
-                        placeholder="Search recent workspaces..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className={classes.searchInput}
-                      />
-                    </>
-                  )}
+              {recents.length > 0 && (
+                <div className={classes.recentHeader}>
+                  <div className={classes.searchBox}>
+                    <IconSearch size={14} className={classes.searchIcon} />
+                    <input
+                      type="text"
+                      placeholder="Search recent workspaces..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className={classes.searchInput}
+                    />
+                  </div>
+                  <div className={classes.recentActions}>
+                    <button onClick={() => setIsNewWsOpen(true)} className={classes.primaryActionBtn} title="New Workspace">
+                      <IconPlus size={16} stroke={2} />
+                      <span>New Workspace</span>
+                    </button>
+                    <button onClick={handleOpenFolderDirect} className={classes.secondaryActionBtn} title="Open Workspace">
+                      <IconFolder size={16} stroke={1.5} />
+                      <span>Open</span>
+                    </button>
+                    <button onClick={() => setIsCloneOpen(true)} className={classes.secondaryActionBtn} title="Clone Repository">
+                      <IconGitBranch size={16} stroke={1.5} />
+                      <span>Clone</span>
+                    </button>
+                  </div>
                 </div>
-                 <div className={classes.recentActions}>
-                  <button onClick={() => setIsNewWsOpen(true)} className={classes.primaryActionBtn} title="New Workspace">
-                    <IconPlus size={16} stroke={2} />
-                    <span>New Workspace</span>
-                  </button>
-                  <button onClick={handleOpenFolderDirect} className={classes.secondaryActionBtn} title="Open Workspace">
-                    <IconFolder size={16} stroke={1.5} />
-                    <span>Open</span>
-                  </button>
-                  <button onClick={() => setIsCloneOpen(true)} className={classes.secondaryActionBtn} title="Clone Repository">
-                    <IconGitBranch size={16} stroke={1.5} />
-                    <span>Clone</span>
-                  </button>
-                </div>
-              </div>
+              )}
 
               {recents.length > 0 ? (
                 // Non-empty recents list state
