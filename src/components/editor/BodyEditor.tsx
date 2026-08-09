@@ -3,6 +3,7 @@ import { Box, Radio, Group, Select, Checkbox, TextInput, ActionIcon, Text } from
 import { IconTrash } from "@tabler/icons-react";
 import Editor from "@monaco-editor/react";
 import { open } from "@tauri-apps/plugin-dialog";
+import { useConfigStore } from "@/stores/configStore";
 import type { RequestBody, KeyValuePair, MultipartField } from "@/types/request";
 import classes from "./BodyEditor.module.css";
 
@@ -12,6 +13,7 @@ interface BodyEditorProps {
 }
 
 export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>) {
+  const { config } = useConfigStore();
   // Translate RequestBody types to Postman body types: none, multipartForm, formUrlencoded, raw, binary
   const [bodyType, setBodyType] = useState<string>(() => {
     if (
@@ -274,9 +276,9 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
             options={{
               minimap: { enabled: false },
               scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8 },
-              fontSize: 13,
-              fontFamily: "JetBrains Mono, Fira Code, monospace",
-              lineHeight: 20,
+              fontSize: config.fontSize || 13,
+              fontFamily: "'JetBrains Mono', 'Fira Code', 'Source Code Pro', Menlo, Monaco, Consolas, monospace",
+              lineHeight: Math.round((config.fontSize || 13) * 1.5),
               padding: { top: 8, bottom: 8 },
               wordWrap: "on",
               tabSize: 2,

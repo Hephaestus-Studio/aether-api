@@ -131,7 +131,7 @@ export default function ParamsEditor({ params, onChange }: Readonly<ParamsEditor
             styles={{
               input: {
                 fontFamily: "var(--aether-font-mono)",
-                fontSize: "var(--aether-font-size-md)",
+                fontSize: "var(--aether-editor-font-size, var(--aether-font-size-md))",
                 lineHeight: "var(--aether-line-height-base)",
                 backgroundColor: "var(--bg-sidebar)",
                 borderColor: "var(--border-color)",

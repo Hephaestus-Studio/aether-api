@@ -1,15 +1,15 @@
 :root {
   /* Font Family Definition */
-  --aether-font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --aether-font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --aether-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --aether-font-mono: "JetBrains Mono", "Fira Code", "Source Code Pro", Menlo, Monaco, Consolas, "Courier New", monospace;
 
   /* Font Sizes */
   --aether-font-size-xs: 11px;
   --aether-font-size-sm: 12px;
   --aether-font-size-md: 13px;
-  --aether-font-size-lg: 15px;
-  --aether-font-size-xl: 20px;
-  --aether-font-size-2xl: 24px;
+  --aether-font-size-lg: 14px;
+  --aether-font-size-xl: 18px;
+  --aether-font-size-2xl: 22px;
 
   /* Font Weights */
   --aether-font-weight-normal: 400;

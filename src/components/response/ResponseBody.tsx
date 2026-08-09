@@ -3,6 +3,7 @@ import { Box, Group, SegmentedControl, Menu, Button, ActionIcon, Text } from "@m
 import { IconChevronDown, IconCode, IconCopy, IconSearch, IconDownload } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import Editor from "@monaco-editor/react";
+import { useConfigStore } from "@/stores/configStore";
 import classes from "./ResponseViewer.module.css";
 
 interface ResponseBodyProps {
@@ -44,6 +45,7 @@ const formatXML = (text: string) => {
 };
 
 export default function ResponseBody({ response }: Readonly<ResponseBodyProps>) {
+  const { config } = useConfigStore();
   const [mode, setMode] = useState<string>("pretty");
   const [language, setLanguage] = useState<string>("auto");
   const [formattedContent, setFormattedContent] = useState<string>("");
@@ -284,8 +286,9 @@ export default function ResponseBody({ response }: Readonly<ResponseBodyProps>) 
               folding: true,
               lineNumbers: "on",
               scrollBeyondLastLine: false,
-              fontSize: 13,
-              fontFamily: "JetBrains Mono, Fira Code, monospace",
+              fontSize: config.fontSize || 13,
+              fontFamily: "'JetBrains Mono', 'Fira Code', 'Source Code Pro', Menlo, Monaco, Consolas, monospace",
+              lineHeight: Math.round((config.fontSize || 13) * 1.5),
               renderLineHighlight: "none",
               scrollbar: {
                 vertical: "visible",

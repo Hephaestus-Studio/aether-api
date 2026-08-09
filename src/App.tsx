@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { MantineProvider, createTheme } from "@mantine/core";
 import { useWorkspaceStore } from "./stores/workspaceStore";
 import { useEnvStore } from "./stores/envStore";
@@ -10,14 +10,15 @@ import WelcomeScreen from "./components/WelcomeScreen";
 import TitleBar from "./components/layout/TitleBar";
 import ResizeBorders from "./components/layout/ResizeBorders";
 import { Notifications } from "@mantine/notifications";
+import { useConfigStore } from "./stores/configStore";
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
 import "./styles/theme.css";
 import "./styles/global.css";
 
 const theme = createTheme({
-  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
-  fontFamilyMonospace: "JetBrains Mono, Fira Code, monospace",
+  fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji'",
+  fontFamilyMonospace: "'JetBrains Mono', 'Fira Code', 'Source Code Pro', Menlo, Monaco, Consolas, monospace",
   primaryColor: "indigo",
   defaultRadius: "sm",
 });
@@ -25,35 +26,23 @@ const theme = createTheme({
 export default function App() {
   const { workspacePath, setTreeData, setGitStatus, reset } = useWorkspaceStore();
   const { setEnvironments } = useEnvStore();
-
-  const [appTheme, setAppTheme] = useState<string>("dark");
+  const { config, loadConfig } = useConfigStore();
   const windowLabel = getCurrentWindow().label;
 
-  // Load global configuration on startup and listen for changes
+  // Load global configuration on startup
   useEffect(() => {
-    invoke<any>("get_app_config")
-      .then((cfg) => {
-        if (cfg && cfg.theme) {
-          setAppTheme(cfg.theme);
-        }
-      })
-      .catch(console.error);
+    loadConfig();
+  }, [loadConfig]);
 
-    let unlisten: () => void;
-    import("@tauri-apps/api/event").then((mod) => {
-      mod.listen<any>("config-changed", (event) => {
-        if (event.payload && event.payload.theme) {
-          setAppTheme(event.payload.theme);
-        }
-      }).then((fn) => {
-        unlisten = fn;
-      });
-    });
-
-    return () => {
-      if (unlisten) unlisten();
-    };
-  }, []);
+  // Sync editor font size to CSS variable on document root
+  useEffect(() => {
+    if (config.fontSize) {
+      document.documentElement.style.setProperty(
+        "--aether-editor-font-size",
+        `${config.fontSize}px`
+      );
+    }
+  }, [config.fontSize]);
 
   // Restore open workspace from backend on startup/reload (for main window only)
   useEffect(() => {
@@ -173,7 +162,7 @@ export default function App() {
 
   if (windowLabel === "welcome") {
     return (
-      <MantineProvider theme={theme} forceColorScheme={appTheme === "light" ? "light" : "dark"}>
+      <MantineProvider theme={theme} forceColorScheme={config.theme === "light" ? "light" : "dark"}>
         <Notifications position="top-right" zIndex={1000} />
         <div style={{ height: "100vh", position: "relative", overflow: "hidden" }}>
           <WelcomeScreen />
@@ -184,7 +173,7 @@ export default function App() {
   }
 
   return (
-    <MantineProvider theme={theme} forceColorScheme={appTheme === "light" ? "light" : "dark"}>
+    <MantineProvider theme={theme} forceColorScheme={config.theme === "light" ? "light" : "dark"}>
       <Notifications position="top-right" zIndex={1000} />
       <div
         style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}

@@ -15,7 +15,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import logoUrl from "@/assets/logo.svg";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { emit } from "@tauri-apps/api/event";
+import { useConfigStore } from "@/stores/configStore";
 import classes from "./WelcomeScreen.module.css";
 
 const parseWorkspacePath = (path: string) => {
@@ -40,11 +40,6 @@ const getRepoNameFromUrl = (url: string): string => {
   }
 };
 
-interface AppConfig {
-  theme: string;
-  fontSize: number;
-  defaultParentDirectory: string | null;
-}
 
 export default function WelcomeScreen() {
   const { open } = useWorkspace();
@@ -67,34 +62,15 @@ export default function WelcomeScreen() {
   const [cloningProgress, setCloningProgress] = useState(0);
 
   // App Settings State
-  const [config, setConfig] = useState<AppConfig>({
-    theme: "dark",
-    fontSize: 13,
-    defaultParentDirectory: null,
-  });
+  const { config, updateConfig } = useConfigStore();
 
-  // Load app config from Rust backend on mount
+  // Load default directories when config is available
   useEffect(() => {
-    invoke<AppConfig>("get_app_config")
-      .then((cfg) => {
-        setConfig(cfg);
-        if (cfg.defaultParentDirectory) {
-          setNewWsParent(cfg.defaultParentDirectory);
-          setCloneDest(cfg.defaultParentDirectory);
-        }
-      })
-      .catch((err) => console.error("Failed to load app config:", err));
-  }, []);
-
-  const saveConfig = async (updatedConfig: AppConfig) => {
-    try {
-      await invoke("update_app_config", { config: updatedConfig });
-      setConfig(updatedConfig);
-      await emit("config-changed", updatedConfig);
-    } catch (err) {
-      console.error("Failed to save app config:", err);
+    if (config.defaultParentDirectory) {
+      setNewWsParent(config.defaultParentDirectory);
+      setCloneDest(config.defaultParentDirectory);
     }
-  };
+  }, [config.defaultParentDirectory]);
 
   const handleOpenPath = async (path: string) => {
     try {
@@ -435,7 +411,7 @@ export default function WelcomeScreen() {
                     </div>
                     <select
                       value={config.theme}
-                      onChange={(e) => saveConfig({ ...config, theme: e.target.value })}
+                      onChange={(e) => updateConfig({ theme: e.target.value })}
                       className={classes.settingsSelect}
                     >
                       <option value="dark">Dark Theme</option>
@@ -450,7 +426,7 @@ export default function WelcomeScreen() {
                   </div>
                   <select
                     value={config.fontSize}
-                    onChange={(e) => saveConfig({ ...config, fontSize: parseInt(e.target.value) })}
+                    onChange={(e) => updateConfig({ fontSize: parseInt(e.target.value) })}
                     className={classes.settingsSelect}
                   >
                     <option value="12">12px</option>
@@ -480,7 +456,7 @@ export default function WelcomeScreen() {
                         if (selected) {
                           const path = Array.isArray(selected) ? selected[0] : selected;
                           if (path) {
-                            saveConfig({ ...config, defaultParentDirectory: path });
+                            updateConfig({ defaultParentDirectory: path });
                             setNewWsParent(path);
                             setCloneDest(path);
                           }
