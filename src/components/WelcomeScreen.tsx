@@ -7,7 +7,6 @@ import {
   IconX,
   IconSearch,
   IconMinus,
-  IconAdjustments,
   IconSquare,
   IconCopy,
 } from "@tabler/icons-react";
@@ -272,14 +271,12 @@ export default function WelcomeScreen() {
               className={`${classes.navItem} ${activeTab === "projects" ? classes.navItemActive : ""}`}
               onClick={() => setActiveTab("projects")}
             >
-              <IconFolder size={18} stroke={1.5} />
               Projects
             </button>
             <button
               className={`${classes.navItem} ${activeTab === "customize" ? classes.navItemActive : ""}`}
               onClick={() => setActiveTab("customize")}
             >
-              <IconAdjustments size={18} stroke={1.5} />
               Customize
             </button>
           </div>
