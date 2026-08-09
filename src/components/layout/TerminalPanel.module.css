@@ -24,7 +24,7 @@
 }
 
 .tab {
-  font-size: 11px;
+  font-size: var(--aether-font-size-xs);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text-muted);

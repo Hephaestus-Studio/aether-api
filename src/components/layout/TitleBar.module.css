@@ -76,7 +76,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 12px;
+  font-size: var(--aether-font-size-sm);
   transition:
     background-color 0.1s,
     color 0.1s;
@@ -89,7 +89,7 @@
 
 .dropdownShortcut {
   color: #707584;
-  font-size: 10px;
+  font-size: calc(var(--aether-font-size-base) - 3px);
   font-family: var(--aether-font-sans), sans-serif;
   margin-left: 16px;
 }
@@ -132,7 +132,7 @@
 
 .commandCenterText {
   color: #8a8e99;
-  font-size: 11px;
+  font-size: var(--aether-font-size-xs);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

@@ -22,7 +22,7 @@
 
 .label {
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: var(--aether-font-size-md);
 }
 
 .childrenContainer {
@@ -37,7 +37,7 @@
 }
 
 .methodTag {
-  font-size: 9px;
+  font-size: calc(var(--aether-font-size-base) - 4px);
   font-weight: 800;
   width: 32px;
   text-align: left;

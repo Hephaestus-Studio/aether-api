@@ -118,7 +118,7 @@
 }
 
 .metricLabelInteractive {
-  font-size: 12px;
+  font-size: var(--aether-font-size-sm);
   color: var(--text-muted);
   cursor: pointer;
 }
@@ -208,7 +208,7 @@
 
 .timeEventCell {
   width: 110px;
-  font-size: 11px;
+  font-size: var(--aether-font-size-xs);
   color: var(--text-primary);
   white-space: nowrap;
 }
@@ -221,7 +221,7 @@
 .timeDurationCell {
   width: 60px;
   text-align: right;
-  font-size: 11px;
+  font-size: var(--aether-font-size-xs);
   color: var(--text-muted);
 }
 
