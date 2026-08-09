@@ -484,11 +484,12 @@
 }
 
 .settingsGroup {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 24px;
   width: 100%;
-  max-width: 960px;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .settingsCard {
