@@ -57,15 +57,15 @@
 }
 
 [data-mantine-color-scheme="dark"] {
-  --aether-color-primary-base: #6366f1;
-  --aether-color-primary-hover: #4f46e5;
+  --aether-color-primary-base: #2563eb;
+  --aether-color-primary-hover: #1d4ed8;
 
   --aether-color-bg-main: #212121;
   --aether-color-bg-surface: #1c1c1c;
   --aether-color-bg-editor: #212121;
 
   --aether-color-border-light: #2d2d2d;
-  --aether-color-border-focus: #6366f1;
+  --aether-color-border-focus: #2563eb;
 
   --aether-color-text-active: #f9fafb;
   --aether-color-text-muted: #9ca3af;
