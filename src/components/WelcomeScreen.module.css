@@ -485,6 +485,10 @@
   border-bottom: 1px solid var(--border-color);
 }
 
+.rowLabel {
+  flex: 1;
+}
+
 .rowLabel h4 {
   font-size: var(--aether-font-size-md);
   font-weight: var(--aether-font-weight-medium);
@@ -573,6 +577,7 @@
 
 .modalContainer {
   width: 480px;
+  max-width: 90%;
   background-color: var(--bg-sidebar);
   border: 1px solid var(--border-color);
   border-radius: 10px;
@@ -773,5 +778,40 @@
   }
   .searchBox {
     max-width: 180px;
+  }
+}
+
+@media (max-width: 900px) {
+  .emptyActionCards {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .actionCard {
+    flex-direction: row;
+    align-items: center;
+    text-align: left;
+    padding: 16px;
+    gap: 16px;
+  }
+  .actionCard h3 {
+    margin-bottom: 2px;
+  }
+  .actionCard p {
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 850px) {
+  .settingsRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .settingsSelect {
+    width: 100%;
+  }
+  .locationPicker {
+    max-width: none;
+    width: 100%;
   }
 }
