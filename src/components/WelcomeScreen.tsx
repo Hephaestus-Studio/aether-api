@@ -419,8 +419,26 @@ export default function WelcomeScreen() {
 
                     <div className={classes.settingsRow}>
                       <div className={classes.rowLabel}>
+                        <h4>UI Font Size</h4>
+                        <span>Adjust scale of interface buttons, trees, and labels.</span>
+                      </div>
+                      <select
+                        value={config.uiFontSize}
+                        onChange={(e) => updateConfig({ uiFontSize: parseInt(e.target.value) })}
+                        className={classes.settingsSelect}
+                      >
+                        <option value="12">12px (Small)</option>
+                        <option value="13">13px (Default)</option>
+                        <option value="14">14px (Medium)</option>
+                        <option value="15">15px (Large)</option>
+                        <option value="16">16px (Extra Large)</option>
+                      </select>
+                    </div>
+
+                    <div className={classes.settingsRow}>
+                      <div className={classes.rowLabel}>
                         <h4>Editor Font Size</h4>
-                        <span>Adjust size of default interface text blocks.</span>
+                        <span>Adjust size of Monaco editor and text areas.</span>
                       </div>
                       <select
                         value={config.fontSize}

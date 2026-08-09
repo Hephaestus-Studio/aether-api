@@ -4,12 +4,13 @@
   --aether-font-mono: "JetBrains Mono", "Fira Code", "Source Code Pro", Menlo, Monaco, Consolas, "Courier New", monospace;
 
   /* Font Sizes */
-  --aether-font-size-xs: 11px;
-  --aether-font-size-sm: 12px;
-  --aether-font-size-md: 13px;
-  --aether-font-size-lg: 14px;
-  --aether-font-size-xl: 18px;
-  --aether-font-size-2xl: 22px;
+  --aether-font-size-base: 13px;
+  --aether-font-size-xs: calc(var(--aether-font-size-base) - 2px);
+  --aether-font-size-sm: calc(var(--aether-font-size-base) - 1px);
+  --aether-font-size-md: var(--aether-font-size-base);
+  --aether-font-size-lg: calc(var(--aether-font-size-base) + 1px);
+  --aether-font-size-xl: calc(var(--aether-font-size-base) + 5px);
+  --aether-font-size-2xl: calc(var(--aether-font-size-base) + 9px);
 
   /* Font Weights */
   --aether-font-weight-normal: 400;

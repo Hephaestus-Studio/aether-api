@@ -10,8 +10,15 @@ pub struct AppConfig {
     pub theme: String,
     /// Default font size for UI/editor elements.
     pub font_size: u32,
+    /// Base font size for UI components.
+    #[serde(default = "default_ui_font_size")]
+    pub ui_font_size: u32,
     /// Default parent directory path used when scaffolding new workspaces.
     pub default_parent_directory: Option<String>,
+}
+
+fn default_ui_font_size() -> u32 {
+    13
 }
 
 impl Default for AppConfig {
@@ -19,6 +26,7 @@ impl Default for AppConfig {
         Self {
             theme: "dark".to_string(),
             font_size: 13,
+            ui_font_size: 13,
             default_parent_directory: None,
         }
     }

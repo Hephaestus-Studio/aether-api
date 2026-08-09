@@ -44,6 +44,16 @@ export default function App() {
     }
   }, [config.fontSize]);
 
+  // Sync UI font size to CSS variable on document root
+  useEffect(() => {
+    if (config.uiFontSize) {
+      document.documentElement.style.setProperty(
+        "--aether-font-size-base",
+        `${config.uiFontSize}px`
+      );
+    }
+  }, [config.uiFontSize]);
+
   // Restore open workspace from backend on startup/reload (for main window only)
   useEffect(() => {
     if (windowLabel !== "main") return;

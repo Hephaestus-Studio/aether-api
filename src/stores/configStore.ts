@@ -5,6 +5,7 @@ import { listen } from "@tauri-apps/api/event";
 export interface AppConfig {
   theme: string;
   fontSize: number;
+  uiFontSize: number;
   defaultParentDirectory: string | null;
 }
 
@@ -18,6 +19,7 @@ interface ConfigState {
 const DEFAULT_CONFIG: AppConfig = {
   theme: "dark",
   fontSize: 13,
+  uiFontSize: 13,
   defaultParentDirectory: null,
 };
 
