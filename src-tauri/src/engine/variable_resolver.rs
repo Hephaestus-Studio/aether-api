@@ -66,7 +66,7 @@ impl VariableResolver {
     }
 
     /// Resolves variables in all dynamic parts of an API request: URL, query params, and headers.
-    #[allow(clippy::type_complexity)]
+    #[allow(clippy::type_complexity, dead_code)]
     pub fn resolve_all_in_request(
         url: &str,
         params: &[(String, String)],

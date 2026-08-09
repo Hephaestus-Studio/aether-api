@@ -52,6 +52,7 @@ pub struct KeyValuePair {
     pub description: Option<String>,
 }
 
+#[allow(dead_code)]
 impl KeyValuePair {
     /// Creates a new `KeyValuePair` with the key and value, setting `enabled` to `true` by default.
     pub fn new(key: impl Into<String>, value: impl Into<String>) -> Self {
@@ -222,6 +223,7 @@ pub struct Request {
     pub settings: RequestSettings,
 }
 
+#[allow(dead_code)]
 impl Request {
     /// Creates a new `Request` with the given name and default values.
     ///

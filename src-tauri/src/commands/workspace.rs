@@ -9,6 +9,7 @@ use tauri::State;
 use tokio::sync::mpsc;
 
 /// Represents the active state of an opened workspace.
+#[allow(dead_code)]
 pub struct WorkspaceState {
     /// Absolute path to the workspace root directory.
     pub path: PathBuf,
@@ -391,8 +392,8 @@ pub fn run_terminal_command(command: String, cwd: Option<String>) -> Result<Stri
     let dir = PathBuf::from(&dir_str);
 
     let trimmed = command.trim();
-    if trimmed.starts_with("cd ") {
-        let target = trimmed[3..].trim();
+    if let Some(target_raw) = trimmed.strip_prefix("cd ") {
+        let target = target_raw.trim();
         let target_path = if PathBuf::from(target).is_absolute() {
             PathBuf::from(target)
         } else {
@@ -412,12 +413,12 @@ pub fn run_terminal_command(command: String, cwd: Option<String>) -> Result<Stri
 
     let output = if cfg!(target_os = "windows") {
         Command::new("cmd")
-            .args(&["/C", &command])
+            .args(["/C", &command])
             .current_dir(&dir)
             .output()
     } else {
         Command::new("sh")
-            .args(&["-c", &command])
+            .args(["-c", &command])
             .current_dir(&dir)
             .output()
     };

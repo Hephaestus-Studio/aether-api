@@ -6,11 +6,13 @@ use zeroize::{Zeroize, ZeroizeOnDrop};
 ///
 /// It also serializes as a masked string (`"********"`) to prevent accidental leaks.
 #[derive(Debug, Clone, Zeroize, ZeroizeOnDrop)]
+#[allow(dead_code)]
 pub struct SecretValue {
     /// The actual secret content.
     pub inner: String,
 }
 
+#[allow(dead_code)]
 impl SecretValue {
     /// Creates a new `SecretValue` wrapping the provided string.
     pub fn new(value: impl Into<String>) -> Self {

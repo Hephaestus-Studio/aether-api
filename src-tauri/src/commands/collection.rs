@@ -206,9 +206,9 @@ pub async fn rename_item(
 
     if new.exists() && new != old {
         tracing::warn!("Target path for rename already exists: {}", new.display());
-        return Err(AppError::DuplicateItem(format!(
-            "Item already exists at new path"
-        )));
+        return Err(AppError::DuplicateItem(
+            "Item already exists at new path".to_string(),
+        ));
     }
 
     std::fs::rename(&old, &new)?;

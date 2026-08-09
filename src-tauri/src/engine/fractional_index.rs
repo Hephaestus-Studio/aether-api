@@ -1,13 +1,17 @@
+#[allow(dead_code)]
 const ALPHABET: &[u8] = b"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
+#[allow(dead_code)]
 const COMPACTION_THRESHOLD: usize = 32;
 
 /// Utility for performing fractional index ordering calculations.
 ///
 /// Fractional indexing allows real-time reordering of list nodes in the UI sidebar
 /// without the need to rewrite the order of all adjacent elements.
+#[allow(dead_code)]
 pub struct FractionalIndexer;
 
+#[allow(dead_code)]
 impl FractionalIndexer {
     /// Generates a new fractional index key string lexicographically positioned between `prev` and `next`.
     ///
@@ -31,8 +35,6 @@ impl FractionalIndexer {
                 let mid = p_char + (n_char - p_char) / 2;
                 result.push(mid);
                 break;
-            } else if n_char > p_char {
-                result.push(p_char);
             } else {
                 result.push(p_char);
             }

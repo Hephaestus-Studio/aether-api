@@ -226,7 +226,7 @@ impl HttpExecutor {
 
         req_builder = req_builder.timeout(Duration::from_millis(req_data.settings.timeout_ms));
 
-        let request = req_builder.build().map_err(|e| AppError::NetworkError(e))?;
+        let request = req_builder.build().map_err(AppError::NetworkError)?;
 
         tracing::debug!("Sending HTTP request to {}", request.url());
         let start_time = Instant::now();
@@ -277,7 +277,7 @@ impl HttpExecutor {
         let body_bytes = response
             .bytes()
             .await
-            .map_err(|e| AppError::NetworkError(e))?;
+            .map_err(AppError::NetworkError)?;
         let total_ms = start_time.elapsed().as_secs_f64() * 1000.0;
         let download_ms = total_ms - ttfb_ms;
         let size_bytes = body_bytes.len() as u64;
@@ -338,7 +338,7 @@ impl HttpExecutor {
             .dns_resolver(Arc::new(TimingResolver))
             .connector_layer(TimingConnectorLayer)
             .build()
-            .map_err(|e| AppError::NetworkError(e))?;
+            .map_err(AppError::NetworkError)?;
 
         Ok(client)
     }
@@ -431,7 +431,7 @@ impl HttpExecutor {
                         MultipartFieldType::File => {
                             let file_bytes = tokio::fs::read(&field.value)
                                 .await
-                                .map_err(|e| AppError::Io(e))?;
+                                .map_err(AppError::Io)?;
                             let file_name = std::path::Path::new(&field.value)
                                 .file_name()
                                 .and_then(|n| n.to_str())
@@ -456,10 +456,12 @@ impl Default for HttpExecutor {
 }
 
 /// Manages active request lifecycles and provides cancellation capabilities.
+#[allow(dead_code)]
 pub struct RequestTracker {
     active_requests: Arc<Mutex<HashMap<String, CancellationToken>>>,
 }
 
+#[allow(dead_code)]
 impl RequestTracker {
     /// Initializes a new [`RequestTracker`] mapping active tasks.
     pub fn new() -> Self {

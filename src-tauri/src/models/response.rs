@@ -49,6 +49,7 @@ impl Default for TimingMetrics {
     }
 }
 
+#[allow(dead_code)]
 impl TimingMetrics {
     /// Calculates and sets `total_ms` by summing up all timing phases.
     pub fn calculate_total(&mut self) {
@@ -78,11 +79,13 @@ pub struct HttpResponse {
 
 impl HttpResponse {
     /// Checks whether the response status code indicates success (2xx).
+    #[allow(dead_code)]
     pub fn is_success(&self) -> bool {
         self.status >= 200 && self.status < 300
     }
 
     /// Retrieves the value of a specific response header by key (case-insensitive).
+    #[allow(dead_code)]
     pub fn get_header(&self, key: &str) -> Option<&str> {
         self.headers
             .iter()
