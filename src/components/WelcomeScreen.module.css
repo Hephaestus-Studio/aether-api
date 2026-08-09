@@ -76,7 +76,7 @@
 }
 
 .sidebarHeader {
-  height: 64px;
+  height: 72px;
   display: flex;
   align-items: center;
   padding: 0 20px;
@@ -181,7 +181,7 @@
 }
 
 .recentHeader {
-  height: 64px;
+  height: 72px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -441,7 +441,7 @@
 }
 
 .customizeHeader {
-  height: 64px;
+  height: 72px;
   display: flex;
   align-items: center;
   padding: 0 24px;
@@ -464,9 +464,9 @@
 }
 
 .sectionDesc {
-  font-size: var(--aether-font-size-sm);
-  color: var(--text-muted);
-  margin-bottom: 30px;
+  font-size: var(--aether-font-size-xs);
+  color: var(--text-disabled);
+  margin: 2px 0 0 0;
 }
 
 .settingsGroup {

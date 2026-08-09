@@ -398,10 +398,12 @@ export default function WelcomeScreen() {
           {activeTab === "customize" && (
             <div className={classes.tabCustomize}>
               <div className={classes.customizeHeader}>
-                <h2>Customize AetherAPI</h2>
+                <div>
+                  <h2>Customize AetherAPI</h2>
+                  <p className={classes.sectionDesc}>Configure global layout and application properties.</p>
+                </div>
               </div>
               <div className={classes.customizeBody}>
-                <p className={classes.sectionDesc}>Configure global layout and application properties.</p>
 
                 <div className={classes.settingsGroup}>
                   {/* Card 1: Appearance */}
