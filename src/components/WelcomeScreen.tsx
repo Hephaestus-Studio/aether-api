@@ -283,15 +283,12 @@ export default function WelcomeScreen() {
               Customize
             </button>
           </div>
-
-          <div className={classes.sidebarFooter}>
-            <span className={classes.copyright}>Hephaestus Studio © 2026</span>
-          </div>
         </div>
 
         {/* Right Content Pane */}
         <div className={classes.content}>
-          {activeTab === "projects" && (
+          <div className={classes.contentBody}>
+            {activeTab === "projects" && (
             <div className={classes.tabProjects}>
               {recents.length > 0 && (
                 <div className={classes.recentHeader}>
@@ -482,6 +479,10 @@ export default function WelcomeScreen() {
               </div>
             </div>
           )}
+          </div>
+          <div className={classes.contentFooter}>
+            <span className={classes.copyright}>Hephaestus Studio © 2026</span>
+          </div>
         </div>
       </div>
 
