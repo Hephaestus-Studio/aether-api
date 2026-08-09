@@ -309,6 +309,8 @@
   flex-direction: column;
   gap: 2px;
   overflow: hidden;
+  flex: 1;
+  margin-right: 16px;
 }
 
 .cardTitle {
@@ -746,4 +748,30 @@
   height: 100%;
   background-color: var(--aether-color-primary-base);
   transition: width 0.1s linear;
+}
+
+/* Responsive Media Queries for Narrow Window Layouts */
+@media (max-width: 960px) {
+  .secondaryActionBtn span {
+    display: none;
+  }
+  .secondaryActionBtn {
+    padding: 0;
+    width: 32px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 880px) {
+  .primaryActionBtn span {
+    display: none;
+  }
+  .primaryActionBtn {
+    padding: 0;
+    width: 32px;
+    justify-content: center;
+  }
+  .searchBox {
+    max-width: 180px;
+  }
 }

@@ -332,18 +332,18 @@ export default function WelcomeScreen() {
                     </>
                   )}
                 </div>
-                <div className={classes.recentActions}>
-                  <button onClick={() => setIsNewWsOpen(true)} className={classes.primaryActionBtn}>
+                 <div className={classes.recentActions}>
+                  <button onClick={() => setIsNewWsOpen(true)} className={classes.primaryActionBtn} title="New Workspace">
                     <IconPlus size={16} stroke={2} />
-                    New Workspace
+                    <span>New Workspace</span>
                   </button>
-                  <button onClick={handleOpenFolderDirect} className={classes.secondaryActionBtn}>
+                  <button onClick={handleOpenFolderDirect} className={classes.secondaryActionBtn} title="Open Workspace">
                     <IconFolder size={16} stroke={1.5} />
-                    Open
+                    <span>Open</span>
                   </button>
-                  <button onClick={() => setIsCloneOpen(true)} className={classes.secondaryActionBtn}>
+                  <button onClick={() => setIsCloneOpen(true)} className={classes.secondaryActionBtn} title="Clone Repository">
                     <IconGitBranch size={16} stroke={1.5} />
-                    Clone
+                    <span>Clone</span>
                   </button>
                 </div>
               </div>
