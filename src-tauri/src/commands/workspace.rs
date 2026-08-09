@@ -436,3 +436,41 @@ pub fn run_terminal_command(command: String, cwd: Option<String>) -> Result<Stri
         Err(e) => Err(e.to_string()),
     }
 }
+
+/// Tauri command to explicitly create and scaffold a new workspace.
+#[tauri::command]
+pub async fn create_workspace(
+    name: String,
+    parent_directory: String,
+) -> Result<String, AppError> {
+    let sanitized = sanitize_name(&name);
+    let parent_path = PathBuf::from(&parent_directory);
+    let workspace_path = parent_path.join(sanitized);
+
+    if workspace_path.exists() {
+        return Err(AppError::DuplicateItem(format!(
+            "Directory already exists: {}",
+            workspace_path.display()
+        )));
+    }
+
+    std::fs::create_dir_all(&workspace_path)?;
+    create_workspace_scaffold(&workspace_path)?;
+
+    Ok(workspace_path.to_string_lossy().to_string())
+}
+
+/// Tauri command to fetch the global application settings.
+#[tauri::command]
+pub fn get_app_config(app_handle: tauri::AppHandle) -> Result<crate::engine::config::AppConfig, AppError> {
+    crate::engine::config::ConfigManager::read_config(&app_handle)
+}
+
+/// Tauri command to update the global application settings.
+#[tauri::command]
+pub fn update_app_config(
+    config: crate::engine::config::AppConfig,
+    app_handle: tauri::AppHandle,
+) -> Result<(), AppError> {
+    crate::engine::config::ConfigManager::write_config(&app_handle, &config)
+}

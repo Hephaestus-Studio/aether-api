@@ -12,10 +12,24 @@
   "app": {
     "windows": [
       {
-        "title": "aether-api",
-        "width": 1024,
-        "height": 768,
-        "decorations": false
+        "label": "welcome",
+        "title": "Welcome to AetherAPI",
+        "width": 800,
+        "height": 600,
+        "decorations": false,
+        "resizable": true,
+        "center": true,
+        "visible": true
+      },
+      {
+        "label": "main",
+        "title": "AetherAPI",
+        "width": 1280,
+        "height": 800,
+        "decorations": false,
+        "resizable": true,
+        "center": true,
+        "visible": false
       }
     ],
     "security": {

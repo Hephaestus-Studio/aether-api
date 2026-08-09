@@ -12,3 +12,4 @@ pub mod fs_scanner;
 pub mod http_client;
 pub mod variable_resolver;
 pub mod yaml_parser;
+pub mod config;

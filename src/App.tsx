@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { MantineProvider, createTheme } from "@mantine/core";
 import { useWorkspaceStore } from "./stores/workspaceStore";
 import { useEnvStore } from "./stores/envStore";
 import { useFsWatcher } from "./hooks/useFsWatcher";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api/core";
 import AppShell from "./components/layout/AppShell";
 import WelcomeScreen from "./components/WelcomeScreen";
@@ -25,8 +26,38 @@ export default function App() {
   const { workspacePath, setTreeData, setGitStatus, reset } = useWorkspaceStore();
   const { setEnvironments } = useEnvStore();
 
-  // Restore open workspace from backend on startup/reload
+  const [appTheme, setAppTheme] = useState<string>("dark");
+  const windowLabel = getCurrentWindow().label;
+
+  // Load global configuration on startup and listen for changes
   useEffect(() => {
+    invoke<any>("get_app_config")
+      .then((cfg) => {
+        if (cfg && cfg.theme) {
+          setAppTheme(cfg.theme);
+        }
+      })
+      .catch(console.error);
+
+    let unlisten: () => void;
+    import("@tauri-apps/api/event").then((mod) => {
+      mod.listen<any>("config-changed", (event) => {
+        if (event.payload && event.payload.theme) {
+          setAppTheme(event.payload.theme);
+        }
+      }).then((fn) => {
+        unlisten = fn;
+      });
+    });
+
+    return () => {
+      if (unlisten) unlisten();
+    };
+  }, []);
+
+  // Restore open workspace from backend on startup/reload (for main window only)
+  useEffect(() => {
+    if (windowLabel !== "main") return;
     let isMounted = true;
 
     invoke<any>("get_workspace_info")
@@ -52,31 +83,73 @@ export default function App() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [windowLabel]);
 
-  // Handle desynchronization between Frontend and Backend on startup / reload
+  // Synchronize workspace changes between windows
   useEffect(() => {
-    if (workspacePath) {
-      invoke("get_workspace_info")
-        .then(() => {
-          // Sync environments list
-          invoke("list_environments")
-            .then((envs: any) => setEnvironments(envs))
-            .catch(console.error);
+    if (windowLabel !== "main") return;
 
-          // Sync git status
-          invoke("get_git_status")
-            .then((git: any) => setGitStatus(git))
-            .catch(console.error);
-        })
-        .catch((err) => {
-          console.warn("Backend workspace desync detected, resetting frontend state:", err);
-          reset();
-        });
-    }
-  }, [workspacePath, reset, setEnvironments, setGitStatus]);
+    const syncWorkspace = async (path: string | null) => {
+      if (path) {
+        try {
+          const tree = await invoke<any>("open_workspace", { directoryPath: path });
+          useWorkspaceStore.getState().setWorkspacePath(path);
+          useWorkspaceStore.getState().setTreeData(tree.children);
+          
+          const info = await invoke<any>("get_workspace_info");
+          useWorkspaceStore.getState().setWorkspaceInfo(info);
 
+          const envs = await invoke<any>("list_environments");
+          setEnvironments(envs);
+
+          const git = await invoke<any>("get_git_status");
+          setGitStatus(git);
+        } catch (err) {
+          console.error("Failed to sync workspace in main window:", err);
+        }
+      } else {
+        reset();
+      }
+    };
+
+    let unlisten: () => void;
+    import("@tauri-apps/api/event").then((mod) => {
+      mod.listen<string | null>("workspace-changed", (event) => {
+        console.log("Workspace changed event received in main window:", event.payload);
+        syncWorkspace(event.payload);
+      }).then((fn) => {
+        unlisten = fn;
+      });
+    });
+
+    return () => {
+      if (unlisten) unlisten();
+    };
+  }, [windowLabel, reset, setEnvironments, setGitStatus]);
+
+  // Handle desynchronization on startup / reload (for main window only)
+  useEffect(() => {
+    if (windowLabel !== "main" || !workspacePath) return;
+
+    invoke("get_workspace_info")
+      .then(() => {
+        invoke("list_environments")
+          .then((envs: any) => setEnvironments(envs))
+          .catch(console.error);
+
+        invoke("get_git_status")
+          .then((git: any) => setGitStatus(git))
+          .catch(console.error);
+      })
+      .catch((err) => {
+        console.warn("Backend workspace desync detected, resetting frontend state:", err);
+        reset();
+      });
+  }, [windowLabel, workspacePath, reset, setEnvironments, setGitStatus]);
+
+  // File watcher for hot reloading workspace changes
   useFsWatcher(async (payload) => {
+    if (windowLabel !== "main" || !workspacePath) return;
     console.log("FS Changed:", payload);
     try {
       const tree: any = await invoke("open_workspace", { directoryPath: workspacePath });
@@ -98,15 +171,27 @@ export default function App() {
     }
   });
 
+  if (windowLabel === "welcome") {
+    return (
+      <MantineProvider theme={theme} forceColorScheme={appTheme === "light" ? "light" : "dark"}>
+        <Notifications position="top-right" zIndex={1000} />
+        <div style={{ height: "100vh", position: "relative", overflow: "hidden" }}>
+          <WelcomeScreen />
+          <ResizeBorders />
+        </div>
+      </MantineProvider>
+    );
+  }
+
   return (
-    <MantineProvider theme={theme} forceColorScheme="dark">
+    <MantineProvider theme={theme} forceColorScheme={appTheme === "light" ? "light" : "dark"}>
       <Notifications position="top-right" zIndex={1000} />
       <div
         style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}
       >
         <TitleBar />
         <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
-          {workspacePath ? <AppShell /> : <WelcomeScreen />}
+          <AppShell />
         </div>
         <ResizeBorders />
       </div>

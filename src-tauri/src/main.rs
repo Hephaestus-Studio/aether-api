@@ -42,6 +42,9 @@ fn main() {
             commands::workspace::get_git_status,
             commands::workspace::get_git_diff,
             commands::workspace::run_terminal_command,
+            commands::workspace::create_workspace,
+            commands::workspace::get_app_config,
+            commands::workspace::update_app_config,
             commands::collection::create_collection,
             commands::collection::create_folder,
             commands::collection::rename_item,
@@ -58,6 +61,23 @@ fn main() {
             commands::environment::update_environment,
             commands::environment::delete_environment,
         ])
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { .. } = event {
+                let label = window.label();
+                if label == "main" {
+                    window.app_handle().exit(0);
+                } else if label == "welcome" {
+                    let app = window.app_handle();
+                    if let Some(main_window) = app.get_webview_window("main") {
+                        if !main_window.is_visible().unwrap_or(false) {
+                            app.exit(0);
+                        }
+                    } else {
+                        app.exit(0);
+                    }
+                }
+            }
+        })
         .setup(|app| {
             use tracing_subscriber::layer::SubscriberExt;
             use tracing_subscriber::util::SubscriberInitExt;
