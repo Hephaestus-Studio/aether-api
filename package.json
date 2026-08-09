@@ -17,6 +17,7 @@
     "@mantine/hooks": "^9.5.1",
     "@mantine/modals": "^9.5.1",
     "@mantine/notifications": "^9.5.1",
+    "@monaco-editor/loader": "^1.7.0",
     "@monaco-editor/react": "^4.7.0",
     "@tabler/icons-react": "^3.46.0",
     "@tauri-apps/api": "^2",

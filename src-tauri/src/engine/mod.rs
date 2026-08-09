@@ -7,9 +7,9 @@
 //! - [`variable_resolver`]: Substitution of environment variable placeholders.
 //! - [`yaml_parser`]: Utility functions to safely parse and serialize YAML data.
 
+pub mod config;
 pub mod fractional_index;
 pub mod fs_scanner;
 pub mod http_client;
 pub mod variable_resolver;
 pub mod yaml_parser;
-pub mod config;

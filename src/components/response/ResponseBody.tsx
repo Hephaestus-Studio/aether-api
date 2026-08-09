@@ -2,12 +2,14 @@ import { useState, useRef, useEffect } from "react";
 import { Box, Group, SegmentedControl, Menu, Button, ActionIcon, Text } from "@mantine/core";
 import { IconChevronDown, IconCode, IconCopy, IconSearch, IconDownload } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
-import Editor from "@monaco-editor/react";
+import MonacoEditor from "@/components/common/MonacoEditor";
 import { useConfigStore } from "@/stores/configStore";
+import MonacoErrorBoundary from "@/components/common/MonacoErrorBoundary";
 import classes from "./ResponseViewer.module.css";
 
 interface ResponseBodyProps {
   response: any;
+  isActive?: boolean;
 }
 
 const formatXML = (text: string) => {
@@ -44,36 +46,58 @@ const formatXML = (text: string) => {
   }
 };
 
-export default function ResponseBody({ response }: Readonly<ResponseBodyProps>) {
+export default function ResponseBody({ response, isActive = true }: Readonly<ResponseBodyProps>) {
   const { config } = useConfigStore();
   const [mode, setMode] = useState<string>("pretty");
   const [language, setLanguage] = useState<string>("auto");
   const [formattedContent, setFormattedContent] = useState<string>("");
   const editorRef = useRef<any>(null);
 
-  const initialLanguage = response.bodyType || "json";
+  const initialLanguage = response?.bodyType || "json";
+
+  // Cleanup editor ref on unmount
+  useEffect(() => {
+    return () => {
+      editorRef.current = null;
+    };
+  }, []);
+
+  // Trigger editor layout when tab becomes active
+  useEffect(() => {
+    if (isActive && editorRef.current) {
+      try {
+        if (!editorRef.current.isDisposed?.() && editorRef.current.getModel?.()) {
+          editorRef.current.layout();
+        }
+      } catch (err) {
+        console.warn("Could not layout Monaco Editor:", err);
+      }
+    }
+  }, [isActive, mode]);
 
   useEffect(() => {
+    const rawBody = response?.body || "";
     const activeLang = language === "auto" ? initialLanguage : language;
     if (mode === "pretty") {
       if (activeLang === "json") {
         try {
-          setFormattedContent(JSON.stringify(JSON.parse(response.body), null, 2));
+          setFormattedContent(JSON.stringify(JSON.parse(rawBody), null, 2));
         } catch {
-          setFormattedContent(response.body);
+          setFormattedContent(rawBody);
         }
       } else if (activeLang === "xml") {
-        setFormattedContent(formatXML(response.body));
+        setFormattedContent(formatXML(rawBody));
       } else {
-        setFormattedContent(response.body);
+        setFormattedContent(rawBody);
       }
     } else {
-      setFormattedContent(response.body);
+      setFormattedContent(rawBody);
     }
-  }, [response.body, initialLanguage, mode, language]);
+  }, [response?.body, initialLanguage, mode, language]);
 
   const handleDownloadResponse = () => {
-    const blob = new Blob([response.body], { type: "text/plain" });
+    const rawBody = response?.body || "";
+    const blob = new Blob([rawBody], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -83,10 +107,11 @@ export default function ResponseBody({ response }: Readonly<ResponseBodyProps>) 
   };
 
   const handlePrettify = () => {
+    const rawBody = response?.body || "";
     const activeLang = language === "auto" ? initialLanguage : language;
     if (activeLang === "json") {
       try {
-        const parsed = JSON.parse(response.body);
+        const parsed = JSON.parse(rawBody);
         setFormattedContent(JSON.stringify(parsed, null, 2));
         notifications.show({
           title: "Prettified",
@@ -101,7 +126,7 @@ export default function ResponseBody({ response }: Readonly<ResponseBodyProps>) 
         });
       }
     } else if (activeLang === "xml") {
-      setFormattedContent(formatXML(response.body));
+      setFormattedContent(formatXML(rawBody));
       notifications.show({
         title: "Prettified",
         message: "XML content formatted successfully.",
@@ -116,7 +141,8 @@ export default function ResponseBody({ response }: Readonly<ResponseBodyProps>) 
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(response.body);
+    const rawBody = response?.body || "";
+    navigator.clipboard.writeText(rawBody);
     notifications.show({
       message: "Response body copied to clipboard!",
       color: "indigo",
@@ -125,11 +151,17 @@ export default function ResponseBody({ response }: Readonly<ResponseBodyProps>) 
 
   const handleSearch = () => {
     if (editorRef.current) {
-      editorRef.current.trigger("source", "actions.find", null);
+      try {
+        if (!editorRef.current.isDisposed?.() && editorRef.current.getModel?.()) {
+          editorRef.current.trigger("source", "actions.find", null);
+        }
+      } catch (err) {
+        console.warn("Could not trigger search in Monaco Editor:", err);
+      }
     }
   };
 
-  const isBinary = response.bodyType === "binary";
+  const isBinary = response?.bodyType === "binary";
 
   if (isBinary) {
     return (
@@ -160,6 +192,22 @@ export default function ResponseBody({ response }: Readonly<ResponseBodyProps>) 
   }
 
   const editorLanguage = language === "auto" ? initialLanguage : language;
+  const rawBody = response?.body || "";
+
+  const handleBeforeMount = (monaco: any) => {
+    try {
+      monaco.editor.defineTheme("aether-dark", {
+        base: "vs-dark",
+        inherit: true,
+        rules: [],
+        colors: {
+          "editor.background": "#212121", // matching var(--bg-panel)
+        },
+      });
+    } catch {
+      // theme already defined or failed safely
+    }
+  };
 
   return (
     <Box style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
@@ -241,9 +289,13 @@ export default function ResponseBody({ response }: Readonly<ResponseBodyProps>) 
         </Box>
       </Box>
 
-      <Box className={classes.editorContainer}>
-        {(mode === "pretty" || mode === "raw") && (
-          <Editor
+      {/* Editor view for Pretty and Raw modes */}
+      <Box
+        className={classes.editorContainer}
+        style={{ display: mode === "pretty" || mode === "raw" ? "block" : "none" }}
+      >
+        <MonacoErrorBoundary fallbackContent={mode === "raw" ? rawBody : formattedContent}>
+          <MonacoEditor
             height="100%"
             language={
               mode === "raw"
@@ -253,17 +305,8 @@ export default function ResponseBody({ response }: Readonly<ResponseBodyProps>) 
                   : editorLanguage
             }
             theme="aether-dark"
-            value={mode === "raw" ? response.body : formattedContent}
-            beforeMount={(monaco) => {
-              monaco.editor.defineTheme("aether-dark", {
-                base: "vs-dark",
-                inherit: true,
-                rules: [],
-                colors: {
-                  "editor.background": "#212121", // matching var(--bg-panel)
-                },
-              });
-            }}
+            value={mode === "raw" ? rawBody : formattedContent}
+            beforeMount={handleBeforeMount}
             onMount={(editor) => {
               editorRef.current = editor;
             }}
@@ -287,7 +330,8 @@ export default function ResponseBody({ response }: Readonly<ResponseBodyProps>) 
               lineNumbers: "on",
               scrollBeyondLastLine: false,
               fontSize: config.fontSize || 13,
-              fontFamily: "'JetBrains Mono', 'Fira Code', 'Source Code Pro', Menlo, Monaco, Consolas, monospace",
+              fontFamily:
+                "'JetBrains Mono', 'Fira Code', 'Source Code Pro', Menlo, Monaco, Consolas, monospace",
               lineHeight: Math.round((config.fontSize || 13) * 1.5),
               renderLineHighlight: "none",
               scrollbar: {
@@ -296,49 +340,56 @@ export default function ResponseBody({ response }: Readonly<ResponseBodyProps>) 
               },
             }}
           />
-        )}
-
-        {mode === "preview" && (
-          <Box
-            style={{ height: "100%", width: "100%", backgroundColor: "#fff", overflow: "hidden" }}
-          >
-            {editorLanguage === "html" ? (
-              <iframe
-                srcDoc={response.body}
-                title="Response Preview"
-                style={{ width: "100%", height: "100%", border: "none" }}
-              />
-            ) : (
-              <Box
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  height: "100%",
-                  color: "#000",
-                }}
-              >
-                Preview is only supported for HTML responses.
-              </Box>
-            )}
-          </Box>
-        )}
-
-        {mode === "visualize" && (
-          <Box
-            p={16}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              height: "100%",
-              color: "var(--text-muted)",
-            }}
-          >
-            Visualize mode allows rendering custom templates (coming soon).
-          </Box>
-        )}
+        </MonacoErrorBoundary>
       </Box>
+
+      {/* HTML Preview Mode */}
+      {mode === "preview" && (
+        <Box
+          className={classes.editorContainer}
+          style={{ backgroundColor: "#fff", overflow: "hidden" }}
+        >
+          {editorLanguage === "html" ? (
+            <iframe
+              srcDoc={rawBody}
+              sandbox="allow-same-origin"
+              title="Response Preview"
+              style={{ width: "100%", height: "100%", border: "none" }}
+            />
+          ) : (
+            <Box
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "100%",
+                color: "#333",
+                fontSize: 13,
+              }}
+            >
+              Preview is only supported for HTML responses.
+            </Box>
+          )}
+        </Box>
+      )}
+
+      {/* Visualize Mode */}
+      {mode === "visualize" && (
+        <Box
+          className={classes.editorContainer}
+          p={16}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100%",
+            color: "var(--text-muted)",
+            fontSize: 13,
+          }}
+        >
+          Visualize mode allows rendering custom templates (coming soon).
+        </Box>
+      )}
     </Box>
   );
 }

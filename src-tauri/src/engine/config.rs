@@ -1,6 +1,6 @@
+use crate::errors::AppError;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use crate::errors::AppError;
 
 /// Global application configuration settings persisted under the system's config path.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -60,16 +60,16 @@ impl ConfigManager {
         }
 
         let content = std::fs::read_to_string(&path)?;
-        let config: AppConfig = serde_json::from_str(&content).unwrap_or_else(|_| AppConfig::default());
+        let config: AppConfig =
+            serde_json::from_str(&content).unwrap_or_else(|_| AppConfig::default());
         Ok(config)
     }
 
     /// Persists global configuration changes atomically back to disk.
     pub fn write_config(app_handle: &tauri::AppHandle, config: &AppConfig) -> Result<(), AppError> {
         let path = Self::get_config_path(app_handle)?;
-        let content = serde_json::to_string_pretty(config).map_err(|e| {
-            AppError::FsError(format!("Failed to serialize app config: {}", e))
-        })?;
+        let content = serde_json::to_string_pretty(config)
+            .map_err(|e| AppError::FsError(format!("Failed to serialize app config: {}", e)))?;
         std::fs::write(&path, content)?;
         Ok(())
     }

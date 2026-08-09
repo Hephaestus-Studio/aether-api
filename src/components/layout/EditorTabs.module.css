@@ -19,6 +19,7 @@
   padding: 0 14px;
   display: flex;
   align-items: center;
+  gap: 8px;
   background-color: var(--bg-tab-inactive);
   border-right: 1px solid var(--border-color);
   cursor: pointer;
@@ -35,7 +36,7 @@
 }
 
 .methodText {
-  margin-right: 6px;
+  font-weight: 700;
 }
 
 .nameText {
@@ -53,4 +54,25 @@
 
 .closeBtn {
   margin-left: 8px;
+}
+
+.actionsGroup {
+  border-left: 1px solid var(--border-color);
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.actionBtn {
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.actionBtn:hover {
+  color: var(--text-primary);
+  background-color: rgba(255, 255, 255, 0.05) !important;
 }

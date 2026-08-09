@@ -22,6 +22,9 @@ interface TabState {
   setProtocol: (tabId: string, protocol: string) => void;
   terminalOpened: boolean;
   toggleTerminal: () => void;
+  responsePanelOpened: boolean;
+  toggleResponsePanel: () => void;
+  setResponsePanelOpened: (opened: boolean) => void;
 }
 
 export const useTabStore = create<TabState>((set, get) => ({
@@ -33,11 +36,19 @@ export const useTabStore = create<TabState>((set, get) => ({
   protocols: {},
 
   openTab: (tab) => {
-    const { tabs } = get();
+    const { tabs, responses } = get();
+    const hasResponse = !!responses[tab.id];
     if (!tabs.some((t) => t.id === tab.id)) {
-      set({ tabs: [...tabs, tab], activeTabId: tab.id });
+      set({
+        tabs: [...tabs, tab],
+        activeTabId: tab.id,
+        responsePanelOpened: hasResponse,
+      });
     } else {
-      set({ activeTabId: tab.id });
+      set({
+        activeTabId: tab.id,
+        responsePanelOpened: hasResponse,
+      });
     }
   },
 
@@ -72,7 +83,18 @@ export const useTabStore = create<TabState>((set, get) => ({
     });
   },
 
-  setActiveTab: (tabId) => set({ activeTabId: tabId }),
+  setActiveTab: (tabId) => {
+    if (tabId) {
+      const { responses } = get();
+      const hasResponse = !!responses[tabId];
+      set({
+        activeTabId: tabId,
+        responsePanelOpened: hasResponse,
+      });
+    } else {
+      set({ activeTabId: tabId });
+    }
+  },
 
   markDirty: (tabId) => {
     set({
@@ -142,6 +164,17 @@ export const useTabStore = create<TabState>((set, get) => ({
   toggleTerminal: () => {
     set({
       terminalOpened: !get().terminalOpened,
+    });
+  },
+  responsePanelOpened: true,
+  toggleResponsePanel: () => {
+    set({
+      responsePanelOpened: !get().responsePanelOpened,
+    });
+  },
+  setResponsePanelOpened: (opened: boolean) => {
+    set({
+      responsePanelOpened: opened,
     });
   },
 }));

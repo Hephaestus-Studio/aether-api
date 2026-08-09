@@ -6,12 +6,14 @@ interface SplitPaneProps {
   topPanel: ReactNode;
   bottomPanel: ReactNode;
   orientation?: "horizontal" | "vertical";
+  collapsed?: boolean;
 }
 
 export default function SplitPane({
   topPanel,
   bottomPanel,
   orientation = "horizontal",
+  collapsed = false,
 }: Readonly<SplitPaneProps>) {
   const [splitRatio, setSplitRatio] = useState(0.5);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -62,8 +64,8 @@ export default function SplitPane({
     >
       <Box
         style={{
-          height: isVertical ? `calc(${splitRatio * 100}% - 2px)` : "100%",
-          width: isVertical ? "100%" : `calc(${splitRatio * 100}% - 2px)`,
+          height: collapsed ? "100%" : isVertical ? `calc(${splitRatio * 100}% - 2px)` : "100%",
+          width: collapsed ? "100%" : isVertical ? "100%" : `calc(${splitRatio * 100}% - 2px)`,
           overflow: "auto",
           flexShrink: 0,
         }}
@@ -76,6 +78,7 @@ export default function SplitPane({
         onDoubleClick={handleDoubleClick}
         className={classes.divider}
         style={{
+          display: collapsed ? "none" : isVertical ? "block" : "block",
           cursor: isVertical ? "row-resize" : "col-resize",
           height: isVertical ? "4px" : "100%",
           width: isVertical ? "100%" : "4px",
@@ -84,6 +87,7 @@ export default function SplitPane({
       />
       <Box
         style={{
+          display: collapsed ? "none" : "block",
           height: isVertical ? `calc(${(1 - splitRatio) * 100}% - 2px)` : "100%",
           width: isVertical ? "100%" : `calc(${(1 - splitRatio) * 100}% - 2px)`,
           overflow: "auto",

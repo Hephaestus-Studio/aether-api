@@ -15,6 +15,7 @@ export default function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>)
   const response = useTabStore((s) => s.responses[tabId]);
   const isLoading = useTabStore((s) => s.loadingStates[tabId]);
   const [requestDetails, setRequestDetails] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<string | null>("body");
 
   useEffect(() => {
     if (response) {
@@ -31,33 +32,6 @@ export default function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>)
         <Text size="xs" style={{ color: "var(--text-muted)", marginTop: 8 }}>
           Sending request...
         </Text>
-      </Box>
-    );
-  }
-
-  if (!response) {
-    return (
-      <Box className={classes.emptyState}>
-        <Text size="sm" style={{ color: "var(--text-muted)" }}>
-          No response. Send a request to see the response.
-        </Text>
-      </Box>
-    );
-  }
-
-  if ("error" in response) {
-    return (
-      <Box className={classes.container}>
-        <Group gap={16} p={16} mb={12} border-bottom="1px solid var(--border-color)">
-          <Text size="sm" fw={700} color="red">
-            Error
-          </Text>
-        </Group>
-        <Box p={16}>
-          <Text size="sm" color="red">
-            {response.error}
-          </Text>
-        </Box>
       </Box>
     );
   }
@@ -123,8 +97,8 @@ export default function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>)
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  const responseBodySize = response.sizeBytes || 0;
-  const responseHeadersSize = calculateHeadersSize(response.headers || []);
+  const responseBodySize = response?.sizeBytes || 0;
+  const responseHeadersSize = calculateHeadersSize(response?.headers || []);
   const responseTotalSize = responseBodySize + responseHeadersSize;
 
   const requestHeadersSize = calculateRequestHeadersSize(requestDetails);
@@ -132,12 +106,12 @@ export default function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>)
   const requestTotalSize = requestHeadersSize + requestBodySize;
 
   // Timing breakdown calculations
-  const dnsMs = response.timing?.dnsMs || 0;
-  const tcpMs = response.timing?.tcpMs || 0;
-  const tlsMs = response.timing?.tlsMs || 0;
-  const ttfbMs = response.timing?.ttfbMs || 0;
-  const downloadMs = response.timing?.downloadMs || 0;
-  const totalMs = response.timing?.totalMs || 0;
+  const dnsMs = response?.timing?.dnsMs || 0;
+  const tcpMs = response?.timing?.tcpMs || 0;
+  const tlsMs = response?.timing?.tlsMs || 0;
+  const ttfbMs = response?.timing?.ttfbMs || 0;
+  const downloadMs = response?.timing?.downloadMs || 0;
+  const totalMs = response?.timing?.totalMs || 0;
 
   const prepareMs = 1.2;
   const socketMs = 1.0;
@@ -207,275 +181,335 @@ export default function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>)
     };
   });
 
+  const hasResponse = !!response && !("error" in response);
+  const isError = !!response && "error" in response;
+
   return (
-    <Box className={classes.container}>
-      <Tabs defaultValue="body" className={classes.tabs}>
-        <Box className={classes.topHeader}>
-          <Tabs.List className={classes.tabsList}>
-            <Tabs.Tab value="body" className={classes.tabItem}>
-              Body
-            </Tabs.Tab>
-            <Tabs.Tab value="cookies" className={classes.tabItem}>
-              Cookies
-            </Tabs.Tab>
-            <Tabs.Tab value="headers" className={classes.tabItem}>
-              Headers <span className={classes.headerCount}>({response.headers?.length || 0})</span>
-            </Tabs.Tab>
-            <Tabs.Tab value="testResults" className={classes.tabItem}>
-              Test Results
-            </Tabs.Tab>
-          </Tabs.List>
+    <Box className={classes.container} style={{ height: "100%", position: "relative" }}>
+      {/* Empty State */}
+      <Box
+        className={classes.emptyState}
+        style={{
+          display: !response ? "flex" : "none",
+          height: "100%",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Text size="sm" style={{ color: "var(--text-muted)" }}>
+          No response. Send a request to see the response.
+        </Text>
+      </Box>
 
-          <Group gap={16} wrap="nowrap" className={classes.metricsGroup}>
-            <Group gap={4} wrap="nowrap" className={classes.metricLabel}>
-              <IconGlobe size={14} />
-              <span>Status:</span>
-              <span className={classes.metricValueGreen}>
-                {response.status} {response.statusText}
-              </span>
-            </Group>
-
-            <HoverCard
-              width={350}
-              position="bottom-end"
-              withArrow
-              shadow="md"
-              openDelay={200}
-              closeDelay={200}
+      {/* Error State */}
+      <Box
+        style={{
+          display: isError ? "block" : "none",
+          height: "100%",
+        }}
+      >
+        {isError && (
+          <Box>
+            <Group
+              gap={16}
+              p={16}
+              mb={12}
+              style={{ borderBottom: "1px solid var(--border-color)" }}
             >
-              <HoverCard.Target>
-                <Group gap={4} wrap="nowrap" className={classes.metricLabelInteractive}>
-                  <span>Time:</span>
-                  <span className={classes.metricValueGreenUnderlined}>
-                    {Math.round(totalMs)} ms
-                  </span>
-                </Group>
-              </HoverCard.Target>
-              <HoverCard.Dropdown className={classes.timePopoverDropdown}>
-                {/* Header row */}
-                <Box className={classes.timeHeaderRow}>
-                  <Text size="xxs" fw={700} style={{ color: "var(--text-muted)", width: 110 }}>
-                    EVENT
-                  </Text>
-                  <Text
-                    size="xxs"
-                    fw={700}
-                    style={{ color: "var(--text-muted)", width: 140, textAlign: "center" }}
-                  ></Text>
-                  <Text
-                    size="xxs"
-                    fw={700}
-                    style={{ color: "var(--text-muted)", width: 60, textAlign: "right" }}
-                  >
-                    TIME
-                  </Text>
-                </Box>
+              <Text size="sm" fw={700} color="red">
+                Error
+              </Text>
+            </Group>
+            <Box p={16}>
+              <Text size="sm" color="red">
+                {(response as any)?.error}
+              </Text>
+            </Box>
+          </Box>
+        )}
+      </Box>
 
-                {/* Event list */}
-                {waterfallData
-                  .filter((phase) => !phase.isHidden)
-                  .map((phase) => (
-                    <Box
-                      key={phase.label}
-                      className={classes.timeRow}
-                      style={{ opacity: phase.isMuted || phase.isCached ? 0.5 : 1 }}
+      {/* Normal Tabs Layout */}
+      <Box
+        style={{
+          display: hasResponse ? "block" : "none",
+          height: "100%",
+        }}
+      >
+        <Tabs
+          value={activeTab}
+          onChange={setActiveTab}
+          defaultValue="body"
+          className={classes.tabs}
+        >
+          <Box className={classes.topHeader}>
+            <Tabs.List className={classes.tabsList}>
+              <Tabs.Tab value="body" className={classes.tabItem}>
+                Body
+              </Tabs.Tab>
+              <Tabs.Tab value="cookies" className={classes.tabItem}>
+                Cookies
+              </Tabs.Tab>
+              <Tabs.Tab value="headers" className={classes.tabItem}>
+                Headers{" "}
+                <span className={classes.headerCount}>({response?.headers?.length || 0})</span>
+              </Tabs.Tab>
+              <Tabs.Tab value="testResults" className={classes.tabItem}>
+                Test Results
+              </Tabs.Tab>
+            </Tabs.List>
+
+            <Group gap={12} wrap="wrap" className={classes.metricsGroup}>
+              <Group gap={4} wrap="nowrap" className={classes.metricLabel}>
+                <IconGlobe size={14} />
+                <span>Status:</span>
+                <span className={classes.metricValueGreen}>
+                  {response?.status} {response?.statusText}
+                </span>
+              </Group>
+
+              <HoverCard
+                width={350}
+                position="bottom-end"
+                withArrow
+                shadow="md"
+                openDelay={200}
+                closeDelay={200}
+              >
+                <HoverCard.Target>
+                  <Group gap={4} wrap="nowrap" className={classes.metricLabelInteractive}>
+                    <span>Time:</span>
+                    <span className={classes.metricValueGreenUnderlined}>
+                      {Math.round(totalMs)} ms
+                    </span>
+                  </Group>
+                </HoverCard.Target>
+                <HoverCard.Dropdown className={classes.timePopoverDropdown}>
+                  {/* Header row */}
+                  <Box className={classes.timeHeaderRow}>
+                    <Text size="xxs" fw={700} style={{ color: "var(--text-muted)", width: 110 }}>
+                      EVENT
+                    </Text>
+                    <Text
+                      size="xxs"
+                      fw={700}
+                      style={{ color: "var(--text-muted)", width: 140, textAlign: "center" }}
+                    ></Text>
+                    <Text
+                      size="xxs"
+                      fw={700}
+                      style={{ color: "var(--text-muted)", width: 60, textAlign: "right" }}
                     >
-                      <Text size="xs" className={classes.timeEventCell}>
-                        {phase.label}
-                      </Text>
-                      <Box className={classes.timeTimelineCell}>
-                        <Box className={classes.waterfallTrack}>
-                          {phase.width > 0 && (
-                            <Box
-                              className={
-                                phase.isMuted ? classes.waterfallBarGrey : classes.waterfallBar
-                              }
-                              style={{
-                                left: `${phase.left}%`,
-                                width: `${phase.width}%`,
-                              }}
-                            />
-                          )}
+                      TIME
+                    </Text>
+                  </Box>
+
+                  {/* Event list */}
+                  {waterfallData
+                    .filter((phase) => !phase.isHidden)
+                    .map((phase) => (
+                      <Box
+                        key={phase.label}
+                        className={classes.timeRow}
+                        style={{ opacity: phase.isMuted || phase.isCached ? 0.5 : 1 }}
+                      >
+                        <Text size="xs" className={classes.timeEventCell}>
+                          {phase.label}
+                        </Text>
+                        <Box className={classes.timeTimelineCell}>
+                          <Box className={classes.waterfallTrack}>
+                            {phase.width > 0 && (
+                              <Box
+                                className={
+                                  phase.isMuted ? classes.waterfallBarGrey : classes.waterfallBar
+                                }
+                                style={{
+                                  left: `${phase.left}%`,
+                                  width: `${phase.width}%`,
+                                }}
+                              />
+                            )}
+                          </Box>
                         </Box>
+                        <Text
+                          size="xs"
+                          className={classes.timeDurationCell}
+                          style={{ color: phase.isCached ? "var(--text-disabled)" : undefined }}
+                        >
+                          {phase.isCached
+                            ? "Cache"
+                            : phase.duration >= 100
+                              ? `${phase.duration.toFixed(0)} ms`
+                              : `${phase.duration.toFixed(2)} ms`}
+                        </Text>
                       </Box>
+                    ))}
+
+                  <Box className={classes.timeDivider} />
+
+                  {/* Total row */}
+                  <Box className={classes.timeRow} style={{ marginTop: 8 }}>
+                    <Text size="xs" fw={700} className={classes.timeTotalLabel}>
+                      Total
+                    </Text>
+                    <Box className={classes.timeTimelineCell}></Box>
+                    <Text size="xs" fw={700} className={classes.timeTotalValue}>
+                      {calculatedTotalMs >= 100
+                        ? `${calculatedTotalMs.toFixed(0)} ms`
+                        : `${calculatedTotalMs.toFixed(2)} ms`}
+                    </Text>
+                  </Box>
+                </HoverCard.Dropdown>
+              </HoverCard>
+
+              <HoverCard
+                width={280}
+                position="bottom-end"
+                withArrow
+                shadow="md"
+                openDelay={200}
+                closeDelay={200}
+              >
+                <HoverCard.Target>
+                  <Group gap={4} wrap="nowrap" className={classes.metricLabelInteractive}>
+                    <span>Size:</span>
+                    <span className={classes.metricValueGreenUnderlined}>
+                      {formatSize(responseTotalSize)}
+                    </span>
+                  </Group>
+                </HoverCard.Target>
+                <HoverCard.Dropdown className={classes.sizePopoverDropdown}>
+                  <Box className={classes.popoverSection}>
+                    <Box className={classes.popoverTitleRow}>
+                      <Box className={classes.arrowBoxBlue}>
+                        <IconArrowDown size={12} color="#fff" />
+                      </Box>
+                      <Text size="xs" fw={700} className={classes.popoverTitleText}>
+                        Response Size
+                      </Text>
                       <Text
                         size="xs"
-                        className={classes.timeDurationCell}
-                        style={{ color: phase.isCached ? "var(--text-disabled)" : undefined }}
+                        fw={700}
+                        style={{ marginLeft: "auto", color: "var(--text-primary)" }}
                       >
-                        {phase.isCached
-                          ? "Cache"
-                          : phase.duration >= 100
-                            ? `${phase.duration.toFixed(0)} ms`
-                            : `${phase.duration.toFixed(2)} ms`}
+                        {formatSize(responseTotalSize)}
                       </Text>
                     </Box>
-                  ))}
-
-                <Box className={classes.timeDivider} />
-
-                {/* Total row */}
-                <Box className={classes.timeRow} style={{ marginTop: 8 }}>
-                  <Text size="xs" fw={700} className={classes.timeTotalLabel}>
-                    Total
-                  </Text>
-                  <Box className={classes.timeTimelineCell}></Box>
-                  <Text size="xs" fw={700} className={classes.timeTotalValue}>
-                    {calculatedTotalMs >= 100
-                      ? `${calculatedTotalMs.toFixed(0)} ms`
-                      : `${calculatedTotalMs.toFixed(2)} ms`}
-                  </Text>
-                </Box>
-              </HoverCard.Dropdown>
-            </HoverCard>
-
-            <HoverCard
-              width={280}
-              position="bottom-end"
-              withArrow
-              shadow="md"
-              openDelay={200}
-              closeDelay={200}
-            >
-              <HoverCard.Target>
-                <Group gap={4} wrap="nowrap" className={classes.metricLabelInteractive}>
-                  <span>Size:</span>
-                  <span className={classes.metricValueGreenUnderlined}>
-                    {formatSize(responseTotalSize)}
-                  </span>
-                </Group>
-              </HoverCard.Target>
-              <HoverCard.Dropdown className={classes.sizePopoverDropdown}>
-                <Box className={classes.popoverSection}>
-                  <Box className={classes.popoverTitleRow}>
-                    <Box className={classes.arrowBoxBlue}>
-                      <IconArrowDown size={12} color="#fff" />
+                    <Box className={classes.popoverSubRow}>
+                      <Text size="xs" style={{ color: "var(--text-muted)" }}>
+                        Headers
+                      </Text>
+                      <Text size="xs" style={{ marginLeft: "auto", color: "var(--text-muted)" }}>
+                        {formatSize(responseHeadersSize)}
+                      </Text>
                     </Box>
-                    <Text size="xs" fw={700} className={classes.popoverTitleText}>
-                      Response Size
-                    </Text>
-                    <Text
-                      size="xs"
-                      fw={700}
-                      style={{ marginLeft: "auto", color: "var(--text-primary)" }}
-                    >
-                      {formatSize(responseTotalSize)}
-                    </Text>
-                  </Box>
-                  <Box className={classes.popoverSubRow}>
-                    <Text size="xs" style={{ color: "var(--text-muted)" }}>
-                      Headers
-                    </Text>
-                    <Text size="xs" style={{ marginLeft: "auto", color: "var(--text-muted)" }}>
-                      {formatSize(responseHeadersSize)}
-                    </Text>
-                  </Box>
-                  <Box className={classes.popoverSubRow}>
-                    <Text size="xs" style={{ color: "var(--text-muted)" }}>
-                      Body
-                    </Text>
-                    <Text size="xs" style={{ marginLeft: "auto", color: "var(--text-muted)" }}>
-                      {formatSize(responseBodySize)}
-                    </Text>
-                  </Box>
-                  <Box className={classes.popoverSubRow} style={{ opacity: 0.6 }}>
-                    <Text size="xs" style={{ color: "var(--text-muted)" }}>
-                      Uncompressed
-                    </Text>
-                    <Text size="xs" style={{ marginLeft: "auto", color: "var(--text-muted)" }}>
-                      {formatSize(responseBodySize)}
-                    </Text>
-                  </Box>
-                </Box>
-
-                <Box className={classes.popoverSection} style={{ marginTop: 12 }}>
-                  <Box className={classes.popoverTitleRow}>
-                    <Box className={classes.arrowBoxOrange}>
-                      <IconArrowUp size={12} color="#fff" />
+                    <Box className={classes.popoverSubRow}>
+                      <Text size="xs" style={{ color: "var(--text-muted)" }}>
+                        Body
+                      </Text>
+                      <Text size="xs" style={{ marginLeft: "auto", color: "var(--text-muted)" }}>
+                        {formatSize(responseBodySize)}
+                      </Text>
                     </Box>
-                    <Text size="xs" fw={700} className={classes.popoverTitleText}>
-                      Request Size
-                    </Text>
-                    <Text
-                      size="xs"
-                      fw={700}
-                      style={{ marginLeft: "auto", color: "var(--text-primary)" }}
-                    >
-                      {formatSize(requestTotalSize)}
-                    </Text>
+                    <Box className={classes.popoverSubRow} style={{ opacity: 0.6 }}>
+                      <Text size="xs" style={{ color: "var(--text-muted)" }}>
+                        Uncompressed
+                      </Text>
+                      <Text size="xs" style={{ marginLeft: "auto", color: "var(--text-muted)" }}>
+                        {formatSize(responseBodySize)}
+                      </Text>
+                    </Box>
                   </Box>
-                  <Box className={classes.popoverSubRow}>
-                    <Text size="xs" style={{ color: "var(--text-muted)" }}>
-                      Headers
-                    </Text>
-                    <Text size="xs" style={{ marginLeft: "auto", color: "var(--text-muted)" }}>
-                      {formatSize(requestHeadersSize)}
-                    </Text>
-                  </Box>
-                  <Box className={classes.popoverSubRow}>
-                    <Text size="xs" style={{ color: "var(--text-muted)" }}>
-                      Body
-                    </Text>
-                    <Text size="xs" style={{ marginLeft: "auto", color: "var(--text-muted)" }}>
-                      {formatSize(requestBodySize)}
-                    </Text>
-                  </Box>
-                </Box>
 
-                <Box className={classes.popoverFooter}>
-                  <Text
-                    size="xxs"
-                    style={{ color: "var(--text-muted)", fontStyle: "italic", fontSize: 10 }}
+                  <Box className={classes.popoverSection} style={{ marginTop: 12 }}>
+                    <Box className={classes.popoverTitleRow}>
+                      <Box className={classes.arrowBoxOrange}>
+                        <IconArrowUp size={12} color="#fff" />
+                      </Box>
+                      <Text size="xs" fw={700} className={classes.popoverTitleText}>
+                        Request Size
+                      </Text>
+                      <Text
+                        size="xs"
+                        fw={700}
+                        style={{ marginLeft: "auto", color: "var(--text-primary)" }}
+                      >
+                        {formatSize(requestTotalSize)}
+                      </Text>
+                    </Box>
+                    <Box className={classes.popoverSubRow}>
+                      <Text size="xs" style={{ color: "var(--text-muted)" }}>
+                        Headers
+                      </Text>
+                      <Text size="xs" style={{ marginLeft: "auto", color: "var(--text-muted)" }}>
+                        {formatSize(requestHeadersSize)}
+                      </Text>
+                    </Box>
+                    <Box className={classes.popoverSubRow}>
+                      <Text size="xs" style={{ color: "var(--text-muted)" }}>
+                        Body
+                      </Text>
+                      <Text size="xs" style={{ marginLeft: "auto", color: "var(--text-muted)" }}>
+                        {formatSize(requestBodySize)}
+                      </Text>
+                    </Box>
+                  </Box>
+
+                  <Box className={classes.popoverFooter}>
+                    <Text
+                      size="xxs"
+                      style={{ color: "var(--text-muted)", fontStyle: "italic", fontSize: 10 }}
+                    >
+                      All size calculations are approximate
+                    </Text>
+                  </Box>
+                </HoverCard.Dropdown>
+              </HoverCard>
+
+              <Menu shadow="md" width={150}>
+                <Menu.Target>
+                  <Button
+                    variant="subtle"
+                    size="xs"
+                    color="indigo"
+                    rightSection={<IconChevronDown size={12} />}
+                    className={classes.saveBtn}
                   >
-                    All size calculations are approximate
-                  </Text>
-                </Box>
-              </HoverCard.Dropdown>
-            </HoverCard>
-
-            <Menu shadow="md" width={150}>
-              <Menu.Target>
-                <Button
-                  variant="subtle"
-                  size="xs"
-                  color="indigo"
-                  rightSection={<IconChevronDown size={12} />}
-                  className={classes.saveBtn}
-                >
-                  Save Response
-                </Button>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Item onClick={handleDownloadResponse}>Save to file...</Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
-          </Group>
-        </Box>
-
-        <Tabs.Panel value="body" className={classes.panel}>
-          <ResponseBody response={response} />
-        </Tabs.Panel>
-
-        <Tabs.Panel value="cookies" className={classes.panel}>
-          <Box className={classes.placeholderTabContent}>
-            <Text size="sm" style={{ color: "var(--text-muted)" }}>
-              No cookies returned for this response.
-            </Text>
+                    Save Response
+                  </Button>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Item onClick={handleDownloadResponse}>Save to file...</Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+            </Group>
           </Box>
-        </Tabs.Panel>
 
-        <Tabs.Panel value="headers" className={classes.panel}>
-          <ResponseHeaders headers={response.headers} />
-        </Tabs.Panel>
+          <Tabs.Panel value="body" className={classes.panel} keepMounted>
+            <ResponseBody response={response || {}} isActive={activeTab === "body"} />
+          </Tabs.Panel>
 
-        <Tabs.Panel value="testResults" className={classes.panel}>
-          <Box className={classes.placeholderTabContent}>
-            <Text size="sm" style={{ color: "var(--text-muted)" }}>
-              No tests were run for this request.
-            </Text>
-          </Box>
-        </Tabs.Panel>
-      </Tabs>
+          <Tabs.Panel value="cookies" className={classes.panel} keepMounted>
+            <Box className={classes.placeholderTabContent}>
+              <Text size="sm" style={{ color: "var(--text-muted)" }}>
+                No cookies returned for this response.
+              </Text>
+            </Box>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="headers" className={classes.panel} keepMounted>
+            <ResponseHeaders headers={response?.headers || []} />
+          </Tabs.Panel>
+
+          <Tabs.Panel value="testResults" className={classes.panel} keepMounted>
+            <Box className={classes.placeholderTabContent}>
+              <Text size="sm" style={{ color: "var(--text-muted)" }}>
+                No tests were run for this request.
+              </Text>
+            </Box>
+          </Tabs.Panel>
+        </Tabs>
+      </Box>
     </Box>
   );
 }

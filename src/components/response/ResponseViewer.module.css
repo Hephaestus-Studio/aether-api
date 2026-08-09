@@ -13,11 +13,13 @@
 
 .topHeader {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid var(--border-color);
-  padding: 0 16px;
+  padding: 4px 16px;
   background-color: var(--bg-sidebar);
+  gap: 8px;
 }
 
 .tabsList {
@@ -48,6 +50,9 @@
 .metricsGroup {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 6px 0;
 }
 
 .metricLabel {

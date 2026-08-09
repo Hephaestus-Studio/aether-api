@@ -439,10 +439,7 @@ pub fn run_terminal_command(command: String, cwd: Option<String>) -> Result<Stri
 
 /// Tauri command to explicitly create and scaffold a new workspace.
 #[tauri::command]
-pub async fn create_workspace(
-    name: String,
-    parent_directory: String,
-) -> Result<String, AppError> {
+pub async fn create_workspace(name: String, parent_directory: String) -> Result<String, AppError> {
     let sanitized = sanitize_name(&name);
     let parent_path = PathBuf::from(&parent_directory);
     let workspace_path = parent_path.join(sanitized);
@@ -462,7 +459,9 @@ pub async fn create_workspace(
 
 /// Tauri command to fetch the global application settings.
 #[tauri::command]
-pub fn get_app_config(app_handle: tauri::AppHandle) -> Result<crate::engine::config::AppConfig, AppError> {
+pub fn get_app_config(
+    app_handle: tauri::AppHandle,
+) -> Result<crate::engine::config::AppConfig, AppError> {
     crate::engine::config::ConfigManager::read_config(&app_handle)
 }
 

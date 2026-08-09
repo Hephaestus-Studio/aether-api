@@ -22,6 +22,7 @@ export default function AppShell() {
 
   const activeTabId = useTabStore((s) => s.activeTabId);
   const terminalOpened = useTabStore((s) => s.terminalOpened);
+  const responsePanelOpened = useTabStore((s) => s.responsePanelOpened);
 
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     return workspaceInfo?.settings?.sidebarWidth || 280;
@@ -133,35 +134,25 @@ export default function AppShell() {
       <MantineAppShell.Main className={classes.main}>
         <EditorTabs />
         <Box className={classes.editorWrapper}>
-          {terminalOpened ? (
-            <SplitPane
-              topPanel={
-                activeTabId ? (
-                  <SplitPane
-                    topPanel={<RequestEditor tabId={activeTabId} />}
-                    bottomPanel={<ResponseViewer tabId={activeTabId} />}
-                    orientation="horizontal"
-                  />
-                ) : (
-                  <Box className={classes.emptyState}>
-                    Select a request from explorer or press Ctrl+P to search
-                  </Box>
-                )
-              }
-              bottomPanel={<TerminalPanel />}
-              orientation="vertical"
-            />
-          ) : activeTabId ? (
-            <SplitPane
-              topPanel={<RequestEditor tabId={activeTabId} />}
-              bottomPanel={<ResponseViewer tabId={activeTabId} />}
-              orientation="horizontal"
-            />
-          ) : (
-            <Box className={classes.emptyState}>
-              Select a request from explorer or press Ctrl+P to search
-            </Box>
-          )}
+          <SplitPane
+            collapsed={!terminalOpened}
+            topPanel={
+              activeTabId ? (
+                <SplitPane
+                  collapsed={!responsePanelOpened}
+                  topPanel={<RequestEditor tabId={activeTabId} />}
+                  bottomPanel={<ResponseViewer tabId={activeTabId} />}
+                  orientation="horizontal"
+                />
+              ) : (
+                <Box className={classes.emptyState}>
+                  Select a request from explorer or press Ctrl+P to search
+                </Box>
+              )
+            }
+            bottomPanel={<TerminalPanel />}
+            orientation="vertical"
+          />
         </Box>
       </MantineAppShell.Main>
 

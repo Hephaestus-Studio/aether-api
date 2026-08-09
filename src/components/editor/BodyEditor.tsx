@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Box, Radio, Group, Select, Checkbox, TextInput, ActionIcon, Text } from "@mantine/core";
 import { IconTrash } from "@tabler/icons-react";
-import Editor from "@monaco-editor/react";
+import MonacoEditor from "@/components/common/MonacoEditor";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useConfigStore } from "@/stores/configStore";
+import MonacoErrorBoundary from "@/components/common/MonacoErrorBoundary";
 import type { RequestBody, KeyValuePair, MultipartField } from "@/types/request";
 import classes from "./BodyEditor.module.css";
 
@@ -260,11 +261,8 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
 
       {bodyType === "raw" && (
         <Box className={classes.editorContainer}>
-          <Editor
-            height="100%"
-            language={monacoLang()}
-            theme="aether-dark"
-            value={
+          <MonacoErrorBoundary
+            fallbackContent={
               body.type === "json" ||
               body.type === "xml" ||
               body.type === "text" ||
@@ -272,28 +270,47 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
                 ? body.content
                 : ""
             }
-            onChange={handleContentChange}
-            options={{
-              minimap: { enabled: false },
-              scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8 },
-              fontSize: config.fontSize || 13,
-              fontFamily: "'JetBrains Mono', 'Fira Code', 'Source Code Pro', Menlo, Monaco, Consolas, monospace",
-              lineHeight: Math.round((config.fontSize || 13) * 1.5),
-              padding: { top: 8, bottom: 8 },
-              wordWrap: "on",
-              tabSize: 2,
-            }}
-            onMount={(_, monaco) => {
-              monaco.editor.defineTheme("aether-dark", {
-                base: "vs-dark",
-                inherit: true,
-                rules: [],
-                colors: {
-                  "editor.background": "#212121",
-                },
-              });
-            }}
-          />
+          >
+            <MonacoEditor
+              height="100%"
+              language={monacoLang()}
+              theme="aether-dark"
+              value={
+                body.type === "json" ||
+                body.type === "xml" ||
+                body.type === "text" ||
+                body.type === "yaml"
+                  ? body.content
+                  : ""
+              }
+              onChange={handleContentChange}
+              options={{
+                minimap: { enabled: false },
+                scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8 },
+                fontSize: config.fontSize || 13,
+                fontFamily:
+                  "'JetBrains Mono', 'Fira Code', 'Source Code Pro', Menlo, Monaco, Consolas, monospace",
+                lineHeight: Math.round((config.fontSize || 13) * 1.5),
+                padding: { top: 8, bottom: 8 },
+                wordWrap: "on",
+                tabSize: 2,
+              }}
+              beforeMount={(monaco) => {
+                try {
+                  monaco.editor.defineTheme("aether-dark", {
+                    base: "vs-dark",
+                    inherit: true,
+                    rules: [],
+                    colors: {
+                      "editor.background": "#212121",
+                    },
+                  });
+                } catch {
+                  // theme already defined or failed safely
+                }
+              }}
+            />
+          </MonacoErrorBoundary>
         </Box>
       )}
 

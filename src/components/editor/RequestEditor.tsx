@@ -33,6 +33,7 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
   const markClean = useTabStore((s) => s.markClean);
   const setResponse = useTabStore((s) => s.setResponse);
   const setTabLoading = useTabStore((s) => s.setLoading);
+  const setResponsePanelOpened = useTabStore((s) => s.setResponsePanelOpened);
 
   const activeProtocol = useTabStore((s) => s.protocols[tabId]) || "http";
   const setProtocol = useTabStore((s) => s.setProtocol);
@@ -73,6 +74,7 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
 
   const handleSend = async () => {
     if (!request) return;
+    setResponsePanelOpened(true);
     setLoading(true);
     setTabLoading(tabId, true);
     try {

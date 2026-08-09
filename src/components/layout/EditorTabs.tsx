@@ -1,9 +1,21 @@
-import { Box, ScrollArea, Group, Text, Menu, CloseButton } from "@mantine/core";
+import {
+  Box,
+  ScrollArea,
+  Group,
+  Text,
+  Menu,
+  CloseButton,
+  ActionIcon,
+  Tooltip,
+} from "@mantine/core";
+import { IconLayoutSidebarRightCollapse, IconLayoutSidebarRightExpand } from "@tabler/icons-react";
 import { useTabStore } from "@/stores/tabStore";
 import classes from "./EditorTabs.module.css";
 
 export default function EditorTabs() {
   const { tabs, activeTabId, setActiveTab, closeTab, closeOtherTabs, closeAllTabs } = useTabStore();
+  const responsePanelOpened = useTabStore((s) => s.responsePanelOpened);
+  const toggleResponsePanel = useTabStore((s) => s.toggleResponsePanel);
 
   const getMethodColor = (method: string) => {
     switch (method.toUpperCase()) {
@@ -67,6 +79,29 @@ export default function EditorTabs() {
           })}
         </Group>
       </ScrollArea>
+      {tabs.length > 0 && (
+        <Group gap={6} px="xs" className={classes.actionsGroup}>
+          <Tooltip
+            label={responsePanelOpened ? "Hide Response Panel" : "Show Response Panel"}
+            position="bottom-end"
+            withArrow
+          >
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              size="md"
+              onClick={toggleResponsePanel}
+              className={classes.actionBtn}
+            >
+              {responsePanelOpened ? (
+                <IconLayoutSidebarRightCollapse size={16} />
+              ) : (
+                <IconLayoutSidebarRightExpand size={16} />
+              )}
+            </ActionIcon>
+          </Tooltip>
+        </Group>
+      )}
     </Box>
   );
 }

@@ -39,7 +39,6 @@ const getRepoNameFromUrl = (url: string): string => {
   }
 };
 
-
 export default function WelcomeScreen() {
   const { open } = useWorkspace();
   const [activeTab, setActiveTab] = useState<"projects" | "customize">("projects");
@@ -240,14 +239,22 @@ export default function WelcomeScreen() {
           <button onClick={handleMinimize} className={classes.controlButton} title="Minimize">
             <IconMinus size={14} stroke={1.8} />
           </button>
-          <button onClick={handleMaximize} className={classes.controlButton} title={isMaximized ? "Restore Down" : "Maximize"}>
+          <button
+            onClick={handleMaximize}
+            className={classes.controlButton}
+            title={isMaximized ? "Restore Down" : "Maximize"}
+          >
             {isMaximized ? (
               <IconCopy size={12} stroke={1.8} />
             ) : (
               <IconSquare size={12} stroke={1.8} />
             )}
           </button>
-          <button onClick={handleClose} className={`${classes.controlButton} ${classes.closeButton}`} title="Close">
+          <button
+            onClick={handleClose}
+            className={`${classes.controlButton} ${classes.closeButton}`}
+            title="Close"
+          >
             <IconX size={14} stroke={1.8} />
           </button>
         </div>
@@ -286,199 +293,226 @@ export default function WelcomeScreen() {
         <div className={classes.content}>
           <div className={classes.contentBody}>
             {activeTab === "projects" && (
-            <div className={classes.tabProjects}>
-              {recents.length > 0 && (
-                <div className={classes.recentHeader}>
-                  <div className={classes.searchBox}>
-                    <IconSearch size={14} className={classes.searchIcon} />
-                    <input
-                      type="text"
-                      placeholder="Search recent workspaces..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className={classes.searchInput}
-                    />
+              <div className={classes.tabProjects}>
+                {recents.length > 0 && (
+                  <div className={classes.recentHeader}>
+                    <div className={classes.searchBox}>
+                      <IconSearch size={14} className={classes.searchIcon} />
+                      <input
+                        type="text"
+                        placeholder="Search recent workspaces..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className={classes.searchInput}
+                      />
+                    </div>
+                    <div className={classes.recentActions}>
+                      <button
+                        onClick={() => setIsNewWsOpen(true)}
+                        className={classes.primaryActionBtn}
+                        title="New Workspace"
+                      >
+                        <IconPlus size={16} stroke={2} />
+                        <span>New Workspace</span>
+                      </button>
+                      <button
+                        onClick={handleOpenFolderDirect}
+                        className={classes.secondaryActionBtn}
+                        title="Open Workspace"
+                      >
+                        <IconFolder size={16} stroke={1.5} />
+                        <span>Open</span>
+                      </button>
+                      <button
+                        onClick={() => setIsCloneOpen(true)}
+                        className={classes.secondaryActionBtn}
+                        title="Clone Repository"
+                      >
+                        <IconGitBranch size={16} stroke={1.5} />
+                        <span>Clone</span>
+                      </button>
+                    </div>
                   </div>
-                  <div className={classes.recentActions}>
-                    <button onClick={() => setIsNewWsOpen(true)} className={classes.primaryActionBtn} title="New Workspace">
-                      <IconPlus size={16} stroke={2} />
-                      <span>New Workspace</span>
-                    </button>
-                    <button onClick={handleOpenFolderDirect} className={classes.secondaryActionBtn} title="Open Workspace">
-                      <IconFolder size={16} stroke={1.5} />
-                      <span>Open</span>
-                    </button>
-                    <button onClick={() => setIsCloneOpen(true)} className={classes.secondaryActionBtn} title="Clone Repository">
-                      <IconGitBranch size={16} stroke={1.5} />
-                      <span>Clone</span>
-                    </button>
-                  </div>
-                </div>
-              )}
+                )}
 
-              {recents.length > 0 ? (
-                // Non-empty recents list state
-                <div className={classes.recentContainer}>
-                  <div className={classes.recentScrollList}>
-                    {filteredRecents.length > 0 ? (
-                      <ul className={classes.workspaceList}>
-                        {filteredRecents.map((path) => {
-                          const { folderName } = parseWorkspacePath(path);
-                          return (
-                            <li
-                              key={path}
-                              onClick={() => handleOpenPath(path)}
-                              className={classes.workspaceCard}
-                            >
-                              <div className={classes.cardInfo}>
-                                <span className={classes.cardTitle}>{folderName}</span>
-                                <span className={classes.cardSubtitle}>{path}</span>
-                              </div>
-                              <button
-                                onClick={(e) => handleRemoveRecent(e, path)}
-                                className={classes.removeBtn}
-                                title="Remove from list"
+                {recents.length > 0 ? (
+                  // Non-empty recents list state
+                  <div className={classes.recentContainer}>
+                    <div className={classes.recentScrollList}>
+                      {filteredRecents.length > 0 ? (
+                        <ul className={classes.workspaceList}>
+                          {filteredRecents.map((path) => {
+                            const { folderName } = parseWorkspacePath(path);
+                            return (
+                              <li
+                                key={path}
+                                onClick={() => handleOpenPath(path)}
+                                className={classes.workspaceCard}
                               >
-                                <IconX size={14} />
-                              </button>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    ) : (
-                      <div className={classes.noResults}>No workspaces matched your search.</div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                // Empty state
-                <div className={classes.emptyState}>
-                  <div className={classes.emptyMessage}>
-                    <h2>Welcome to AetherAPI</h2>
-                    <p>Create a new workspace to start from scratch or open an existing repository.</p>
-                  </div>
-                  <div className={classes.emptyActionCards}>
-                    <div className={classes.actionCard} onClick={() => setIsNewWsOpen(true)}>
-                      <div className={classes.actionCardIcon} style={{ background: "rgba(99, 102, 241, 0.15)", color: "#6366f1" }}>
-                        <IconPlus size={24} stroke={2} />
-                      </div>
-                      <h3>New Workspace</h3>
-                      <p>Start a clean API workspace template from scratch</p>
-                    </div>
-
-                    <div className={classes.actionCard} onClick={handleOpenFolderDirect}>
-                      <div className={classes.actionCardIcon} style={{ background: "rgba(16, 185, 129, 0.15)", color: "#10b981" }}>
-                        <IconFolder size={24} stroke={1.5} />
-                      </div>
-                      <h3>Open</h3>
-                      <p>Open an existing workspace folder from your disk</p>
-                    </div>
-
-                    <div className={classes.actionCard} onClick={() => setIsCloneOpen(true)}>
-                      <div className={classes.actionCardIcon} style={{ background: "rgba(245, 158, 11, 0.15)", color: "#f59e0b" }}>
-                        <IconGitBranch size={24} stroke={1.5} />
-                      </div>
-                      <h3>Clone Repository</h3>
-                      <p>Pull files down from GitHub, GitLab, or raw URL</p>
+                                <div className={classes.cardInfo}>
+                                  <span className={classes.cardTitle}>{folderName}</span>
+                                  <span className={classes.cardSubtitle}>{path}</span>
+                                </div>
+                                <button
+                                  onClick={(e) => handleRemoveRecent(e, path)}
+                                  className={classes.removeBtn}
+                                  title="Remove from list"
+                                >
+                                  <IconX size={14} />
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      ) : (
+                        <div className={classes.noResults}>No workspaces matched your search.</div>
+                      )}
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === "customize" && (
-            <div className={classes.tabCustomize}>
-              <div className={classes.customizeHeader}>
-                <div>
-                  <h2>Customize AetherAPI</h2>
-                  <p className={classes.sectionDesc}>Configure global layout and application properties.</p>
-                </div>
-              </div>
-              <div className={classes.customizeBody}>
-
-                <div className={classes.settingsGroup}>
-                  {/* Card 1: Appearance */}
-                  <div className={classes.settingsCard}>
-                    <h3 className={classes.settingsCardTitle}>Appearance</h3>
-                    
-                    <div className={classes.settingsRow}>
-                      <div className={classes.rowLabel}>
-                        <h4>UI Font Size</h4>
-                        <span>Adjust scale of interface buttons, trees, and labels.</span>
-                      </div>
-                      <select
-                        value={config.uiFontSize}
-                        onChange={(e) => updateConfig({ uiFontSize: parseInt(e.target.value) })}
-                        className={classes.settingsSelect}
-                      >
-                        <option value="12">12px (Small)</option>
-                        <option value="13">13px (Default)</option>
-                        <option value="14">14px (Medium)</option>
-                        <option value="15">15px (Large)</option>
-                        <option value="16">16px (Extra Large)</option>
-                      </select>
+                ) : (
+                  // Empty state
+                  <div className={classes.emptyState}>
+                    <div className={classes.emptyMessage}>
+                      <h2>Welcome to AetherAPI</h2>
+                      <p>
+                        Create a new workspace to start from scratch or open an existing repository.
+                      </p>
                     </div>
-
-                    <div className={classes.settingsRow}>
-                      <div className={classes.rowLabel}>
-                        <h4>Editor Font Size</h4>
-                        <span>Adjust size of Monaco editor and text areas.</span>
-                      </div>
-                      <select
-                        value={config.fontSize}
-                        onChange={(e) => updateConfig({ fontSize: parseInt(e.target.value) })}
-                        className={classes.settingsSelect}
-                      >
-                        <option value="12">12px</option>
-                        <option value="13">13px</option>
-                        <option value="14">14px</option>
-                        <option value="15">15px</option>
-                        <option value="16">16px</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Card 2: Workspace Storage */}
-                  <div className={classes.settingsCard}>
-                    <h3 className={classes.settingsCardTitle}>Workspace Storage</h3>
-                    
-                    <div className={classes.settingsRow}>
-                      <div className={classes.rowLabel}>
-                        <h4>Default Parent Location</h4>
-                        <span>Pre-filled destination path for new workspace scaffolds.</span>
-                      </div>
-                      <div className={classes.locationPicker}>
-                        <input
-                          type="text"
-                          readOnly
-                          placeholder="No directory selected"
-                          value={config.defaultParentDirectory || ""}
-                          className={classes.locationInput}
-                        />
-                        <button
-                          onClick={async () => {
-                            const selected = await openDialog({ directory: true, multiple: false });
-                            if (selected) {
-                              const path = Array.isArray(selected) ? selected[0] : selected;
-                              if (path) {
-                                updateConfig({ defaultParentDirectory: path });
-                                setNewWsParent(path);
-                                setCloneDest(path);
-                              }
-                            }
-                          }}
-                          className={classes.pickerBtn}
+                    <div className={classes.emptyActionCards}>
+                      <div className={classes.actionCard} onClick={() => setIsNewWsOpen(true)}>
+                        <div
+                          className={classes.actionCardIcon}
+                          style={{ background: "rgba(99, 102, 241, 0.15)", color: "#6366f1" }}
                         >
-                          Choose...
-                        </button>
+                          <IconPlus size={24} stroke={2} />
+                        </div>
+                        <h3>New Workspace</h3>
+                        <p>Start a clean API workspace template from scratch</p>
+                      </div>
+
+                      <div className={classes.actionCard} onClick={handleOpenFolderDirect}>
+                        <div
+                          className={classes.actionCardIcon}
+                          style={{ background: "rgba(16, 185, 129, 0.15)", color: "#10b981" }}
+                        >
+                          <IconFolder size={24} stroke={1.5} />
+                        </div>
+                        <h3>Open</h3>
+                        <p>Open an existing workspace folder from your disk</p>
+                      </div>
+
+                      <div className={classes.actionCard} onClick={() => setIsCloneOpen(true)}>
+                        <div
+                          className={classes.actionCardIcon}
+                          style={{ background: "rgba(245, 158, 11, 0.15)", color: "#f59e0b" }}
+                        >
+                          <IconGitBranch size={24} stroke={1.5} />
+                        </div>
+                        <h3>Clone Repository</h3>
+                        <p>Pull files down from GitHub, GitLab, or raw URL</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === "customize" && (
+              <div className={classes.tabCustomize}>
+                <div className={classes.customizeHeader}>
+                  <div>
+                    <h2>Customize AetherAPI</h2>
+                    <p className={classes.sectionDesc}>
+                      Configure global layout and application properties.
+                    </p>
+                  </div>
+                </div>
+                <div className={classes.customizeBody}>
+                  <div className={classes.settingsGroup}>
+                    {/* Card 1: Appearance */}
+                    <div className={classes.settingsCard}>
+                      <h3 className={classes.settingsCardTitle}>Appearance</h3>
+
+                      <div className={classes.settingsRow}>
+                        <div className={classes.rowLabel}>
+                          <h4>UI Font Size</h4>
+                          <span>Adjust scale of interface buttons, trees, and labels.</span>
+                        </div>
+                        <select
+                          value={config.uiFontSize}
+                          onChange={(e) => updateConfig({ uiFontSize: parseInt(e.target.value) })}
+                          className={classes.settingsSelect}
+                        >
+                          <option value="12">12px (Small)</option>
+                          <option value="13">13px (Default)</option>
+                          <option value="14">14px (Medium)</option>
+                          <option value="15">15px (Large)</option>
+                          <option value="16">16px (Extra Large)</option>
+                        </select>
+                      </div>
+
+                      <div className={classes.settingsRow}>
+                        <div className={classes.rowLabel}>
+                          <h4>Editor Font Size</h4>
+                          <span>Adjust size of Monaco editor and text areas.</span>
+                        </div>
+                        <select
+                          value={config.fontSize}
+                          onChange={(e) => updateConfig({ fontSize: parseInt(e.target.value) })}
+                          className={classes.settingsSelect}
+                        >
+                          <option value="12">12px</option>
+                          <option value="13">13px</option>
+                          <option value="14">14px</option>
+                          <option value="15">15px</option>
+                          <option value="16">16px</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Card 2: Workspace Storage */}
+                    <div className={classes.settingsCard}>
+                      <h3 className={classes.settingsCardTitle}>Workspace Storage</h3>
+
+                      <div className={classes.settingsRow}>
+                        <div className={classes.rowLabel}>
+                          <h4>Default Parent Location</h4>
+                          <span>Pre-filled destination path for new workspace scaffolds.</span>
+                        </div>
+                        <div className={classes.locationPicker}>
+                          <input
+                            type="text"
+                            readOnly
+                            placeholder="No directory selected"
+                            value={config.defaultParentDirectory || ""}
+                            className={classes.locationInput}
+                          />
+                          <button
+                            onClick={async () => {
+                              const selected = await openDialog({
+                                directory: true,
+                                multiple: false,
+                              });
+                              if (selected) {
+                                const path = Array.isArray(selected) ? selected[0] : selected;
+                                if (path) {
+                                  updateConfig({ defaultParentDirectory: path });
+                                  setNewWsParent(path);
+                                  setCloneDest(path);
+                                }
+                              }
+                            }}
+                            className={classes.pickerBtn}
+                          >
+                            Choose...
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
           </div>
           <div className={classes.contentFooter}>
             <span className={classes.copyright}>Hephaestus Studio © 2026</span>
@@ -518,7 +552,10 @@ export default function WelcomeScreen() {
                     onChange={(e) => setNewWsParent(e.target.value)}
                     className={classes.locationInput}
                   />
-                  <button onClick={() => handleSelectParentFolder("new")} className={classes.pickerBtn}>
+                  <button
+                    onClick={() => handleSelectParentFolder("new")}
+                    className={classes.pickerBtn}
+                  >
                     Browse
                   </button>
                 </div>
@@ -576,7 +613,10 @@ export default function WelcomeScreen() {
                         onChange={(e) => setCloneDest(e.target.value)}
                         className={classes.locationInput}
                       />
-                      <button onClick={() => handleSelectParentFolder("clone")} className={classes.pickerBtn}>
+                      <button
+                        onClick={() => handleSelectParentFolder("clone")}
+                        className={classes.pickerBtn}
+                      >
                         Browse
                       </button>
                     </div>

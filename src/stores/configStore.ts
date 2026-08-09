@@ -26,7 +26,7 @@ const DEFAULT_CONFIG: AppConfig = {
 export const useConfigStore = create<ConfigState>((set, get) => {
   // Listen for tauri events to keep instances synchronized across different windows
   let isListening = false;
-  
+
   if (typeof window !== "undefined") {
     if (!isListening) {
       isListening = true;

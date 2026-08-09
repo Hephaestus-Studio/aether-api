@@ -17,8 +17,10 @@ import "./styles/theme.css";
 import "./styles/global.css";
 
 const theme = createTheme({
-  fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji'",
-  fontFamilyMonospace: "'JetBrains Mono', 'Fira Code', 'Source Code Pro', Menlo, Monaco, Consolas, monospace",
+  fontFamily:
+    "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji'",
+  fontFamilyMonospace:
+    "'JetBrains Mono', 'Fira Code', 'Source Code Pro', Menlo, Monaco, Consolas, monospace",
   primaryColor: "blue",
   defaultRadius: "sm",
 });
@@ -39,7 +41,7 @@ export default function App() {
     if (config.fontSize) {
       document.documentElement.style.setProperty(
         "--aether-editor-font-size",
-        `${config.fontSize}px`
+        `${config.fontSize}px`,
       );
     }
   }, [config.fontSize]);
@@ -49,7 +51,7 @@ export default function App() {
     if (config.uiFontSize) {
       document.documentElement.style.setProperty(
         "--aether-font-size-base",
-        `${config.uiFontSize}px`
+        `${config.uiFontSize}px`,
       );
     }
   }, [config.uiFontSize]);
@@ -94,7 +96,7 @@ export default function App() {
           const tree = await invoke<any>("open_workspace", { directoryPath: path });
           useWorkspaceStore.getState().setWorkspacePath(path);
           useWorkspaceStore.getState().setTreeData(tree.children);
-          
+
           const info = await invoke<any>("get_workspace_info");
           useWorkspaceStore.getState().setWorkspaceInfo(info);
 
@@ -113,12 +115,14 @@ export default function App() {
 
     let unlisten: () => void;
     import("@tauri-apps/api/event").then((mod) => {
-      mod.listen<string | null>("workspace-changed", (event) => {
-        console.log("Workspace changed event received in main window:", event.payload);
-        syncWorkspace(event.payload);
-      }).then((fn) => {
-        unlisten = fn;
-      });
+      mod
+        .listen<string | null>("workspace-changed", (event) => {
+          console.log("Workspace changed event received in main window:", event.payload);
+          syncWorkspace(event.payload);
+        })
+        .then((fn) => {
+          unlisten = fn;
+        });
     });
 
     return () => {

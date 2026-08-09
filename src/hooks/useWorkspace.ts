@@ -15,7 +15,7 @@ export function useWorkspace() {
       store.setLoading(true);
       try {
         const tree = await invoke<WorkspaceTree>("open_workspace", { directoryPath: path });
-        
+
         const currentWindow = getCurrentWindow();
         if (currentWindow.label === "welcome") {
           // If called from welcome window, notify main window and show it, then hide ourselves
@@ -41,7 +41,7 @@ export function useWorkspace() {
           } catch (gitErr) {
             console.error("Failed to load initial git status:", gitErr);
           }
-          
+
           await emit("workspace-changed", path);
         }
 
