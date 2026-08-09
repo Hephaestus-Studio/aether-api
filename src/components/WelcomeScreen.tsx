@@ -404,74 +404,84 @@ export default function WelcomeScreen() {
                 <p className={classes.sectionDesc}>Configure global layout and application properties.</p>
 
                 <div className={classes.settingsGroup}>
-                  <div className={classes.settingsRow}>
-                    <div className={classes.rowLabel}>
-                      <h4>Color Theme</h4>
-                      <span>Choose the visual appearance of the workspace.</span>
+                  {/* Card 1: Appearance */}
+                  <div className={classes.settingsCard}>
+                    <h3 className={classes.settingsCardTitle}>Appearance</h3>
+                    
+                    <div className={classes.settingsRow}>
+                      <div className={classes.rowLabel}>
+                        <h4>Color Theme</h4>
+                        <span>Choose the visual appearance of the workspace.</span>
+                      </div>
+                      <select
+                        value={config.theme}
+                        onChange={(e) => updateConfig({ theme: e.target.value })}
+                        className={classes.settingsSelect}
+                      >
+                        <option value="dark">Dark Theme</option>
+                        <option value="light">Light Theme</option>
+                      </select>
                     </div>
-                    <select
-                      value={config.theme}
-                      onChange={(e) => updateConfig({ theme: e.target.value })}
-                      className={classes.settingsSelect}
-                    >
-                      <option value="dark">Dark Theme</option>
-                      <option value="light">Light Theme</option>
-                    </select>
+
+                    <div className={classes.settingsRow}>
+                      <div className={classes.rowLabel}>
+                        <h4>Editor Font Size</h4>
+                        <span>Adjust size of default interface text blocks.</span>
+                      </div>
+                      <select
+                        value={config.fontSize}
+                        onChange={(e) => updateConfig({ fontSize: parseInt(e.target.value) })}
+                        className={classes.settingsSelect}
+                      >
+                        <option value="12">12px</option>
+                        <option value="13">13px</option>
+                        <option value="14">14px</option>
+                        <option value="15">15px</option>
+                        <option value="16">16px</option>
+                      </select>
+                    </div>
                   </div>
 
-                <div className={classes.settingsRow}>
-                  <div className={classes.rowLabel}>
-                    <h4>Editor Font Size</h4>
-                    <span>Adjust size of default interface text blocks.</span>
-                  </div>
-                  <select
-                    value={config.fontSize}
-                    onChange={(e) => updateConfig({ fontSize: parseInt(e.target.value) })}
-                    className={classes.settingsSelect}
-                  >
-                    <option value="12">12px</option>
-                    <option value="13">13px</option>
-                    <option value="14">14px</option>
-                    <option value="15">15px</option>
-                    <option value="16">16px</option>
-                  </select>
-                </div>
-
-                <div className={classes.settingsRow}>
-                  <div className={classes.rowLabel}>
-                    <h4>Default Parent Location</h4>
-                    <span>Pre-filled destination path for new workspace scaffolds.</span>
-                  </div>
-                  <div className={classes.locationPicker}>
-                    <input
-                      type="text"
-                      readOnly
-                      placeholder="No directory selected"
-                      value={config.defaultParentDirectory || ""}
-                      className={classes.locationInput}
-                    />
-                    <button
-                      onClick={async () => {
-                        const selected = await openDialog({ directory: true, multiple: false });
-                        if (selected) {
-                          const path = Array.isArray(selected) ? selected[0] : selected;
-                          if (path) {
-                            updateConfig({ defaultParentDirectory: path });
-                            setNewWsParent(path);
-                            setCloneDest(path);
-                          }
-                        }
-                      }}
-                      className={classes.pickerBtn}
-                    >
-                      Choose...
-                    </button>
+                  {/* Card 2: Workspace Storage */}
+                  <div className={classes.settingsCard}>
+                    <h3 className={classes.settingsCardTitle}>Workspace Storage</h3>
+                    
+                    <div className={classes.settingsRow}>
+                      <div className={classes.rowLabel}>
+                        <h4>Default Parent Location</h4>
+                        <span>Pre-filled destination path for new workspace scaffolds.</span>
+                      </div>
+                      <div className={classes.locationPicker}>
+                        <input
+                          type="text"
+                          readOnly
+                          placeholder="No directory selected"
+                          value={config.defaultParentDirectory || ""}
+                          className={classes.locationInput}
+                        />
+                        <button
+                          onClick={async () => {
+                            const selected = await openDialog({ directory: true, multiple: false });
+                            if (selected) {
+                              const path = Array.isArray(selected) ? selected[0] : selected;
+                              if (path) {
+                                updateConfig({ defaultParentDirectory: path });
+                                setNewWsParent(path);
+                                setCloneDest(path);
+                              }
+                            }
+                          }}
+                          className={classes.pickerBtn}
+                        >
+                          Choose...
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
         </div>
       </div>
 

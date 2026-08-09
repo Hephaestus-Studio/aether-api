@@ -470,19 +470,53 @@
 }
 
 .settingsGroup {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+  width: 100%;
+  max-width: 960px;
+}
+
+.settingsCard {
+  background-color: var(--bg-sidebar);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  max-width: 560px;
+  gap: 20px;
+}
+
+.settingsCardTitle {
+  font-size: var(--aether-font-size-md);
+  font-weight: var(--aether-font-weight-semibold);
+  color: var(--text-bright);
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .settingsRow {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--border-color);
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.settingsRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.settingsCard .settingsSelect {
+  width: 100%;
+}
+
+.settingsCard .locationPicker {
+  max-width: none;
+  width: 100%;
 }
 
 .rowLabel {
@@ -798,20 +832,5 @@
   }
   .actionCard p {
     margin-bottom: 0;
-  }
-}
-
-@media (max-width: 850px) {
-  .settingsRow {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-  .settingsSelect {
-    width: 100%;
-  }
-  .locationPicker {
-    max-width: none;
-    width: 100%;
   }
 }
