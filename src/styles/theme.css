@@ -41,18 +41,20 @@
   --aether-radius-lg: 8px;
 
   /* HTTP Method Colors */
-  --aether-color-get: #10b981;
-  --aether-color-get-bg: rgba(16, 185, 129, 0.15);
+  --aether-color-get: #22c55e;
+  --aether-color-get-bg: rgba(34, 197, 94, 0.15);
   --aether-color-post: #f59e0b;
   --aether-color-post-bg: rgba(245, 158, 11, 0.15);
   --aether-color-put: #3b82f6;
   --aether-color-put-bg: rgba(59, 130, 246, 0.15);
-  --aether-color-patch: #8b5cf6;
-  --aether-color-patch-bg: rgba(139, 92, 246, 0.15);
-  --aether-color-delete: #ef4444;
-  --aether-color-delete-bg: rgba(239, 68, 68, 0.15);
-  --aether-color-options: #ec4899;
-  --aether-color-head: #6b7280;
+  --aether-color-patch: #a855f7;
+  --aether-color-patch-bg: rgba(168, 85, 247, 0.15);
+  --aether-color-delete: #f87171;
+  --aether-color-delete-bg: rgba(248, 113, 113, 0.15);
+  --aether-color-head: #34d399;
+  --aether-color-head-bg: rgba(52, 211, 153, 0.15);
+  --aether-color-options: #f472b6;
+  --aether-color-options-bg: rgba(244, 114, 182, 0.15);
 
   /* Layout Metrics */
   --width-activity-bar: 48px;

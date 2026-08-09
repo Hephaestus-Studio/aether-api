@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Box, Select, TextInput, Button, Tabs, Menu, Text } from "@mantine/core";
+import { Box, TextInput, Button, Tabs, Menu, Text } from "@mantine/core";
 import { invoke } from "@tauri-apps/api/core";
 import {
   IconDeviceFloppy,
@@ -14,6 +14,7 @@ import {
 import { notifications } from "@mantine/notifications";
 import { useTabStore } from "@/stores/tabStore";
 import { useEnvStore } from "@/stores/envStore";
+import MethodSelector from "./MethodSelector";
 import ParamsEditor from "./ParamsEditor";
 import HeadersEditor from "./HeadersEditor";
 import BodyEditor from "./BodyEditor";
@@ -31,6 +32,7 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
   const activeEnvironmentName = useEnvStore((s) => s.activeEnvironmentName);
   const markDirty = useTabStore((s) => s.markDirty);
   const markClean = useTabStore((s) => s.markClean);
+  const updateTab = useTabStore((s) => s.updateTab);
   const setResponse = useTabStore((s) => s.setResponse);
   const setTabLoading = useTabStore((s) => s.setLoading);
   const setResponsePanelOpened = useTabStore((s) => s.setResponsePanelOpened);
@@ -118,25 +120,13 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
   const handleChange = (fields: Partial<HttpRequestDetails>) => {
     if (!request) return;
     setRequest({ ...request, ...fields });
-    markDirty(tabId);
-  };
-
-  const getMethodColor = (method?: string) => {
-    const m = (method || "GET").toUpperCase();
-    switch (m) {
-      case "GET":
-        return "#10b981";
-      case "POST":
-        return "#f59e0b";
-      case "PUT":
-        return "#3b82f6";
-      case "PATCH":
-        return "#8b5cf6";
-      case "DELETE":
-        return "#ef4444";
-      default:
-        return "#6b7280";
+    if (fields.method) {
+      updateTab(tabId, { method: fields.method });
     }
+    if (fields.name) {
+      updateTab(tabId, { name: fields.name });
+    }
+    markDirty(tabId);
   };
 
   if (!request) return null;
@@ -231,21 +221,8 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
 
       {/* Address Bar Row */}
       <div className={classes.addressBarRow}>
-        <div className={classes.addressBarContainer}>
-          <Select
-            data={["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]}
-            value={request.method}
-            onChange={(val: any) => handleChange({ method: val })}
-            variant="unstyled"
-            className={classes.methodSelect}
-            styles={{
-              input: {
-                color: getMethodColor(request.method),
-                fontWeight: 700,
-              },
-            }}
-          />
-          <div className={classes.addressBarSeparator} />
+        <MethodSelector value={request.method} onChange={(val) => handleChange({ method: val })} />
+        <div className={classes.urlInputContainer}>
           <TextInput
             value={request.url}
             onChange={(e) => handleChange({ url: e.target.value })}

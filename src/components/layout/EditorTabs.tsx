@@ -10,29 +10,13 @@ import {
 } from "@mantine/core";
 import { IconLayoutSidebarRightCollapse, IconLayoutSidebarRightExpand } from "@tabler/icons-react";
 import { useTabStore } from "@/stores/tabStore";
+import { getMethodColor } from "@/utils/httpMethods";
 import classes from "./EditorTabs.module.css";
 
 export default function EditorTabs() {
   const { tabs, activeTabId, setActiveTab, closeTab, closeOtherTabs, closeAllTabs } = useTabStore();
   const responsePanelOpened = useTabStore((s) => s.responsePanelOpened);
   const toggleResponsePanel = useTabStore((s) => s.toggleResponsePanel);
-
-  const getMethodColor = (method: string) => {
-    switch (method.toUpperCase()) {
-      case "GET":
-        return "var(--color-get)";
-      case "POST":
-        return "var(--color-post)";
-      case "PUT":
-        return "var(--color-put)";
-      case "PATCH":
-        return "var(--color-patch)";
-      case "DELETE":
-        return "var(--color-delete)";
-      default:
-        return "var(--text-muted)";
-    }
-  };
 
   return (
     <Box className={classes.tabBar}>

@@ -37,7 +37,7 @@ export interface RequestSettings {
 export interface HttpRequestDetails {
   id: string;
   name: string;
-  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
+  method: string;
   url: string;
   params: KeyValuePair[];
   headers: KeyValuePair[];

@@ -353,6 +353,8 @@ impl HttpExecutor {
             HttpMethod::Delete => reqwest::Method::DELETE,
             HttpMethod::Head => reqwest::Method::HEAD,
             HttpMethod::Options => reqwest::Method::OPTIONS,
+            HttpMethod::Custom(m) => reqwest::Method::from_bytes(m.as_bytes())
+                .unwrap_or(reqwest::Method::GET),
         }
     }
 

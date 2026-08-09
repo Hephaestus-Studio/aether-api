@@ -11,6 +11,7 @@ import { useTabStore } from "@/stores/tabStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { invoke } from "@tauri-apps/api/core";
 import type { WorkspaceTreeNode } from "@/types/workspace";
+import { getMethodColor } from "@/utils/httpMethods";
 import classes from "./FileTreeNode.module.css";
 
 interface FileTreeNodeProps {
@@ -62,24 +63,6 @@ export default function FileTreeNode({ node }: Readonly<FileTreeNodeProps>) {
       return <Box className={classes.indentPlaceholder} />;
     }
     return expanded ? <IconChevronDown size={12} /> : <IconChevronRight size={12} />;
-  };
-
-  const getMethodColor = (method?: string) => {
-    const m = (method || "GET").toUpperCase();
-    switch (m) {
-      case "GET":
-        return "#2ec4b6";
-      case "POST":
-        return "#ff9f1c";
-      case "PUT":
-        return "#3a86c8";
-      case "PATCH":
-        return "#8338ec";
-      case "DELETE":
-        return "#e63946";
-      default:
-        return "#9ca3af";
-    }
   };
 
   const getMethodText = (method?: string) => {

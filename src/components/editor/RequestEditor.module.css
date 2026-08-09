@@ -46,50 +46,40 @@
 
 .addressBarRow {
   display: flex;
+  align-items: center;
   gap: 8px;
   margin-bottom: 16px;
 }
 
-.addressBarContainer {
+.urlInputContainer {
   display: flex;
   align-items: center;
   flex: 1;
   border: 1px solid var(--border-color);
-  border-radius: 4px;
+  border-radius: var(--aether-radius-md);
   background-color: var(--bg-app);
   height: 36px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
-.methodSelect {
-  width: 90px;
-}
-
-.methodSelect :global(.mantine-Input-input) {
-  font-size: var(--aether-font-size-sm);
-  font-weight: var(--aether-font-weight-bold);
-  text-align: center;
-  color: var(--text-primary);
-  padding: 0 4px;
-}
-
-.methodSelect :global(.mantine-Select-option) {
-  font-weight: var(--aether-font-weight-semibold);
-  font-size: var(--aether-font-size-sm);
-}
-
-.addressBarSeparator {
-  width: 1px;
-  height: 20px;
-  background-color: var(--border-color);
+.urlInputContainer:focus-within {
+  border-color: #0084ff;
+  box-shadow: 0 0 0 1px #0084ff;
 }
 
 .urlInput {
   flex: 1;
+  width: 100%;
 }
 
 .urlInput :global(.mantine-Input-input) {
   font-size: var(--aether-font-size-md);
+  font-family: var(--aether-font-mono);
   padding: 0 12px;
+  height: 34px;
+  color: var(--text-primary);
 }
 
 .sendBtn {
@@ -97,6 +87,7 @@
   font-weight: var(--aether-font-weight-semibold);
   font-size: var(--aether-font-size-md);
   padding: 0 16px;
+  border-radius: var(--aether-radius-md);
 }
 
 .tabs {

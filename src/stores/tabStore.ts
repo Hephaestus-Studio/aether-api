@@ -14,6 +14,7 @@ interface TabState {
   setActiveTab: (tabId: string | null) => void;
   markDirty: (tabId: string) => void;
   markClean: (tabId: string) => void;
+  updateTab: (tabId: string, updates: Partial<TabItem>) => void;
   reopenLastClosed: () => void;
   closeAllTabs: () => void;
   closeOtherTabs: (tabId: string) => void;
@@ -105,6 +106,12 @@ export const useTabStore = create<TabState>((set, get) => ({
   markClean: (tabId) => {
     set({
       tabs: get().tabs.map((t) => (t.id === tabId ? { ...t, isDirty: false } : t)),
+    });
+  },
+
+  updateTab: (tabId, updates) => {
+    set({
+      tabs: get().tabs.map((t) => (t.id === tabId ? { ...t, ...updates } : t)),
     });
   },
 

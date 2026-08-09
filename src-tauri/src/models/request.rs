@@ -21,6 +21,9 @@ pub enum HttpMethod {
     Head,
     /// OPTIONS request method.
     Options,
+    /// Custom HTTP method.
+    #[serde(untagged)]
+    Custom(String),
 }
 
 impl std::fmt::Display for HttpMethod {
@@ -33,6 +36,7 @@ impl std::fmt::Display for HttpMethod {
             HttpMethod::Delete => write!(f, "DELETE"),
             HttpMethod::Head => write!(f, "HEAD"),
             HttpMethod::Options => write!(f, "OPTIONS"),
+            HttpMethod::Custom(m) => write!(f, "{}", m),
         }
     }
 }
