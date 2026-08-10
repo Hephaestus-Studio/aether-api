@@ -4,6 +4,7 @@ import { IconGlobe, IconChevronDown, IconArrowDown, IconArrowUp } from "@tabler/
 import { invoke } from "@tauri-apps/api/core";
 import { useTabStore } from "@/stores/tabStore";
 import { useCollision } from "@/hooks/useCollision";
+import { getStatusColor } from "@/utils/httpMethods";
 import ResponseBody from "./ResponseBody";
 import ResponseHeaders from "./ResponseHeaders";
 import classes from "./ResponseViewer.module.css";
@@ -306,7 +307,10 @@ export default function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>)
               <div className={classes.metricItem}>
                 <IconGlobe size={15} style={{ color: "var(--text-muted)" }} />
                 {showLabels && <span className={classes.metricLabel}>Status:</span>}
-                <span className={classes.metricValueGreen}>
+                <span
+                  className={classes.metricValue}
+                  style={{ color: getStatusColor(response?.status) }}
+                >
                   {response?.status} {response?.statusText}
                 </span>
               </div>

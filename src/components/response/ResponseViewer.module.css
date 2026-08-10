@@ -125,6 +125,12 @@
   white-space: nowrap;
 }
 
+.metricValue {
+  font-weight: 600;
+  font-size: var(--aether-font-size-xs);
+  white-space: nowrap;
+}
+
 .metricValueGreen {
   color: #22c55e;
   font-weight: 600;

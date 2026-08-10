@@ -107,6 +107,10 @@
   padding-top: 12px;
 }
 
+.tabHeaderWrapper {
+  width: 100%;
+}
+
 .tabListContainer {
   display: flex;
   justify-content: space-between;

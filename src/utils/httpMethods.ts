@@ -27,3 +27,13 @@ export const getMethodBgColor = (method?: string): string => {
   const found = HTTP_METHODS.find((item) => item.name === m);
   return found ? found.bgColor : "rgba(156, 163, 175, 0.15)";
 };
+
+export const getStatusColor = (status?: number): string => {
+  if (!status) return "#ef4444";
+  if (status >= 100 && status < 200) return "#06b6d4"; // 1xx Informational (Cyan)
+  if (status >= 200 && status < 300) return "#22c55e"; // 2xx Success (Green)
+  if (status >= 300 && status < 400) return "#f59e0b"; // 3xx Redirection (Yellow / Amber)
+  if (status >= 400 && status < 500) return "#f97316"; // 4xx Client Error (Orange / Coral)
+  if (status >= 500) return "#ef4444"; // 5xx Server Error (Red)
+  return "#9ca3af";
+};
