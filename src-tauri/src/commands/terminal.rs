@@ -13,6 +13,7 @@ pub struct TerminalSession {
     pub id: String,
     pub master: Box<dyn MasterPty + Send>,
     pub writer: Arc<Mutex<Box<dyn Write + Send>>>,
+    pub buffer: Arc<Mutex<Vec<u8>>>,
 }
 
 /// Thread-safe manager holding active PTY terminal sessions.
@@ -123,10 +124,12 @@ pub async fn create_terminal_session(
         .map_err(|e| AppError::Io(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
 
     let writer_arc = Arc::new(Mutex::new(writer));
+    let buffer = Arc::new(Mutex::new(Vec::with_capacity(65536)));
 
     // Spawn background reader thread to stream PTY stdout/stderr to frontend via Tauri event
     let session_id_clone = session_id.clone();
     let app_handle_clone = app_handle.clone();
+    let buffer_clone = buffer.clone();
 
     std::thread::spawn(move || {
         let mut buf = [0u8; 4096];
@@ -136,6 +139,14 @@ pub async fn create_terminal_session(
         while let Ok(n) = reader.read(&mut buf) {
             if n == 0 {
                 break;
+            }
+            {
+                let mut b = buffer_clone.lock().unwrap();
+                b.extend_from_slice(&buf[..n]);
+                if b.len() > 1_000_000 {
+                    let trim = b.len() - 1_000_000;
+                    b.drain(0..trim);
+                }
             }
             let data = String::from_utf8_lossy(&buf[..n]).to_string();
             let _ = app_handle_clone.emit(&event_name, data);
@@ -148,6 +159,7 @@ pub async fn create_terminal_session(
         id: session_id.clone(),
         master: pair.master,
         writer: writer_arc,
+        buffer,
     };
 
     state
@@ -160,6 +172,21 @@ pub async fn create_terminal_session(
     tracing::info!("Terminal session {} started with shell: {}", session_id, shell);
 
     Ok(session_id)
+}
+
+/// Tauri command to get buffered terminal output (useful on initial attach).
+#[tauri::command]
+pub async fn get_terminal_buffer(
+    session_id: String,
+    state: State<'_, AppState>,
+) -> Result<String, AppError> {
+    let sessions = state.terminal_manager.sessions.lock().unwrap();
+    if let Some(session) = sessions.get(&session_id) {
+        let buf = session.buffer.lock().unwrap();
+        Ok(String::from_utf8_lossy(&buf).to_string())
+    } else {
+        Ok(String::new())
+    }
 }
 
 /// Tauri command to write raw input data / keystrokes into the terminal stdin.

@@ -49,27 +49,27 @@ const XTerminalInstance = forwardRef<XTerminalHandle, XTerminalInstanceProps>(
         scrollback: 5000,
         allowProposedApi: true,
         theme: {
-          background: "#121316",
-          foreground: "#c9d1d9",
-          cursor: "#339af0",
-          cursorAccent: "#121316",
-          selectionBackground: "rgba(51, 154, 240, 0.35)",
-          black: "#484f58",
-          red: "#ff7b72",
-          green: "#3fb950",
-          yellow: "#d29922",
-          blue: "#58a6ff",
-          magenta: "#bc8cff",
-          cyan: "#39c5cf",
-          white: "#b1bac4",
-          brightBlack: "#6e7681",
-          brightRed: "#ffa198",
-          brightGreen: "#56d364",
-          brightYellow: "#e3b341",
-          brightBlue: "#79c0ff",
-          brightMagenta: "#d2a8ff",
-          brightCyan: "#56d4dd",
-          brightWhite: "#f0f6fc",
+          background: "#212121",
+          foreground: "#e5e7eb",
+          cursor: "#2563eb",
+          cursorAccent: "#212121",
+          selectionBackground: "rgba(37, 99, 235, 0.35)",
+          black: "#2d2d2d",
+          red: "#ef4444",
+          green: "#22c55e",
+          yellow: "#eab308",
+          blue: "#3b82f6",
+          magenta: "#a855f7",
+          cyan: "#06b6d4",
+          white: "#f3f4f6",
+          brightBlack: "#4b5563",
+          brightRed: "#f87171",
+          brightGreen: "#4ade80",
+          brightYellow: "#fde047",
+          brightBlue: "#60a5fa",
+          brightMagenta: "#c084fc",
+          brightCyan: "#22d3ee",
+          brightWhite: "#ffffff",
         },
       });
 
@@ -106,11 +106,22 @@ const XTerminalInstance = forwardRef<XTerminalHandle, XTerminalInstanceProps>(
       // Listen for incoming PTY stdout/stderr from Rust backend
       let unlistenData: UnlistenFn | null = null;
       let unlistenExit: UnlistenFn | null = null;
+      let receivedStreamData = false;
 
       listen<string>(`terminal-data-${sessionId}`, (event) => {
+        receivedStreamData = true;
         term.write(event.payload);
       }).then((fn) => {
         unlistenData = fn;
+        // If listener attached after initial shell output was emitted, fetch and render the startup buffer
+        invoke<string>("get_terminal_buffer", { sessionId })
+          .then((buf) => {
+            if (!receivedStreamData && buf) {
+              term.write(buf);
+              receivedStreamData = true;
+            }
+          })
+          .catch(() => {});
       });
 
       listen(`terminal-exit-${sessionId}`, () => {
@@ -173,7 +184,7 @@ const XTerminalInstance = forwardRef<XTerminalHandle, XTerminalInstanceProps>(
           width: "100%",
           height: "100%",
           display: active ? "block" : "none",
-          backgroundColor: "#121316",
+          backgroundColor: "#212121",
           padding: "6px 8px",
           boxSizing: "border-box",
           overflow: "hidden",

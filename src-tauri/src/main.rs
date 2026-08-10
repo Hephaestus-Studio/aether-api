@@ -45,6 +45,7 @@ fn main() {
             commands::workspace::get_app_config,
             commands::workspace::update_app_config,
             commands::terminal::create_terminal_session,
+            commands::terminal::get_terminal_buffer,
             commands::terminal::write_terminal,
             commands::terminal::resize_terminal,
             commands::terminal::close_terminal,

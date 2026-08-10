@@ -3,7 +3,7 @@
   flex-direction: column;
   height: 100%;
   width: 100%;
-  background-color: #121316;
+  background-color: var(--bg-app);
   border-top: 1px solid var(--border-color);
   overflow: hidden;
 }
@@ -16,7 +16,7 @@
   height: 34px;
   min-height: 34px;
   border-bottom: 1px solid var(--border-color);
-  background-color: var(--bg-sidebar, #18191c);
+  background-color: var(--bg-sidebar);
   user-select: none;
 }
 
@@ -36,13 +36,13 @@
 .tab {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 0 8px 0 10px;
-  height: 24px;
-  border-radius: 4px;
-  font-size: 12px;
+  gap: 5px;
+  padding: 0 6px 0 7px;
+  height: 22px;
+  border-radius: 3px;
+  font-size: 10.5px;
   color: var(--text-muted);
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   background: transparent;
   border: 1px solid transparent;
@@ -57,9 +57,9 @@
 
 .tabActive {
   color: var(--text-primary);
-  background-color: rgba(255, 255, 255, 0.09);
-  border-color: rgba(255, 255, 255, 0.08);
-  font-weight: 600;
+  background-color: var(--bg-app);
+  border-color: var(--border-color);
+  font-weight: 500;
 }
 
 .tabCloseBtn {
@@ -109,5 +109,5 @@
   height: calc(100% - 34px);
   position: relative;
   overflow: hidden;
-  background-color: #121316;
+  background-color: var(--bg-app);
 }

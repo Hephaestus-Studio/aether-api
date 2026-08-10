@@ -46,10 +46,10 @@ export default function TerminalPanel() {
   // Initialize first terminal tab once on mount
   useEffect(() => {
     let isMounted = true;
+    nextTabIndex.current = 1;
 
     const initFirstTab = async () => {
       try {
-        const index = nextTabIndex.current++;
         const currentWs = useWorkspaceStore.getState().workspacePath;
         const sessionId = await invoke<string>("create_terminal_session", {
           cols: 80,
@@ -58,9 +58,10 @@ export default function TerminalPanel() {
         });
 
         if (isMounted) {
+          nextTabIndex.current = 2; // Subsequent tabs will start from 2
           const newTab: TerminalTab = {
             id: sessionId,
-            title: `Terminal ${index}`,
+            title: `Terminal 1`,
           };
           setTabs([newTab]);
           setActiveTabId(sessionId);
@@ -83,38 +84,42 @@ export default function TerminalPanel() {
     };
   }, []);
 
-  // Handle closing a single terminal tab
-  const handleCloseTab = async (e: React.MouseEvent, tabIdToClose: string) => {
+  // Handle closing / exiting a single terminal tab
+  const handleTabExited = useCallback(
+    (tabIdToClose: string) => {
+      terminalRefs.current.delete(tabIdToClose);
+      invoke("close_terminal", { sessionId: tabIdToClose }).catch(() => {});
+
+      setTabs((prevTabs) => {
+        const remainingTabs = prevTabs.filter((t) => t.id !== tabIdToClose);
+
+        // If no tabs remain, hide the whole terminal panel
+        if (remainingTabs.length === 0) {
+          setActiveTabId(null);
+          setTerminalOpened(false);
+          return [];
+        }
+
+        // If the closed tab was active, switch to adjacent tab
+        setActiveTabId((currentActive) => {
+          if (currentActive === tabIdToClose) {
+            const closedIndex = prevTabs.findIndex((t) => t.id === tabIdToClose);
+            return (
+              remainingTabs[Math.min(closedIndex, remainingTabs.length - 1)]?.id || null
+            );
+          }
+          return currentActive;
+        });
+
+        return remainingTabs;
+      });
+    },
+    [setTerminalOpened],
+  );
+
+  const handleCloseTab = (e: React.MouseEvent, tabIdToClose: string) => {
     e.stopPropagation();
-
-    try {
-      await invoke("close_terminal", { sessionId: tabIdToClose });
-    } catch (err) {
-      console.error("Failed to close terminal session:", err);
-    }
-
-    terminalRefs.current.delete(tabIdToClose);
-
-    setTabs((prevTabs) => {
-      const remainingTabs = prevTabs.filter((t) => t.id !== tabIdToClose);
-
-      // If no tabs remain, hide the whole terminal panel
-      if (remainingTabs.length === 0) {
-        setActiveTabId(null);
-        setTerminalOpened(false);
-        return [];
-      }
-
-      // If the closed tab was active, switch to the last tab or adjacent tab
-      if (activeTabId === tabIdToClose) {
-        const closedIndex = prevTabs.findIndex((t) => t.id === tabIdToClose);
-        const nextActive =
-          remainingTabs[Math.min(closedIndex, remainingTabs.length - 1)]?.id || null;
-        setActiveTabId(nextActive);
-      }
-
-      return remainingTabs;
-    });
+    handleTabExited(tabIdToClose);
   };
 
   // Handle clearing the active terminal screen
@@ -142,7 +147,7 @@ export default function TerminalPanel() {
                 onClick={() => setActiveTabId(tab.id)}
                 className={`${classes.tab} ${isActive ? classes.tabActive : ""}`}
               >
-                <IconTerminal2 size={13} style={{ opacity: isActive ? 1 : 0.7 }} />
+                <IconTerminal2 size={12} style={{ opacity: isActive ? 1 : 0.7 }} />
                 <span>{tab.title}</span>
                 <span
                   role="button"
@@ -202,9 +207,7 @@ export default function TerminalPanel() {
                 terminalRefs.current.delete(tab.id);
               }
             }}
-            onExit={() => {
-              // Automatically switch or handle exit if desired
-            }}
+            onExit={() => handleTabExited(tab.id)}
           />
         ))}
       </Box>
