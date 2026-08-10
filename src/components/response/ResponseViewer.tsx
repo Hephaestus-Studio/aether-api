@@ -13,18 +13,26 @@ interface ResponseViewerProps {
 }
 
 export default function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>) {
+  const response = useTabStore((s) => s.responses[tabId]);
+  const isLoading = useTabStore((s) => s.loadingStates[tabId]);
+  const hasResponse = !!response && !("error" in response);
+  const isError = !!response && "error" in response;
+
   const {
     containerRef: topHeaderRef,
     leftRef: tabsRef,
     rightRef: metricsRef,
     isColliding: isHeaderColliding,
-  } = useCollision<HTMLDivElement>({ gap: 16, minExpandedWidth: 620, hysteresis: 8 });
+  } = useCollision<HTMLDivElement>({
+    gap: 16,
+    minExpandedWidth: 620,
+    hysteresis: 8,
+    dependencies: [hasResponse, response?.status, response?.headers?.length],
+  });
 
   const isCompact = isHeaderColliding;
   const showLabels = !isHeaderColliding;
 
-  const response = useTabStore((s) => s.responses[tabId]);
-  const isLoading = useTabStore((s) => s.loadingStates[tabId]);
   const [requestDetails, setRequestDetails] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<string | null>("body");
 
@@ -182,9 +190,6 @@ export default function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>)
     };
   });
 
-  const hasResponse = !!response && !("error" in response);
-  const isError = !!response && "error" in response;
-
   const getTabLabel = (val: string | null) => {
     switch (val) {
       case "body":
@@ -201,55 +206,45 @@ export default function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>)
   return (
     <Box className={classes.container} style={{ height: "100%", position: "relative" }}>
       {/* Empty State */}
-      <Box
-        className={classes.emptyState}
-        style={{
-          display: !response ? "flex" : "none",
-          height: "100%",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Text size="sm" style={{ color: "var(--text-muted)" }}>
-          No response. Send a request to see the response.
-        </Text>
-      </Box>
+      {!response && (
+        <Box
+          className={classes.emptyState}
+          style={{
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text size="sm" style={{ color: "var(--text-muted)" }}>
+            No response. Send a request to see the response.
+          </Text>
+        </Box>
+      )}
 
       {/* Error State */}
-      <Box
-        style={{
-          display: isError ? "block" : "none",
-          height: "100%",
-        }}
-      >
-        {isError && (
-          <Box>
-            <Group
-              gap={16}
-              p={16}
-              mb={12}
-              style={{ borderBottom: "1px solid var(--border-color)" }}
-            >
-              <Text size="sm" fw={700} color="red">
-                Error
-              </Text>
-            </Group>
-            <Box p={16}>
-              <Text size="sm" color="red">
-                {(response as any)?.error}
-              </Text>
-            </Box>
+      {isError && (
+        <Box style={{ height: "100%" }}>
+          <Group
+            gap={16}
+            p={16}
+            mb={12}
+            style={{ borderBottom: "1px solid var(--border-color)" }}
+          >
+            <Text size="sm" fw={700} color="red">
+              Error
+            </Text>
+          </Group>
+          <Box p={16}>
+            <Text size="sm" color="red">
+              {(response as any)?.error}
+            </Text>
           </Box>
-        )}
-      </Box>
+        </Box>
+      )}
 
       {/* Normal Tabs Layout */}
-      <Box
-        style={{
-          display: hasResponse ? "block" : "none",
-          height: "100%",
-        }}
-      >
+      {hasResponse && (
         <Tabs
           value={activeTab}
           onChange={setActiveTab}
@@ -486,7 +481,7 @@ export default function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>)
             <ResponseHeaders headers={response?.headers || []} />
           </Tabs.Panel>
         </Tabs>
-      </Box>
+      )}
     </Box>
   );
 }

@@ -297,7 +297,6 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
           onClick={handleSend}
           loading={loading}
           className={classes.sendBtn}
-          rightSection={<IconChevronDown size={14} style={{ opacity: 0.8 }} />}
           style={{ backgroundColor: "var(--mantine-color-blue-6)" }}
         >
           Send
