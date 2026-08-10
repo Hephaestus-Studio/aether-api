@@ -1,0 +1,199 @@
+.wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.inputContainer {
+  position: relative;
+  width: 100%;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2; /* ABOVE nativeInput to capture hover events on pills */
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 34px;
+  white-space: pre;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  color: var(--text-primary);
+  box-sizing: border-box;
+}
+
+.nativeInput {
+  position: relative;
+  width: 100%;
+  height: 34px;
+  padding: 0 12px;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 34px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: transparent !important;
+  caret-color: var(--text-primary);
+  z-index: 1; /* BELOW overlay */
+  box-sizing: border-box;
+}
+
+.nativeInput::placeholder {
+  color: var(--text-muted);
+}
+
+.pillResolved {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(99, 102, 241, 0.18);
+  border: 1px solid rgba(165, 180, 252, 0.4);
+  color: #a5b4fc;
+  border-radius: 6px;
+  padding: 0 6px;
+  height: 22px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  line-height: 1;
+  margin: 0 1px;
+  cursor: pointer;
+  pointer-events: auto; /* CAPTURES HOVER */
+  transition: all 0.15s ease;
+}
+
+.pillResolved:hover {
+  background: rgba(99, 102, 241, 0.3);
+  border-color: rgba(165, 180, 252, 0.7);
+  color: #c7d2fe;
+}
+
+.pillUnresolved {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(239, 68, 68, 0.18);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  color: #f87171;
+  border-radius: 6px;
+  padding: 0 6px;
+  height: 22px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  line-height: 1;
+  margin: 0 1px;
+  cursor: pointer;
+  pointer-events: auto; /* CAPTURES HOVER */
+  transition: all 0.15s ease;
+}
+
+.pillUnresolved:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: rgba(248, 113, 113, 0.7);
+  color: #fca5a5;
+}
+
+/* HoverCard Dropdown styling matching Postman reference */
+.hoverCardDropdown {
+  background-color: #1a1a20 !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 10px !important;
+  padding: 12px !important;
+  min-width: 280px;
+  max-width: 360px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6) !important;
+  pointer-events: auto;
+}
+
+.hoverValueBox {
+  background-color: #101014;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: var(--mantine-font-family-monospace, monospace);
+  color: var(--text-primary);
+  word-break: break-all;
+  margin-bottom: 10px;
+}
+
+.hoverValueBoxUnresolved {
+  background-color: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #f87171;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.hoverFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.envSection {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.envBadge {
+  background-color: #059669;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 10px;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.envBadgeUnresolved {
+  background-color: #dc2626;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 10px;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.envText {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.varsRequest {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 400;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.varsRequest:hover {
+  color: var(--mantine-color-blue-4);
+  text-decoration: underline;
+}

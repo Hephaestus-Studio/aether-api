@@ -205,7 +205,7 @@ impl HttpExecutor {
         let url = reqwest::Url::parse(&req_data.url)
             .map_err(|e| AppError::SchemaValidationError(format!("Invalid URL: {}", e)))?;
 
-        let mut req_builder = effective_client.request(method, url);
+        let mut req_builder = effective_client.request(method, url.clone());
 
         let header_map = Self::build_headers(&req_data.headers)?;
         req_builder = req_builder.headers(header_map);
@@ -213,10 +213,10 @@ impl HttpExecutor {
         let query_pairs: Vec<(&str, &str)> = req_data
             .params
             .iter()
-            .filter(|p| p.enabled)
+            .filter(|p| p.enabled && !p.key.trim().is_empty())
             .map(|p| (p.key.as_str(), p.value.as_str()))
             .collect();
-        if !query_pairs.is_empty() {
+        if !query_pairs.is_empty() && url.query().is_none() {
             req_builder = req_builder.query(&query_pairs);
         }
 
@@ -360,7 +360,10 @@ impl HttpExecutor {
     fn build_headers(headers: &[KeyValuePair]) -> Result<HeaderMap, AppError> {
         let mut map = HeaderMap::new();
 
-        for kv in headers.iter().filter(|h| h.enabled) {
+        for kv in headers
+            .iter()
+            .filter(|h| h.enabled && !h.key.trim().is_empty())
+        {
             let name = HeaderName::from_bytes(kv.key.as_bytes()).map_err(|e| {
                 AppError::SchemaValidationError(format!("Invalid header name '{}': {}", kv.key, e))
             })?;

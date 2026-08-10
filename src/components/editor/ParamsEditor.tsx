@@ -41,7 +41,7 @@ export default function ParamsEditor({ params, onChange }: Readonly<ParamsEditor
   return (
     <Box
       ref={containerRef}
-      style={{ border: "1px solid var(--border-color)", borderRadius: 4, overflow: "hidden" }}
+      style={{ border: "1px solid var(--border-color)", borderRadius: 4, overflow: "visible" }}
     >
       <div
         style={{

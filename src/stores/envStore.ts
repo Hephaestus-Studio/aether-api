@@ -13,7 +13,7 @@ interface EnvState {
 
 export const useEnvStore = create<EnvState>((set) => ({
   environments: [],
-  activeEnvironmentName: null,
+  activeEnvironmentName: "global",
   activeVariables: [],
 
   setEnvironments: (envs) => set({ environments: envs }),

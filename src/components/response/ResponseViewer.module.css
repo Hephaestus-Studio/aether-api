@@ -171,9 +171,12 @@
 
 .panel {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   padding: 0;
   overflow: hidden;
-  height: calc(100% - 40px);
+  height: calc(100% - 38px);
 }
 
 .placeholderTabContent {
@@ -189,6 +192,7 @@
   padding: 6px 12px;
   background-color: var(--bg-app);
   border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
 }
 
 .bodyControlLeft {
@@ -205,7 +209,8 @@
 
 .editorContainer {
   flex: 1;
-  height: calc(100% - 45px);
+  min-height: 0;
+  height: calc(100% - 38px);
   overflow: hidden;
 }
 

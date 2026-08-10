@@ -31,6 +31,8 @@ import ParamsEditor from "./ParamsEditor";
 import HeadersEditor from "./HeadersEditor";
 import BodyEditor from "./BodyEditor";
 import AuthEditor from "./AuthEditor";
+import UrlInput from "./UrlInput";
+import { buildUrlWithParams, parseParamsFromUrl } from "@/utils/url";
 import type { HttpRequestDetails } from "@/types/request";
 import classes from "./RequestEditor.module.css";
 
@@ -92,7 +94,16 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
 
   useEffect(() => {
     invoke<any>("read_request", { path: tabId })
-      .then((res) => setRequest(res))
+      .then((res) => {
+        if (res) {
+          if (res.params && res.params.length > 0 && res.url) {
+            const syncedUrl = buildUrlWithParams(res.url, res.params);
+            setRequest({ ...res, url: syncedUrl });
+          } else {
+            setRequest(res);
+          }
+        }
+      })
       .catch((err) => console.error("Error reading request details:", err));
   }, [tabId]);
 
@@ -141,12 +152,22 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
 
   const handleChange = (fields: Partial<HttpRequestDetails>) => {
     if (!request) return;
-    setRequest({ ...request, ...fields });
-    if (fields.method) {
-      updateTab(tabId, { method: fields.method });
+
+    let updatedFields = { ...fields };
+
+    // Two-way synchronization between URL and Params
+    if (fields.params !== undefined && fields.url === undefined) {
+      updatedFields.url = buildUrlWithParams(request.url, fields.params);
+    } else if (fields.url !== undefined && fields.params === undefined) {
+      updatedFields.params = parseParamsFromUrl(fields.url, request.params);
     }
-    if (fields.name) {
-      updateTab(tabId, { name: fields.name });
+
+    setRequest({ ...request, ...updatedFields });
+    if (updatedFields.method) {
+      updateTab(tabId, { method: updatedFields.method });
+    }
+    if (updatedFields.name) {
+      updateTab(tabId, { name: updatedFields.name });
     }
     markDirty(tabId);
   };
@@ -265,11 +286,10 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
       <div className={classes.addressBarRow}>
         <MethodSelector value={request.method} onChange={(val) => handleChange({ method: val })} />
         <div className={classes.urlInputContainer}>
-          <TextInput
+          <UrlInput
             value={request.url}
-            onChange={(e) => handleChange({ url: e.target.value })}
+            onChange={(val) => handleChange({ url: val })}
             placeholder="Enter URL or paste text"
-            variant="unstyled"
             className={classes.urlInput}
           />
         </div>

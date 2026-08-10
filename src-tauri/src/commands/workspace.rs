@@ -78,6 +78,27 @@ pub async fn open_workspace(
     if !workspace_yml.exists() {
         tracing::info!("Scaffolding new workspace.yml at {}", path.display());
         create_workspace_scaffold(&path)?;
+    } else {
+        // Automatically ensure .env and .gitignore exist for existing environments
+        let env_dir = path.join("environments");
+        if let Ok(entries) = std::fs::read_dir(&env_dir) {
+            for entry in entries.flatten() {
+                let file_path = entry.path();
+                if file_path.is_file() {
+                    if let Some(ext) = file_path.extension() {
+                        if ext == "yml" || ext == "yaml" {
+                            if let Some(stem) = file_path.file_stem().and_then(|s| s.to_str()) {
+                                let _ = crate::commands::environment::ensure_gitignore_and_dotenv(
+                                    &path, stem,
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            let _ = crate::commands::environment::ensure_gitignore_and_dotenv(&path, "dev");
+        }
     }
 
     let tree = FsScanner::scan(&path)?;
@@ -324,9 +345,27 @@ pub fn create_workspace_scaffold(path: &Path) -> Result<(), AppError> {
     let ws_file = path.join("workspace.yml");
     crate::engine::yaml_parser::atomic_write_yaml(&ws_file, &workspace)?;
 
+    // Ensure .gitignore and .env.dev exist at workspace root
+    let _ = crate::commands::environment::ensure_gitignore_and_dotenv(path, "dev");
+
+    // Initial default .env.dev variable value
+    let mut default_dotenv = std::collections::HashMap::new();
+    default_dotenv.insert("base_url".to_string(), "http://localhost:8080".to_string());
+    let _ = crate::commands::environment::update_dot_env(path, "dev", &default_dotenv);
+
+    // Scaffold dev.yml environment with placeholder
     let env_dir = path.join("environments");
     std::fs::create_dir_all(&env_dir)?;
-    let dev_env = crate::models::environment::Environment::new("dev");
+    let mut dev_env = crate::models::environment::Environment::new("dev");
+    dev_env
+        .variables
+        .push(crate::models::environment::Variable {
+            name: "base_url".to_string(),
+            value: "{{base_url}}".to_string(),
+            var_type: crate::models::environment::VariableType::Default,
+            enabled: true,
+            description: None,
+        });
     crate::engine::yaml_parser::atomic_write_yaml(&env_dir.join("dev.yml"), &dev_env)?;
 
     let col_dir = path.join("collections");
@@ -370,12 +409,13 @@ pub fn get_last_seq_in_dir(dir_path: &Path) -> Option<String> {
     seqs.pop()
 }
 
-/// Sanitizes directory or file name inputs replacing operating system forbidden path characters.
+/// Sanitizes directory or file name inputs replacing operating system forbidden path characters and spaces with hyphens, converting to lowercase.
 pub fn sanitize_name(name: &str) -> String {
-    name.chars()
+    name.trim()
+        .to_lowercase()
+        .chars()
         .map(|c| match c {
-            '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|' => '-',
-            ' ' => '-',
+            '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|' | ' ' => '-',
             _ => c,
         })
         .collect()

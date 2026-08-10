@@ -29,7 +29,31 @@ const theme = createTheme({
 
 export default function App() {
   const { workspacePath, setTreeData, setGitStatus, reset } = useWorkspaceStore();
-  const { setEnvironments } = useEnvStore();
+  const { setEnvironments, activeEnvironmentName, setActiveVariables } = useEnvStore();
+
+  // Sync active environment variables globally when active environment or workspacePath changes
+  useEffect(() => {
+    if (!workspacePath || !activeEnvironmentName) {
+      setActiveVariables([]);
+      return;
+    }
+
+    invoke<any>("list_environments")
+      .then((envs) => {
+        if (envs) setEnvironments(envs);
+      })
+      .catch(() => {});
+
+    invoke<any>("read_environment", { name: activeEnvironmentName })
+      .then((res) => {
+        if (res && res.variables) {
+          setActiveVariables(res.variables);
+        } else {
+          setActiveVariables([]);
+        }
+      })
+      .catch(() => setActiveVariables([]));
+  }, [workspacePath, activeEnvironmentName, setEnvironments, setActiveVariables]);
   const { config, loadConfig } = useConfigStore();
   const windowLabel = getCurrentWindow().label;
 

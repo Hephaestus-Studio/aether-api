@@ -59,6 +59,7 @@ fn main() {
             commands::environment::read_environment,
             commands::environment::create_environment,
             commands::environment::update_environment,
+            commands::environment::rename_environment,
             commands::environment::delete_environment,
         ])
         .on_window_event(|window, event| {

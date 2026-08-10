@@ -64,7 +64,7 @@ export default function HeadersEditor({ headers, onChange }: Readonly<HeadersEdi
   return (
     <Box
       ref={containerRef}
-      style={{ border: "1px solid var(--border-color)", borderRadius: 4, overflow: "hidden" }}
+      style={{ border: "1px solid var(--border-color)", borderRadius: 4, overflow: "visible" }}
     >
       <div
         style={{

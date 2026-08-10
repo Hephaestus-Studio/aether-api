@@ -50,11 +50,15 @@ export default function StatusBar() {
             <Menu.Target>
               <button className={classes.envBtn}>
                 <IconWorld size={12} />
-                <span className={classes.envText}>{activeEnvironmentName || "No Environment"}</span>
+                <span className={classes.envText}>
+                  {activeEnvironmentName === "global"
+                    ? "Global"
+                    : activeEnvironmentName || "Global"}
+                </span>
               </button>
             </Menu.Target>
             <Menu.Dropdown>
-              <Menu.Item onClick={() => setActiveEnvironment(null)}>No Environment</Menu.Item>
+              <Menu.Item onClick={() => setActiveEnvironment("global")}>Global</Menu.Item>
               {environments.map((env) => (
                 <Menu.Item key={env.name} onClick={() => setActiveEnvironment(env.name)}>
                   {env.name}

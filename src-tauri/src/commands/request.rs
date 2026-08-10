@@ -205,10 +205,24 @@ pub async fn execute_request(
         ..request
     };
 
+    let mut final_url = resolved_url.clone();
+    let enabled_params: Vec<(&str, &str)> = resolved_request
+        .params
+        .iter()
+        .filter(|p| p.enabled && !p.key.trim().is_empty())
+        .map(|p| (p.key.as_str(), p.value.as_str()))
+        .collect();
+    if !enabled_params.is_empty() && !final_url.contains('?') {
+        if let Ok(mut parsed_url) = reqwest::Url::parse(&final_url) {
+            parsed_url.query_pairs_mut().extend_pairs(enabled_params);
+            final_url = parsed_url.to_string();
+        }
+    }
+
     tracing::info!(
         "Sending HTTP {} request to {}",
         resolved_request.method,
-        resolved_url
+        final_url
     );
 
     let cancel_token = CancellationToken::new();
@@ -279,11 +293,16 @@ async fn get_all_variables(
     workspace_path: &Path,
     env_name: Option<&str>,
 ) -> Result<HashMap<String, crate::models::environment::Variable>, AppError> {
-    let mut variables = load_dot_env(workspace_path);
+    let mut variables = load_dot_env(workspace_path, env_name);
 
     if let Some(name) = env_name {
         let env_vars = load_environment_variables(workspace_path, name).await?;
-        for (k, v) in env_vars {
+        for (k, mut v) in env_vars {
+            if v.value == format!("{{{{{}}}}}", k) || v.value == format!("{{{{ {} }}}}", k) {
+                if let Some(dot_val) = variables.get(&k) {
+                    v.value = dot_val.value.clone();
+                }
+            }
             variables.insert(k, v);
         }
     }
@@ -291,12 +310,34 @@ async fn get_all_variables(
     Ok(variables)
 }
 
-/// Helper function to load key-value variables from the workspace `.env` file.
-fn load_dot_env(workspace_path: &Path) -> HashMap<String, crate::models::environment::Variable> {
-    let dot_env_path = workspace_path.join(".env");
+/// Helper function to load key-value variables from the workspace `.env` and `.env.<name>` files.
+fn load_dot_env(
+    workspace_path: &Path,
+    env_name: Option<&str>,
+) -> HashMap<String, crate::models::environment::Variable> {
     let mut map = HashMap::new();
-    if dot_env_path.exists() {
-        if let Ok(content) = std::fs::read_to_string(dot_env_path) {
+
+    // Load global .env first
+    parse_env_file_into_var_map(&workspace_path.join(".env"), &mut map);
+
+    // Load specific .env.<name> if provided
+    if let Some(name) = env_name {
+        let specific_env_path =
+            crate::commands::environment::get_dot_env_path(workspace_path, name);
+        if specific_env_path != workspace_path.join(".env") {
+            parse_env_file_into_var_map(&specific_env_path, &mut map);
+        }
+    }
+
+    map
+}
+
+fn parse_env_file_into_var_map(
+    file_path: &Path,
+    map: &mut HashMap<String, crate::models::environment::Variable>,
+) {
+    if file_path.exists() {
+        if let Ok(content) = std::fs::read_to_string(file_path) {
             for line in content.lines() {
                 let trimmed = line.trim();
                 if trimmed.is_empty() || trimmed.starts_with('#') {
@@ -312,14 +353,19 @@ fn load_dot_env(workspace_path: &Path) -> HashMap<String, crate::models::environ
                             value: val,
                             var_type: crate::models::environment::VariableType::Default,
                             enabled: true,
-                            description: Some("From .env file".to_string()),
+                            description: Some(format!(
+                                "From {}",
+                                file_path
+                                    .file_name()
+                                    .and_then(|n| n.to_str())
+                                    .unwrap_or(".env")
+                            )),
                         },
                     );
                 }
             }
         }
     }
-    map
 }
 
 /// Helper function to load and parse environment variable files (`environments/{env_name}.yml`).

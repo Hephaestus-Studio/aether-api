@@ -91,6 +91,7 @@ export default function AppShell() {
           borderRight: "1px solid var(--border-color)",
           overflow: "hidden",
           height: "auto",
+          minHeight: 0,
           display: "flex",
           flexDirection: "row",
         },
@@ -101,9 +102,11 @@ export default function AppShell() {
           right: 0,
           bottom: 22,
           height: "auto",
+          minHeight: 0,
           display: "flex",
           flexDirection: "column",
           backgroundColor: "var(--bg-app)",
+          overflow: "hidden",
         },
         footer: {
           position: "absolute",
@@ -113,6 +116,8 @@ export default function AppShell() {
           height: 22,
           borderTop: "1px solid var(--border-color)",
           padding: 0,
+          boxSizing: "border-box",
+          zIndex: 100,
         },
       }}
     >
