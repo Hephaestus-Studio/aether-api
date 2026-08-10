@@ -305,7 +305,10 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
     const dragged = activeDraggedNode.node;
 
     if (dragged.id === node.id) return;
-    if ((dragged.nodeType === "folder" || dragged.nodeType === "collection") && node.id.startsWith(dragged.id + "/")) {
+    if (
+      (dragged.nodeType === "folder" || dragged.nodeType === "collection") &&
+      node.id.startsWith(dragged.id + "/")
+    ) {
       return;
     }
 
@@ -357,7 +360,10 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
     const dragged = activeDraggedNode.node;
 
     if (dragged.id === node.id) return;
-    if ((dragged.nodeType === "folder" || dragged.nodeType === "collection") && node.id.startsWith(dragged.id + "/")) {
+    if (
+      (dragged.nodeType === "folder" || dragged.nodeType === "collection") &&
+      node.id.startsWith(dragged.id + "/")
+    ) {
       return;
     }
 
@@ -378,11 +384,14 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
 
       if (targetIdx !== -1) {
         if (pos === "above") {
-          prevSeq = targetIdx > 0 ? siblings[targetIdx - 1].seq ?? undefined : undefined;
+          prevSeq = targetIdx > 0 ? (siblings[targetIdx - 1].seq ?? undefined) : undefined;
           nextSeq = siblings[targetIdx].seq ?? undefined;
         } else {
           prevSeq = siblings[targetIdx].seq ?? undefined;
-          nextSeq = targetIdx < siblings.length - 1 ? siblings[targetIdx + 1].seq ?? undefined : undefined;
+          nextSeq =
+            targetIdx < siblings.length - 1
+              ? (siblings[targetIdx + 1].seq ?? undefined)
+              : undefined;
         }
       }
     }

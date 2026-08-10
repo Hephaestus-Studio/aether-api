@@ -226,12 +226,7 @@ export default function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>)
       {/* Error State */}
       {isError && (
         <Box style={{ height: "100%" }}>
-          <Group
-            gap={16}
-            p={16}
-            mb={12}
-            style={{ borderBottom: "1px solid var(--border-color)" }}
-          >
+          <Group gap={16} p={16} mb={12} style={{ borderBottom: "1px solid var(--border-color)" }}>
             <Text size="sm" fw={700} color="red">
               Error
             </Text>

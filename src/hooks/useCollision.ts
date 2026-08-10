@@ -26,8 +26,7 @@ export function useCollision<
   const checkCollision = useCallback(() => {
     if (!containerRef.current) return;
     const containerWidth =
-      containerRef.current.clientWidth ||
-      containerRef.current.getBoundingClientRect().width;
+      containerRef.current.clientWidth || containerRef.current.getBoundingClientRect().width;
     if (containerWidth === 0) return;
 
     setIsColliding((currentColliding) => {

@@ -1,7 +1,11 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+  height: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .typeRow {
@@ -12,6 +16,7 @@
   padding-bottom: 12px;
   flex-wrap: nowrap !important;
   white-space: nowrap !important;
+  flex-shrink: 0;
 }
 
 .compactTypeRow {
@@ -22,6 +27,7 @@
   padding-bottom: 8px;
   flex-wrap: nowrap !important;
   white-space: nowrap !important;
+  flex-shrink: 0;
 }
 
 .compactSelectBtn {
@@ -128,7 +134,9 @@
   border: 1px solid var(--border-color);
   border-radius: 4px;
   overflow: hidden;
-  height: 280px;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
 }
 
 .emptyState {

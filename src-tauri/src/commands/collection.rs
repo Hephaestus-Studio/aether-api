@@ -206,7 +206,11 @@ pub async fn rename_item(
             let _ = crate::engine::yaml_parser::atomic_write_yaml(&meta_file, &col);
         }
     } else if fold_yml.exists() || fold_yaml.exists() {
-        let meta_file = if fold_yml.exists() { fold_yml } else { fold_yaml };
+        let meta_file = if fold_yml.exists() {
+            fold_yml
+        } else {
+            fold_yaml
+        };
         if let Ok(mut fold) = crate::engine::yaml_parser::read_and_validate_yaml::<
             crate::models::folder::Folder,
         >(&meta_file)
@@ -217,7 +221,11 @@ pub async fn rename_item(
         }
     }
 
-    tracing::info!("Updated directory metadata name of '{}' to '{}'", old_path, new_name);
+    tracing::info!(
+        "Updated directory metadata name of '{}' to '{}'",
+        old_path,
+        new_name
+    );
 
     Ok(RenameResult {
         new_path: old.to_string_lossy().to_string(),

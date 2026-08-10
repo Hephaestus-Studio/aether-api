@@ -92,9 +92,12 @@ pub async fn create_terminal_session(
         pixel_height: 0,
     };
 
-    let pair = pty_system
-        .openpty(size)
-        .map_err(|e| AppError::Io(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+    let pair = pty_system.openpty(size).map_err(|e| {
+        AppError::Io(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            e.to_string(),
+        ))
+    })?;
 
     let shell = get_default_shell();
     let mut cmd = CommandBuilder::new(&shell);
@@ -105,23 +108,29 @@ pub async fn create_terminal_session(
     cmd.env("TERM", "xterm-256color");
     cmd.env("COLORTERM", "truecolor");
 
-    let _child = pair
-        .slave
-        .spawn_command(cmd)
-        .map_err(|e| AppError::Io(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+    let _child = pair.slave.spawn_command(cmd).map_err(|e| {
+        AppError::Io(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            e.to_string(),
+        ))
+    })?;
 
     // Drop slave in the parent process so EOF on stdout is properly received when child exits
     drop(pair.slave);
 
-    let mut reader = pair
-        .master
-        .try_clone_reader()
-        .map_err(|e| AppError::Io(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+    let mut reader = pair.master.try_clone_reader().map_err(|e| {
+        AppError::Io(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            e.to_string(),
+        ))
+    })?;
 
-    let writer = pair
-        .master
-        .take_writer()
-        .map_err(|e| AppError::Io(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+    let writer = pair.master.take_writer().map_err(|e| {
+        AppError::Io(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            e.to_string(),
+        ))
+    })?;
 
     let writer_arc = Arc::new(Mutex::new(writer));
     let buffer = Arc::new(Mutex::new(Vec::with_capacity(65536)));
@@ -169,7 +178,11 @@ pub async fn create_terminal_session(
         .unwrap()
         .insert(session_id.clone(), session);
 
-    tracing::info!("Terminal session {} started with shell: {}", session_id, shell);
+    tracing::info!(
+        "Terminal session {} started with shell: {}",
+        session_id,
+        shell
+    );
 
     Ok(session_id)
 }

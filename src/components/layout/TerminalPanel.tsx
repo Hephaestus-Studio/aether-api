@@ -104,9 +104,7 @@ export default function TerminalPanel() {
         setActiveTabId((currentActive) => {
           if (currentActive === tabIdToClose) {
             const closedIndex = prevTabs.findIndex((t) => t.id === tabIdToClose);
-            return (
-              remainingTabs[Math.min(closedIndex, remainingTabs.length - 1)]?.id || null
-            );
+            return remainingTabs[Math.min(closedIndex, remainingTabs.length - 1)]?.id || null;
           }
           return currentActive;
         });

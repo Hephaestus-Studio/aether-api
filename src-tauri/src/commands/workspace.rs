@@ -424,7 +424,6 @@ pub fn sanitize_name(name: &str) -> String {
         .collect()
 }
 
-
 /// Tauri command to explicitly create and scaffold a new workspace.
 #[tauri::command]
 pub async fn create_workspace(name: String, parent_directory: String) -> Result<String, AppError> {
