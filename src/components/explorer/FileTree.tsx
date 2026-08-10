@@ -21,7 +21,7 @@ export default function FileTree() {
   return (
     <Box style={{ padding: "0 8px" }}>
       {rootNodes.map((node) => (
-        <FileTreeNode key={node.id} node={node} />
+        <FileTreeNode key={node.id} node={node} parentNode={collectionsNode} />
       ))}
     </Box>
   );

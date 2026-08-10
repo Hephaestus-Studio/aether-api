@@ -1,4 +1,4 @@
-use crate::commands::workspace::{get_last_seq_in_dir, sanitize_name, AppState};
+use crate::commands::workspace::{get_last_seq_in_dir, AppState};
 use crate::errors::AppError;
 use chrono::Utc;
 use serde::Serialize;
@@ -19,11 +19,10 @@ pub struct CreateCollectionResult {
     pub seq: String,
 }
 
-/// Tauri command to construct a new API collection metadata directory.
+/// Tauri command to construct a new API collection metadata directory with a UUID v7 directory name.
 ///
 /// # Errors
-/// Returns [`AppError::WorkspaceNotOpened`] if no workspace is opened,
-/// or [`AppError::DuplicateItem`] if a collection with the same sanitized name already exists.
+/// Returns [`AppError::WorkspaceNotOpened`] if no workspace is opened.
 #[tauri::command]
 pub async fn create_collection(
     name: String,
@@ -33,20 +32,8 @@ pub async fn create_collection(
     let ws = state.workspace.lock().await;
     let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
 
-    let clean_name = sanitize_name(&name);
-    let collection_dir = ws_state.path.join("collections").join(&clean_name);
-
-    if collection_dir.exists() {
-        tracing::warn!(
-            "Collection '{}' already exists at {}",
-            clean_name,
-            collection_dir.display()
-        );
-        return Err(AppError::DuplicateItem(format!(
-            "Collection '{}' already exists",
-            clean_name
-        )));
-    }
+    let uuid = uuid::Uuid::now_v7();
+    let collection_dir = ws_state.path.join("collections").join(uuid.to_string());
 
     std::fs::create_dir_all(&collection_dir)?;
 
@@ -93,11 +80,11 @@ pub struct CreateFolderResult {
     pub seq: String,
 }
 
-/// Tauri command to construct a new folder directory in the workspace hierarchy.
+/// Tauri command to construct a new folder directory with a UUID v7 directory name.
 ///
 /// # Errors
 /// Returns [`AppError::WorkspaceNotOpened`] if no workspace is opened,
-/// or [`AppError::DuplicateItem`] if a folder with the same sanitized name already exists.
+/// or [`AppError::InvalidPath`] if the parent path cannot be resolved.
 #[tauri::command]
 pub async fn create_folder(
     parent_path: String,
@@ -108,7 +95,7 @@ pub async fn create_folder(
     let ws = state.workspace.lock().await;
     let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
 
-    let clean_name = sanitize_name(&name);
+    let uuid = uuid::Uuid::now_v7();
     let parent = PathBuf::from(&parent_path);
 
     let parent_abs = if parent.is_absolute() {
@@ -116,19 +103,7 @@ pub async fn create_folder(
     } else {
         ws_state.path.join(&parent)
     };
-    let folder_dir = parent_abs.join(&clean_name);
-
-    if folder_dir.exists() {
-        tracing::warn!(
-            "Folder '{}' already exists at {}",
-            clean_name,
-            folder_dir.display()
-        );
-        return Err(AppError::DuplicateItem(format!(
-            "Folder '{}' already exists",
-            clean_name
-        )));
-    }
+    let folder_dir = parent_abs.join(uuid.to_string());
 
     std::fs::create_dir_all(&folder_dir)?;
 
@@ -167,13 +142,14 @@ pub struct RenameResult {
     pub new_path: String,
 }
 
-/// Tauri command to rename a directory or a configuration file.
+/// Tauri command to rename a directory (collection/folder) or a request file.
 ///
-/// Updates the physical filename/dirname on the disk and updates internal `name` properties.
+/// All items use immutable UUID v7 names on disk. Renaming simply updates
+/// the `name` field inside the corresponding YAML file in place.
 ///
 /// # Errors
 /// Returns [`AppError::WorkspaceNotOpened`] if no workspace is opened,
-/// [`AppError::ItemNotFound`] if the path is invalid, or [`AppError::DuplicateItem`] if new path collides.
+/// or [`AppError::ItemNotFound`] if the path is invalid.
 #[tauri::command]
 pub async fn rename_item(
     old_path: String,
@@ -194,67 +170,57 @@ pub async fn rename_item(
         return Err(AppError::ItemNotFound(old_path));
     }
 
-    let parent = old.parent().ok_or(AppError::InvalidPath)?;
-    let clean_name = sanitize_name(&new_name);
-
-    let new = if old.is_file() {
-        let ext = old.extension().and_then(|s| s.to_str()).unwrap_or("yml");
-        parent.join(format!("{}.{}", clean_name, ext))
-    } else {
-        parent.join(&clean_name)
-    };
-
-    if new.exists() && new != old {
-        tracing::warn!("Target path for rename already exists: {}", new.display());
-        return Err(AppError::DuplicateItem(
-            "Item already exists at new path".to_string(),
-        ));
-    }
-
-    std::fs::rename(&old, &new)?;
-
-    if new.is_dir() {
-        let col_yml = new.join("collection.yml");
-        if col_yml.exists() {
-            if let Ok(mut col) = crate::engine::yaml_parser::read_and_validate_yaml::<
-                crate::models::collection::Collection,
-            >(&col_yml)
-            {
-                col.name = new_name.clone();
-                col.updated_at = Utc::now();
-                let _ = crate::engine::yaml_parser::atomic_write_yaml(&col_yml, &col);
-            }
-        } else {
-            let fold_yml = new.join("folder.yml");
-            if fold_yml.exists() {
-                if let Ok(mut fold) = crate::engine::yaml_parser::read_and_validate_yaml::<
-                    crate::models::folder::Folder,
-                >(&fold_yml)
-                {
-                    fold.name = new_name.clone();
-                    fold.updated_at = Utc::now();
-                    let _ = crate::engine::yaml_parser::atomic_write_yaml(&fold_yml, &fold);
-                }
-            }
-        }
-    } else {
-        let entity_type = crate::engine::yaml_parser::peek_entity_type(&new).unwrap_or_default();
+    if old.is_file() {
+        // Request files use UUID v7 filenames — update the `name` field in YAML
+        let entity_type = crate::engine::yaml_parser::peek_entity_type(&old).unwrap_or_default();
         if entity_type == "request" {
             if let Ok(mut req) = crate::engine::yaml_parser::read_and_validate_yaml::<
                 crate::models::request::Request,
-            >(&new)
+            >(&old)
             {
                 req.name = new_name.clone();
                 req.updated_at = Utc::now();
-                let _ = crate::engine::yaml_parser::atomic_write_yaml(&new, &req);
+                crate::engine::yaml_parser::atomic_write_yaml(&old, &req)?;
             }
+        }
+        tracing::info!("Updated request name of '{}' to '{}'", old_path, new_name);
+        return Ok(RenameResult {
+            new_path: old.to_string_lossy().to_string(),
+        });
+    }
+
+    // Collections & Folders use UUID v7 directory names — update `name` in collection.yml / folder.yml
+    let col_yml = old.join("collection.yml");
+    let col_yaml = old.join("collection.yaml");
+    let fold_yml = old.join("folder.yml");
+    let fold_yaml = old.join("folder.yaml");
+
+    if col_yml.exists() || col_yaml.exists() {
+        let meta_file = if col_yml.exists() { col_yml } else { col_yaml };
+        if let Ok(mut col) = crate::engine::yaml_parser::read_and_validate_yaml::<
+            crate::models::collection::Collection,
+        >(&meta_file)
+        {
+            col.name = new_name.clone();
+            col.updated_at = Utc::now();
+            let _ = crate::engine::yaml_parser::atomic_write_yaml(&meta_file, &col);
+        }
+    } else if fold_yml.exists() || fold_yaml.exists() {
+        let meta_file = if fold_yml.exists() { fold_yml } else { fold_yaml };
+        if let Ok(mut fold) = crate::engine::yaml_parser::read_and_validate_yaml::<
+            crate::models::folder::Folder,
+        >(&meta_file)
+        {
+            fold.name = new_name.clone();
+            fold.updated_at = Utc::now();
+            let _ = crate::engine::yaml_parser::atomic_write_yaml(&meta_file, &fold);
         }
     }
 
-    tracing::info!("Successfully renamed '{}' -> '{}'", old_path, new.display());
+    tracing::info!("Updated directory metadata name of '{}' to '{}'", old_path, new_name);
 
     Ok(RenameResult {
-        new_path: new.to_string_lossy().to_string(),
+        new_path: old.to_string_lossy().to_string(),
     })
 }
 
@@ -323,23 +289,15 @@ pub async fn duplicate_item(
     }
 
     let parent = src.parent().ok_or(AppError::InvalidPath)?;
-    let stem = src
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("request");
-    let ext = src.extension().and_then(|s| s.to_str()).unwrap_or("yml");
 
-    let mut counter = 1;
-    let mut dest = parent.join(format!("{}_copy.{}", stem, ext));
-    while dest.exists() {
-        dest = parent.join(format!("{}_copy_{}.{}", stem, counter, ext));
-        counter += 1;
-    }
+    // Use UUID v7 for the duplicate filename to ensure uniqueness
+    let uuid = uuid::Uuid::now_v7();
+    let dest = parent.join(format!("{}.yml", uuid));
 
     let mut req: crate::models::request::Request =
         crate::engine::yaml_parser::read_and_validate_yaml(&src)?;
 
-    req.name = format!("{} (copy)", req.name);
+    req.name = format!("{} (Copy)", req.name);
     let now = Utc::now();
     req.created_at = now;
     req.updated_at = now;
@@ -433,4 +391,131 @@ pub async fn reorder_item(
     }
 
     Ok(ReorderResult { new_seq })
+}
+
+/// Response payload returned after moving or reordering an item.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MoveItemResult {
+    /// Absolute filesystem path of the moved item.
+    pub new_path: String,
+    /// Relative path ID of the moved item.
+    pub new_id: String,
+    /// Resolved sequence string.
+    pub new_seq: String,
+}
+
+/// Tauri command to move an item to a new parent directory and/or reorder it.
+///
+/// # Errors
+/// Returns [`AppError::WorkspaceNotOpened`] if no workspace is opened,
+/// [`AppError::ItemNotFound`] if source item doesn't exist,
+/// or [`AppError::InvalidPath`] if target directory is invalid.
+#[tauri::command]
+pub async fn move_item(
+    source_path: String,
+    target_parent_path: String,
+    prev_seq: Option<String>,
+    next_seq: Option<String>,
+    state: State<'_, AppState>,
+) -> Result<MoveItemResult, AppError> {
+    tracing::info!(
+        "Moving item '{}' to parent '{}' (prev_seq: {:?}, next_seq: {:?})",
+        source_path,
+        target_parent_path,
+        prev_seq,
+        next_seq
+    );
+    let ws = state.workspace.lock().await;
+    let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
+
+    let src = if Path::new(&source_path).is_absolute() {
+        PathBuf::from(&source_path)
+    } else {
+        ws_state.path.join(&source_path)
+    };
+    if !src.exists() {
+        return Err(AppError::ItemNotFound(source_path));
+    }
+
+    let target_parent = if Path::new(&target_parent_path).is_absolute() {
+        PathBuf::from(&target_parent_path)
+    } else {
+        ws_state.path.join(&target_parent_path)
+    };
+    if !target_parent.exists() || !target_parent.is_dir() {
+        return Err(AppError::InvalidPath);
+    }
+
+    // Prevent moving a directory into itself or its descendants
+    if src.is_dir() && (target_parent == src || target_parent.starts_with(&src)) {
+        return Err(AppError::InvalidPath);
+    }
+
+    let file_name = src.file_name().ok_or(AppError::InvalidPath)?;
+    let dest = target_parent.join(file_name);
+
+    let new_seq = crate::engine::fractional_index::FractionalIndexer::generate_between(
+        prev_seq.as_deref(),
+        next_seq.as_deref(),
+    );
+
+    if src != dest {
+        if dest.exists() {
+            return Err(AppError::DuplicateItem(
+                "An item with the same name already exists in the target folder".to_string(),
+            ));
+        }
+        std::fs::rename(&src, &dest)?;
+    }
+
+    if dest.is_dir() {
+        let col_yml = dest.join("collection.yml");
+        if col_yml.exists() {
+            if let Ok(mut col) = crate::engine::yaml_parser::read_and_validate_yaml::<
+                crate::models::collection::Collection,
+            >(&col_yml)
+            {
+                col.seq = Some(new_seq.clone());
+                col.updated_at = Utc::now();
+                let _ = crate::engine::yaml_parser::atomic_write_yaml(&col_yml, &col);
+            }
+        } else {
+            let fold_yml = dest.join("folder.yml");
+            if fold_yml.exists() {
+                if let Ok(mut fold) = crate::engine::yaml_parser::read_and_validate_yaml::<
+                    crate::models::folder::Folder,
+                >(&fold_yml)
+                {
+                    fold.seq = Some(new_seq.clone());
+                    fold.updated_at = Utc::now();
+                    let _ = crate::engine::yaml_parser::atomic_write_yaml(&fold_yml, &fold);
+                }
+            }
+        }
+    } else {
+        let entity_type = crate::engine::yaml_parser::peek_entity_type(&dest).unwrap_or_default();
+        if entity_type == "request" {
+            if let Ok(mut req) = crate::engine::yaml_parser::read_and_validate_yaml::<
+                crate::models::request::Request,
+            >(&dest)
+            {
+                req.seq = Some(new_seq.clone());
+                req.updated_at = Utc::now();
+                let _ = crate::engine::yaml_parser::atomic_write_yaml(&dest, &req);
+            }
+        }
+    }
+
+    let new_id = dest
+        .strip_prefix(&ws_state.path)
+        .unwrap_or(&dest)
+        .to_string_lossy()
+        .to_string();
+
+    Ok(MoveItemResult {
+        new_path: dest.to_string_lossy().to_string(),
+        new_id,
+        new_seq,
+    })
 }

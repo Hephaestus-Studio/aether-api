@@ -1,6 +1,29 @@
+.shellRoot {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.workspaceRow {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  height: calc(100% - 22px);
+  min-height: 0;
+  overflow: hidden;
+}
+
 .navbar {
   display: flex;
   flex-direction: row;
+  height: 100%;
+  border-right: 1px solid var(--border-color);
+  background-color: var(--bg-sidebar);
+  position: relative;
+  flex-shrink: 0;
 }
 
 .sidebarContainer {
@@ -9,14 +32,10 @@
   overflow: hidden;
 }
 
-.main {
-  position: absolute !important;
-  top: 0 !important;
-  bottom: 22px !important;
-  left: 0 !important;
-  right: 0 !important;
-  height: auto !important;
-  min-height: 0 !important;
+.mainArea {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background-color: var(--bg-app);
@@ -25,8 +44,20 @@
 
 .editorWrapper {
   flex: 1;
+  min-height: 0;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.statusBarWrapper {
+  height: 22px;
+  min-height: 22px;
+  width: 100%;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--bg-activity);
+  z-index: 50;
 }
 
 .emptyState {

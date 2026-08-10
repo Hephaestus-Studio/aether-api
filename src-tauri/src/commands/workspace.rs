@@ -27,6 +27,8 @@ pub struct AppState {
     pub http_executor: crate::engine::http_client::HttpExecutor,
     /// Shared manager for active/running requests cancellation tracking.
     pub request_tracker: crate::engine::http_client::RequestTracker,
+    /// Shared manager for active PTY terminal sessions.
+    pub terminal_manager: crate::commands::terminal::TerminalManager,
 }
 
 impl AppState {
@@ -36,6 +38,7 @@ impl AppState {
             workspace: tokio::sync::Mutex::new(None),
             http_executor,
             request_tracker: crate::engine::http_client::RequestTracker::new(),
+            terminal_manager: crate::commands::terminal::TerminalManager::new(),
         }
     }
 }
@@ -421,62 +424,6 @@ pub fn sanitize_name(name: &str) -> String {
         .collect()
 }
 
-/// Executes a shell command inside the specified working directory, and intercepts
-/// directory changes (cd) to return a resolved folder path back to the frontend.
-#[tauri::command]
-pub fn run_terminal_command(command: String, cwd: Option<String>) -> Result<String, String> {
-    use std::path::PathBuf;
-    use std::process::Command;
-
-    let dir_str = cwd.unwrap_or_else(|| ".".to_string());
-    let dir = PathBuf::from(&dir_str);
-
-    let trimmed = command.trim();
-    if let Some(target_raw) = trimmed.strip_prefix("cd ") {
-        let target = target_raw.trim();
-        let target_path = if PathBuf::from(target).is_absolute() {
-            PathBuf::from(target)
-        } else {
-            dir.join(target)
-        };
-
-        if target_path.exists() && target_path.is_dir() {
-            if let Ok(canonical) = target_path.canonicalize() {
-                return Ok(format!("NEW_CWD:{}", canonical.display()));
-            } else {
-                return Ok(format!("NEW_CWD:{}", target_path.display()));
-            }
-        } else {
-            return Err(format!("cd: no such file or directory: {}", target));
-        }
-    }
-
-    let output = if cfg!(target_os = "windows") {
-        Command::new("cmd")
-            .args(["/C", &command])
-            .current_dir(&dir)
-            .output()
-    } else {
-        Command::new("sh")
-            .args(["-c", &command])
-            .current_dir(&dir)
-            .output()
-    };
-
-    match output {
-        Ok(out) => {
-            let stdout = String::from_utf8_lossy(&out.stdout).to_string();
-            let stderr = String::from_utf8_lossy(&out.stderr).to_string();
-            let combined = format!("{}{}", stdout, stderr);
-            if out.status.success() {
-                Ok(combined)
-            } else {
-                Err(combined)
-            }
-        }
-        Err(e) => Err(e.to_string()),
-    }
-}
 
 /// Tauri command to explicitly create and scaffold a new workspace.
 #[tauri::command]

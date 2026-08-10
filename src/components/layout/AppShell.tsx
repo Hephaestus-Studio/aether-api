@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { AppShell as MantineAppShell, Box } from "@mantine/core";
+import { Box } from "@mantine/core";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useTabStore } from "@/stores/tabStore";
 import ActivityBar from "./ActivityBar";
@@ -72,101 +72,62 @@ export default function AppShell() {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
+  const navWidth = sidebarOpened ? sidebarWidth + 48 : 48;
+
   return (
-    <MantineAppShell
-      header={{ height: 0 }}
-      navbar={{
-        width: sidebarOpened ? sidebarWidth + 48 : 48,
-        breakpoint: "sm",
-      }}
-      footer={{ height: 22 }}
-      padding={0}
-      transitionDuration={0}
-      styles={{
-        root: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
-        navbar: {
-          position: "absolute",
-          top: 0,
-          bottom: 22,
-          borderRight: "1px solid var(--border-color)",
-          overflow: "hidden",
-          height: "auto",
-          minHeight: 0,
-          display: "flex",
-          flexDirection: "row",
-        },
-        main: {
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 22,
-          height: "auto",
-          minHeight: 0,
-          display: "flex",
-          flexDirection: "column",
-          backgroundColor: "var(--bg-app)",
-          overflow: "hidden",
-        },
-        footer: {
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: 22,
-          borderTop: "1px solid var(--border-color)",
-          padding: 0,
-          boxSizing: "border-box",
-          zIndex: 100,
-        },
-      }}
-    >
-      <MantineAppShell.Navbar className={classes.navbar}>
-        <ActivityBar
-          activeView={activeView}
-          sidebarOpened={sidebarOpened}
-          setSidebarOpened={setSidebarOpened}
-        />
-        {sidebarOpened && (
-          <>
-            <Box className={classes.sidebarContainer}>
-              <Sidebar />
-            </Box>
-            <div className={classes.resizeHandle} onMouseDown={handleResizeMouseDown} />
-          </>
-        )}
-      </MantineAppShell.Navbar>
-
-      <MantineAppShell.Main className={classes.main}>
-        <EditorTabs />
-        <Box className={classes.editorWrapper}>
-          <SplitPane
-            collapsed={!terminalOpened}
-            topPanel={
-              activeTabId ? (
-                <SplitPane
-                  collapsed={!responsePanelOpened}
-                  topPanel={<RequestEditor tabId={activeTabId} />}
-                  bottomPanel={<ResponseViewer tabId={activeTabId} />}
-                  orientation={layoutOrientation}
-                  minTopSize={layoutOrientation === "horizontal" ? 320 : 180}
-                  minBottomSize={layoutOrientation === "horizontal" ? 280 : 160}
-                />
-              ) : (
-                <Box className={classes.emptyState}>
-                  Select a request from explorer or press Ctrl+P to search
-                </Box>
-              )
-            }
-            bottomPanel={<TerminalPanel />}
-            orientation="vertical"
+    <Box className={classes.shellRoot}>
+      {/* Middle row: Sidebar on left + Main Workspace on right */}
+      <Box className={classes.workspaceRow}>
+        {/* Navbar: ActivityBar (48px) + Sidebar */}
+        <Box className={classes.navbar} style={{ width: navWidth }}>
+          <ActivityBar
+            activeView={activeView}
+            sidebarOpened={sidebarOpened}
+            setSidebarOpened={setSidebarOpened}
           />
+          {sidebarOpened && (
+            <>
+              <Box className={classes.sidebarContainer}>
+                <Sidebar />
+              </Box>
+              <div className={classes.resizeHandle} onMouseDown={handleResizeMouseDown} />
+            </>
+          )}
         </Box>
-      </MantineAppShell.Main>
 
-      <MantineAppShell.Footer>
+        {/* Main Area: EditorTabs + RequestEditor/ResponseViewer/Terminal SplitPane */}
+        <Box className={classes.mainArea}>
+          <EditorTabs />
+          <Box className={classes.editorWrapper}>
+            <SplitPane
+              collapsed={!terminalOpened}
+              topPanel={
+                activeTabId ? (
+                  <SplitPane
+                    collapsed={!responsePanelOpened}
+                    topPanel={<RequestEditor tabId={activeTabId} />}
+                    bottomPanel={<ResponseViewer tabId={activeTabId} />}
+                    orientation={layoutOrientation}
+                    minTopSize={layoutOrientation === "horizontal" ? 320 : 180}
+                    minBottomSize={layoutOrientation === "horizontal" ? 280 : 160}
+                  />
+                ) : (
+                  <Box className={classes.emptyState}>
+                    Select a request from explorer or press Ctrl+P to search
+                  </Box>
+                )
+              }
+              bottomPanel={terminalOpened ? <TerminalPanel /> : null}
+              orientation="vertical"
+            />
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Bottom row: StatusBar (22px) */}
+      <Box className={classes.statusBarWrapper}>
         <StatusBar />
-      </MantineAppShell.Footer>
+      </Box>
 
       {/* Power tools shortcuts modals */}
       <QuickOpen opened={quickOpenOpened} onClose={() => setQuickOpenOpened(false)} />
@@ -174,6 +135,6 @@ export default function AppShell() {
         opened={commandPaletteOpened}
         onClose={() => setCommandPaletteOpened(false)}
       />
-    </MantineAppShell>
+    </Box>
   );
 }

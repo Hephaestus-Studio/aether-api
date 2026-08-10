@@ -24,6 +24,7 @@ interface TabState {
   markDirty: (tabId: string) => void;
   markClean: (tabId: string) => void;
   updateTab: (tabId: string, updates: Partial<TabItem>) => void;
+  replaceTabId: (oldId: string, newId: string) => void;
   reopenLastClosed: () => void;
   closeAllTabs: () => void;
   closeOtherTabs: (tabId: string) => void;
@@ -142,6 +143,37 @@ export const useTabStore = create<TabState>((set, get) => ({
   updateTab: (tabId, updates) => {
     set({
       tabs: get().tabs.map((t) => (t.id === tabId ? { ...t, ...updates } : t)),
+    });
+  },
+
+  replaceTabId: (oldId, newId) => {
+    const { tabs, activeTabId, responses, loadingStates, protocols } = get();
+    const newTabs = tabs.map((t) => (t.id === oldId ? { ...t, id: newId } : t));
+
+    const newResponses = { ...responses };
+    if (oldId in newResponses) {
+      newResponses[newId] = newResponses[oldId];
+      delete newResponses[oldId];
+    }
+
+    const newLoadingStates = { ...loadingStates };
+    if (oldId in newLoadingStates) {
+      newLoadingStates[newId] = newLoadingStates[oldId];
+      delete newLoadingStates[oldId];
+    }
+
+    const newProtocols = { ...protocols };
+    if (oldId in newProtocols) {
+      newProtocols[newId] = newProtocols[oldId];
+      delete newProtocols[oldId];
+    }
+
+    set({
+      tabs: newTabs,
+      activeTabId: activeTabId === oldId ? newId : activeTabId,
+      responses: newResponses,
+      loadingStates: newLoadingStates,
+      protocols: newProtocols,
     });
   },
 

@@ -1,8 +1,9 @@
-use crate::commands::workspace::AppState;
+use crate::commands::workspace::{get_last_seq_in_dir, AppState};
 use crate::engine::variable_resolver::VariableResolver;
 use crate::errors::AppError;
 use crate::models::request::Request;
 use crate::models::response::HttpResponse;
+use serde::Serialize;
 use serde_json::json;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -30,9 +31,76 @@ pub async fn read_request(path: String, state: State<'_, AppState>) -> Result<Re
     Ok(request)
 }
 
+/// Response payload returned after creating a new request.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateRequestResult {
+    /// The relative path ID of the new request file.
+    pub id: String,
+    /// The absolute filesystem path to the new request file.
+    pub path: String,
+    /// The display name of the request.
+    pub name: String,
+    /// The generated fractional sequence index.
+    pub seq: String,
+}
+
+/// Tauri command to create a new request configuration file using a UUID v7 filename.
+///
+/// Generates a UUID v7-based filename to ensure uniqueness and avoid naming conflicts.
+/// The display name is stored inside the YAML content.
+///
+/// # Errors
+/// Returns [`AppError::WorkspaceNotOpened`] if no workspace is opened.
+#[tauri::command]
+pub async fn create_request(
+    parent_path: String,
+    name: String,
+    state: State<'_, AppState>,
+) -> Result<CreateRequestResult, AppError> {
+    tracing::info!("Creating request '{}' in '{}'", name, parent_path);
+    let ws = state.workspace.lock().await;
+    let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
+
+    let parent = if Path::new(&parent_path).is_absolute() {
+        PathBuf::from(&parent_path)
+    } else {
+        ws_state.path.join(&parent_path)
+    };
+
+    let uuid = uuid::Uuid::now_v7();
+    let filename = format!("{}.yml", uuid);
+    let file_path = parent.join(&filename);
+
+    let last_seq = get_last_seq_in_dir(&parent);
+    let new_seq =
+        crate::engine::fractional_index::FractionalIndexer::generate_last(last_seq.as_deref());
+
+    let mut req = Request::new(&name);
+    req.seq = Some(new_seq.clone());
+
+    crate::engine::yaml_parser::atomic_write_yaml(&file_path, &req)?;
+
+    let id = file_path
+        .strip_prefix(&ws_state.path)
+        .unwrap_or(&file_path)
+        .to_string_lossy()
+        .to_string();
+
+    tracing::info!("Created request '{}' at {}", name, file_path.display());
+
+    Ok(CreateRequestResult {
+        id,
+        path: file_path.to_string_lossy().to_string(),
+        name,
+        seq: new_seq,
+    })
+}
+
 /// Tauri command to update and write a request configuration file back to disk atomically.
 ///
 /// Refreshes the request's internal `updated_at` time stamp.
+/// The file is never renamed — request files use UUID v7 filenames for their entire lifecycle.
 ///
 /// # Errors
 /// Returns [`AppError::WorkspaceNotOpened`] if no workspace is opened,

@@ -12,17 +12,23 @@ import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { invoke } from "@tauri-apps/api/core";
 import type { WorkspaceTreeNode } from "@/types/workspace";
 import { getMethodColor } from "@/utils/httpMethods";
+import clsx from "clsx";
 import classes from "./FileTreeNode.module.css";
 
 interface FileTreeNodeProps {
   node: WorkspaceTreeNode;
+  parentNode?: WorkspaceTreeNode;
 }
 
-export default function FileTreeNode({ node }: Readonly<FileTreeNodeProps>) {
+let activeDraggedNode: { node: WorkspaceTreeNode; parentNode?: WorkspaceTreeNode } | null = null;
+
+export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNodeProps>) {
   const [expanded, setExpanded] = useState(false);
   const [modalType, setModalType] = useState<"newFolder" | "rename" | "delete" | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [error, setError] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
+  const [dropPosition, setDropPosition] = useState<"above" | "below" | "inside" | null>(null);
   const openTab = useTabStore((s) => s.openTab);
   const isFolder = node.nodeType === "collection" || node.nodeType === "folder";
   const { gitStatus, workspacePath, setTreeData } = useWorkspaceStore();
@@ -109,47 +115,9 @@ export default function FileTreeNode({ node }: Readonly<FileTreeNodeProps>) {
 
   const handleNewRequest = async () => {
     try {
-      let baseName = "New Request";
-      let count = 0;
-      let cleanName = baseName;
-
-      const childrenNames = node.children?.map((c) => c.name.toLowerCase()) || [];
-      while (
-        childrenNames.includes(cleanName.toLowerCase()) ||
-        childrenNames.includes(`${cleanName.toLowerCase()}.yml`)
-      ) {
-        count++;
-        cleanName = `${baseName} ${count}`;
-      }
-
-      const cleanFilename = cleanName.toLowerCase().replace(/[^a-z0-9_-]/g, "_") + ".yml";
-      const relativeFilePath = `${node.id}/${cleanFilename}`;
-
-      const defaultRequestDetails = {
-        schemaVersion: "1.0.0",
-        type: "request",
-        name: cleanName,
-        description: null,
-        seq: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        method: "GET",
-        url: "",
-        params: [],
-        headers: [],
-        auth: { type: "none" },
-        body: { type: "none" },
-        settings: {
-          timeoutMs: 30000,
-          followRedirects: true,
-          maxRedirects: 10,
-          verifySsl: true,
-        },
-      };
-
-      await invoke("update_request", {
-        path: relativeFilePath,
-        requestDetails: defaultRequestDetails,
+      const result = await invoke<{ id: string; path: string; name: string }>("create_request", {
+        parentPath: node.id,
+        name: "New Request",
       });
 
       if (workspacePath) {
@@ -157,14 +125,9 @@ export default function FileTreeNode({ node }: Readonly<FileTreeNodeProps>) {
         setTreeData(tree.children);
       }
 
-      const normalizedWorkspace = workspacePath || "";
-      const absolutePath = normalizedWorkspace.endsWith("/")
-        ? `${normalizedWorkspace}${relativeFilePath}`
-        : `${normalizedWorkspace}/${relativeFilePath}`;
-
       openTab({
-        id: absolutePath,
-        name: cleanName,
+        id: result.path,
+        name: result.name,
         method: "GET",
         isDirty: false,
       });
@@ -172,6 +135,19 @@ export default function FileTreeNode({ node }: Readonly<FileTreeNodeProps>) {
       setExpanded(true);
     } catch (err: any) {
       console.error("Failed to auto-create request:", err);
+      alert(err.message || String(err));
+    }
+  };
+
+  const handleDuplicate = async () => {
+    try {
+      await invoke("duplicate_item", { path: node.id });
+      if (workspacePath) {
+        const tree = await invoke<any>("open_workspace", { directoryPath: workspacePath });
+        setTreeData(tree.children);
+      }
+    } catch (err: any) {
+      console.error("Failed to duplicate request:", err);
       alert(err.message || String(err));
     }
   };
@@ -229,6 +205,9 @@ export default function FileTreeNode({ node }: Readonly<FileTreeNodeProps>) {
     }
   };
 
+  const replaceTabId = useTabStore((s) => s.replaceTabId);
+  const updateTab = useTabStore((s) => s.updateTab);
+
   const handleModalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (modalType !== "delete" && !inputValue.trim()) return;
@@ -242,10 +221,16 @@ export default function FileTreeNode({ node }: Readonly<FileTreeNodeProps>) {
           name: cleanInput,
         });
       } else if (modalType === "rename") {
-        await invoke("rename_item", {
-          path: node.id,
+        const result = await invoke<{ newPath: string }>("rename_item", {
+          oldPath: node.id,
           newName: cleanInput,
         });
+        // Request files keep their UUID v7 filename (not renamed on disk), only display name updates.
+        if (node.nodeType === "request") {
+          updateTab(node.path, { name: cleanInput });
+        } else if (result.newPath && result.newPath !== node.path) {
+          replaceTabId(node.path, result.newPath);
+        }
       } else if (modalType === "delete") {
         await invoke("delete_item", {
           path: node.id,
@@ -266,11 +251,190 @@ export default function FileTreeNode({ node }: Readonly<FileTreeNodeProps>) {
     }
   };
 
+  const handleDragStart = (e: React.DragEvent) => {
+    activeDraggedNode = { node, parentNode };
+    setIsDragging(true);
+    e.dataTransfer.setData("text/plain", node.id);
+    e.dataTransfer.effectAllowed = "move";
+
+    // Create a compact custom drag ghost matching the exact item size
+    const dragGhost = document.createElement("div");
+    dragGhost.className = classes.dragPreview;
+
+    if (node.nodeType === "request") {
+      const methodSpan = document.createElement("span");
+      methodSpan.style.color = getMethodColor(node.method);
+      methodSpan.style.fontSize = "10px";
+      methodSpan.style.fontWeight = "800";
+      methodSpan.style.marginRight = "2px";
+      methodSpan.innerText = getMethodText(node.method);
+
+      const labelSpan = document.createElement("span");
+      labelSpan.style.fontSize = "12px";
+      labelSpan.style.color = "var(--text-primary, #ffffff)";
+      labelSpan.innerText = node.name.replace(/\.(yml|yaml|json)$/i, "");
+
+      dragGhost.appendChild(methodSpan);
+      dragGhost.appendChild(labelSpan);
+    } else {
+      const labelSpan = document.createElement("span");
+      labelSpan.style.fontSize = "12px";
+      labelSpan.style.color = "var(--text-primary, #ffffff)";
+      labelSpan.innerText = node.name.replace(/\.(yml|yaml|json)$/i, "");
+      dragGhost.appendChild(labelSpan);
+    }
+
+    document.body.appendChild(dragGhost);
+    e.dataTransfer.setDragImage(dragGhost, 16, 12);
+
+    setTimeout(() => {
+      if (document.body.contains(dragGhost)) {
+        document.body.removeChild(dragGhost);
+      }
+    }, 0);
+  };
+
+  const handleDragEnd = () => {
+    activeDraggedNode = null;
+    setIsDragging(false);
+    setDropPosition(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!activeDraggedNode) return;
+    const dragged = activeDraggedNode.node;
+
+    if (dragged.id === node.id) return;
+    if ((dragged.nodeType === "folder" || dragged.nodeType === "collection") && node.id.startsWith(dragged.id + "/")) {
+      return;
+    }
+
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = "move";
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const height = rect.height;
+
+    if (isFolder) {
+      if (y < height * 0.25) {
+        setDropPosition("above");
+      } else if (y > height * 0.75) {
+        setDropPosition("below");
+      } else {
+        setDropPosition("inside");
+      }
+    } else {
+      if (y < height * 0.5) {
+        setDropPosition("above");
+      } else {
+        setDropPosition("below");
+      }
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (
+      e.clientX <= rect.left ||
+      e.clientX >= rect.right ||
+      e.clientY <= rect.top ||
+      e.clientY >= rect.bottom
+    ) {
+      setDropPosition(null);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const pos = dropPosition;
+    setDropPosition(null);
+
+    if (!activeDraggedNode || !pos) return;
+    const dragged = activeDraggedNode.node;
+
+    if (dragged.id === node.id) return;
+    if ((dragged.nodeType === "folder" || dragged.nodeType === "collection") && node.id.startsWith(dragged.id + "/")) {
+      return;
+    }
+
+    let targetParentPath = "";
+    let prevSeq: string | undefined = undefined;
+    let nextSeq: string | undefined = undefined;
+
+    if (pos === "inside") {
+      targetParentPath = node.id;
+      const children = (node.children || []).filter((c) => c.id !== dragged.id);
+      if (children.length > 0) {
+        prevSeq = children[children.length - 1].seq ?? undefined;
+      }
+    } else {
+      targetParentPath = parentNode?.id || (node.nodeType === "collection" ? "collections" : "");
+      const siblings = (parentNode?.children || []).filter((c) => c.id !== dragged.id);
+      const targetIdx = siblings.findIndex((s) => s.id === node.id);
+
+      if (targetIdx !== -1) {
+        if (pos === "above") {
+          prevSeq = targetIdx > 0 ? siblings[targetIdx - 1].seq ?? undefined : undefined;
+          nextSeq = siblings[targetIdx].seq ?? undefined;
+        } else {
+          prevSeq = siblings[targetIdx].seq ?? undefined;
+          nextSeq = targetIdx < siblings.length - 1 ? siblings[targetIdx + 1].seq ?? undefined : undefined;
+        }
+      }
+    }
+
+    try {
+      const result = await invoke<{ newPath: string; newId: string; newSeq: string }>("move_item", {
+        sourcePath: dragged.id,
+        targetParentPath,
+        prevSeq,
+        nextSeq,
+      });
+
+      if (result.newPath && result.newPath !== dragged.path) {
+        replaceTabId(dragged.path, result.newPath);
+      }
+
+      if (pos === "inside") {
+        setExpanded(true);
+      }
+
+      if (workspacePath) {
+        const tree = await invoke<any>("open_workspace", { directoryPath: workspacePath });
+        setTreeData(tree.children);
+      }
+    } catch (err: any) {
+      console.error("Failed to move/reorder item:", err);
+    } finally {
+      activeDraggedNode = null;
+      setIsDragging(false);
+    }
+  };
+
   return (
     <Box className={classes.nodeWrapper}>
       <Menu position="bottom-start" withinPortal>
         <Menu.ContextMenu>
-          <UnstyledButton onClick={handleNodeClick} className={classes.button}>
+          <UnstyledButton
+            onClick={handleNodeClick}
+            className={clsx(
+              classes.button,
+              isDragging && classes.dragging,
+              dropPosition === "above" && classes.dropAbove,
+              dropPosition === "below" && classes.dropBelow,
+              dropPosition === "inside" && classes.dropInside,
+            )}
+            draggable
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
             <Group gap={6}>
               {getChevron()}
               {getIcon()}
@@ -299,6 +463,9 @@ export default function FileTreeNode({ node }: Readonly<FileTreeNodeProps>) {
               <Menu.Item onClick={handleNewFolder}>New Folder</Menu.Item>
             </>
           )}
+          {!isFolder && node.nodeType === "request" && (
+            <Menu.Item onClick={handleDuplicate}>Duplicate</Menu.Item>
+          )}
           <Menu.Item onClick={handleRename}>Rename</Menu.Item>
           <Menu.Item onClick={handleDelete} color="red">
             Delete
@@ -309,7 +476,7 @@ export default function FileTreeNode({ node }: Readonly<FileTreeNodeProps>) {
       {isFolder && expanded && node.children && (
         <Box className={classes.childrenContainer}>
           {node.children.map((child) => (
-            <FileTreeNode key={child.id} node={child} />
+            <FileTreeNode key={child.id} node={child} parentNode={node} />
           ))}
         </Box>
       )}

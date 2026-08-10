@@ -1,234 +1,212 @@
-import { useState, useEffect, useRef } from "react";
-import { Box, ActionIcon, Tooltip } from "@mantine/core";
-import { IconTrash, IconX } from "@tabler/icons-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Box, Tooltip, UnstyledButton } from "@mantine/core";
+import { IconPlus, IconTrash, IconX, IconTerminal2 } from "@tabler/icons-react";
 import { invoke } from "@tauri-apps/api/core";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useTabStore } from "@/stores/tabStore";
+import XTerminalInstance, { type XTerminalHandle } from "./XTerminalInstance";
 import classes from "./TerminalPanel.module.css";
 
-interface HistoryItem {
-  type: "input" | "stdout" | "stderr" | "info";
-  text: string;
+interface TerminalTab {
+  id: string;
+  title: string;
 }
 
 export default function TerminalPanel() {
-  const { workspacePath } = useWorkspaceStore();
-  const toggleTerminal = useTabStore((s) => s.toggleTerminal);
-  const [terminalCwd, setTerminalCwd] = useState<string>(".");
-  const [inputVal, setInputVal] = useState<string>("");
-  const [history, setHistory] = useState<HistoryItem[]>([]);
-  const [commandHistory, setCommandHistory] = useState<string[]>([]);
-  const [historyIndex, setHistoryIndex] = useState<number>(-1);
-  const [tempInput, setTempInput] = useState<string>("");
+  const setTerminalOpened = useTabStore((s) => s.setTerminalOpened);
+  const [tabs, setTabs] = useState<TerminalTab[]>([]);
+  const [activeTabId, setActiveTabId] = useState<string | null>(null);
 
-  const bodyRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const terminalRefs = useRef<Map<string, XTerminalHandle>>(new Map());
+  const nextTabIndex = useRef(1);
 
-  // Focus input on mount
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
+  // Helper to spawn a new terminal tab
+  const createNewTab = useCallback(async () => {
+    try {
+      const index = nextTabIndex.current++;
+      const currentWs = useWorkspaceStore.getState().workspacePath;
+      const sessionId = await invoke<string>("create_terminal_session", {
+        cols: 80,
+        rows: 24,
+        cwd: currentWs || undefined,
+      });
+
+      const newTab: TerminalTab = {
+        id: sessionId,
+        title: `Terminal ${index}`,
+      };
+
+      setTabs((prev) => [...prev, newTab]);
+      setActiveTabId(sessionId);
+    } catch (err) {
+      console.error("Failed to create terminal session:", err);
     }
   }, []);
 
-  // Initialize cwd once workspacePath is available
+  // Initialize first terminal tab once on mount
   useEffect(() => {
-    if (workspacePath) {
-      setTerminalCwd(workspacePath);
-    }
-  }, [workspacePath]);
+    let isMounted = true;
 
-  // Scroll to bottom of output history
-  useEffect(() => {
-    if (bodyRef.current) {
-      bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
-    }
-  }, [history]);
+    const initFirstTab = async () => {
+      try {
+        const index = nextTabIndex.current++;
+        const currentWs = useWorkspaceStore.getState().workspacePath;
+        const sessionId = await invoke<string>("create_terminal_session", {
+          cols: 80,
+          rows: 24,
+          cwd: currentWs || undefined,
+        });
 
-  // Focus input when clicking anywhere in terminal body
-  const handleBodyClick = () => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-  };
-
-  const getDisplayPath = () => {
-    if (!workspacePath) return ".";
-    // Replace home path with ~ on Unix systems
-    const home = "/home/haipn"; // Standard user home path for simplicity or general matches
-    if (terminalCwd.startsWith(home)) {
-      return terminalCwd.replace(home, "~");
-    }
-    // Just get directory folder name for short view
-    return terminalCwd.split(/[\\/]/).pop() || terminalCwd;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const command = inputVal.trim();
-    if (!command) return;
-
-    // Handle locally processed command session resets first
-    if (command === "exit") {
-      setHistory([]);
-      setInputVal("");
-      setHistoryIndex(-1);
-      setTempInput("");
-      toggleTerminal();
-      return;
-    }
-
-    if (command === "clear" || command === "cls") {
-      setHistory([]);
-      setInputVal("");
-      setHistoryIndex(-1);
-      setTempInput("");
-      return;
-    }
-
-    const displayPath = getDisplayPath();
-    const promptPrefix = `haipn@devbox:${displayPath}$ `;
-
-    // 1. Add input command to history
-    setHistory((prev) => [...prev, { type: "input", text: `${promptPrefix}${command}` }]);
-    setInputVal("");
-
-    // Append to command history list
-    setCommandHistory((prev) => {
-      // Don't add consecutive duplicates
-      if (prev[prev.length - 1] === command) return prev;
-      return [...prev, command];
-    });
-    setHistoryIndex(-1);
-    setTempInput("");
-
-    if (command === "help") {
-      setHistory((prev) => [
-        ...prev,
-        {
-          type: "info",
-          text: "Available commands: standard shell commands (ls, pwd, cd, git, pnpm, cargo, etc.) or clear/cls to clear logs.",
-        },
-      ]);
-      return;
-    }
-
-    // 3. Execute command on backend
-    try {
-      const result = await invoke<string>("run_terminal_command", {
-        command,
-        cwd: terminalCwd,
-      });
-
-      if (result.startsWith("NEW_CWD:")) {
-        const newPath = result.substring(8);
-        setTerminalCwd(newPath);
-      } else {
-        setHistory((prev) => [...prev, { type: "stdout", text: result }]);
-      }
-    } catch (err) {
-      setHistory((prev) => [...prev, { type: "stderr", text: err as string }]);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "ArrowUp") {
-      e.preventDefault();
-      if (commandHistory.length === 0) return;
-
-      const nextIndex = historyIndex + 1;
-      if (nextIndex < commandHistory.length) {
-        if (historyIndex === -1) {
-          setTempInput(inputVal); // save currently typed text
-        }
-        setHistoryIndex(nextIndex);
-        setInputVal(commandHistory[commandHistory.length - 1 - nextIndex]);
-      }
-    } else if (e.key === "ArrowDown") {
-      e.preventDefault();
-      const nextIndex = historyIndex - 1;
-      if (nextIndex >= -1) {
-        setHistoryIndex(nextIndex);
-        if (nextIndex === -1) {
-          setInputVal(tempInput);
+        if (isMounted) {
+          const newTab: TerminalTab = {
+            id: sessionId,
+            title: `Terminal ${index}`,
+          };
+          setTabs([newTab]);
+          setActiveTabId(sessionId);
         } else {
-          setInputVal(commandHistory[commandHistory.length - 1 - nextIndex]);
+          invoke("close_terminal", { sessionId }).catch(() => {});
         }
+      } catch (err) {
+        console.error("Failed to initialize terminal session:", err);
       }
+    };
+
+    initFirstTab();
+
+    // Clean up all terminal sessions when panel unmounts (closes/hides)
+    return () => {
+      isMounted = false;
+      invoke("close_all_terminals").catch((err) =>
+        console.error("Failed to close all terminals on unmount:", err),
+      );
+    };
+  }, []);
+
+  // Handle closing a single terminal tab
+  const handleCloseTab = async (e: React.MouseEvent, tabIdToClose: string) => {
+    e.stopPropagation();
+
+    try {
+      await invoke("close_terminal", { sessionId: tabIdToClose });
+    } catch (err) {
+      console.error("Failed to close terminal session:", err);
+    }
+
+    terminalRefs.current.delete(tabIdToClose);
+
+    setTabs((prevTabs) => {
+      const remainingTabs = prevTabs.filter((t) => t.id !== tabIdToClose);
+
+      // If no tabs remain, hide the whole terminal panel
+      if (remainingTabs.length === 0) {
+        setActiveTabId(null);
+        setTerminalOpened(false);
+        return [];
+      }
+
+      // If the closed tab was active, switch to the last tab or adjacent tab
+      if (activeTabId === tabIdToClose) {
+        const closedIndex = prevTabs.findIndex((t) => t.id === tabIdToClose);
+        const nextActive =
+          remainingTabs[Math.min(closedIndex, remainingTabs.length - 1)]?.id || null;
+        setActiveTabId(nextActive);
+      }
+
+      return remainingTabs;
+    });
+  };
+
+  // Handle clearing the active terminal screen
+  const handleClear = () => {
+    if (activeTabId) {
+      terminalRefs.current.get(activeTabId)?.clear();
     }
   };
 
-  const handleClearHistory = () => {
-    setHistory([]);
+  // Handle close panel button
+  const handleClosePanel = () => {
+    setTerminalOpened(false);
   };
-
-  const displayPath = getDisplayPath();
 
   return (
     <Box className={classes.container}>
-      {/* Header bar */}
+      {/* Header bar with tabs & action controls */}
       <Box className={classes.header}>
-        <Box className={classes.tabs} />
+        <Box className={classes.tabsContainer}>
+          {tabs.map((tab) => {
+            const isActive = tab.id === activeTabId;
+            return (
+              <UnstyledButton
+                key={tab.id}
+                onClick={() => setActiveTabId(tab.id)}
+                className={`${classes.tab} ${isActive ? classes.tabActive : ""}`}
+              >
+                <IconTerminal2 size={13} style={{ opacity: isActive ? 1 : 0.7 }} />
+                <span>{tab.title}</span>
+                <span
+                  role="button"
+                  tabIndex={0}
+                  className={classes.tabCloseBtn}
+                  onClick={(e) => handleCloseTab(e, tab.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      handleCloseTab(e as any, tab.id);
+                    }
+                  }}
+                  title="Close Terminal"
+                >
+                  <IconX size={11} />
+                </span>
+              </UnstyledButton>
+            );
+          })}
 
-        <Box className={classes.actions}>
-          <Tooltip label="Clear Console" position="top" withArrow>
-            <ActionIcon
-              variant="subtle"
-              color="gray"
-              size="sm"
-              onClick={handleClearHistory}
+          <Tooltip label="New Terminal" position="top" withArrow>
+            <UnstyledButton
+              onClick={createNewTab}
               className={classes.actionBtn}
+              style={{ width: 22, height: 22 }}
             >
-              <IconTrash size={14} />
-            </ActionIcon>
+              <IconPlus size={13} />
+            </UnstyledButton>
           </Tooltip>
-          <Tooltip label="Close Terminal" position="top" withArrow>
-            <ActionIcon
-              variant="subtle"
-              color="gray"
-              size="sm"
-              onClick={toggleTerminal}
-              className={classes.actionBtn}
-            >
+        </Box>
+
+        {/* Action icons */}
+        <Box className={classes.actions}>
+          <Tooltip label="Clear Buffer" position="top" withArrow>
+            <UnstyledButton onClick={handleClear} className={classes.actionBtn}>
+              <IconTrash size={14} />
+            </UnstyledButton>
+          </Tooltip>
+          <Tooltip label="Close Panel" position="top" withArrow>
+            <UnstyledButton onClick={handleClosePanel} className={classes.actionBtn}>
               <IconX size={14} />
-            </ActionIcon>
+            </UnstyledButton>
           </Tooltip>
         </Box>
       </Box>
 
-      {/* Output Console and Input Area */}
-      <Box ref={bodyRef} className={classes.body} onClick={handleBodyClick}>
-        {history.map((item, idx) => {
-          let color = "#cccccc";
-          if (item.type === "stderr") color = "#ef4444";
-          if (item.type === "info") color = "var(--aether-color-primary-base)";
-          if (item.type === "input") color = "#ffffff";
-
-          return (
-            <Box key={idx} className={classes.historyLine} style={{ color }}>
-              {item.text}
-            </Box>
-          );
-        })}
-
-        {/* Active Promp Input Line */}
-        <form onSubmit={handleSubmit} className={classes.promptLine}>
-          <span className={classes.promptText}>haipn@devbox</span>
-          <span className={classes.charText}>:</span>
-          <span className={classes.pathText}>{displayPath}</span>
-          <span className={classes.charText}>$</span>
-          <input
-            ref={inputRef}
-            type="text"
-            value={inputVal}
-            onChange={(e) => setInputVal(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className={classes.input}
-            autoComplete="off"
-            autoCapitalize="off"
-            spellCheck={false}
+      {/* Terminal Viewports Container */}
+      <Box className={classes.terminalBody}>
+        {tabs.map((tab) => (
+          <XTerminalInstance
+            key={tab.id}
+            sessionId={tab.id}
+            active={tab.id === activeTabId}
+            ref={(handle) => {
+              if (handle) {
+                terminalRefs.current.set(tab.id, handle);
+              } else {
+                terminalRefs.current.delete(tab.id);
+              }
+            }}
+            onExit={() => {
+              // Automatically switch or handle exit if desired
+            }}
           />
-        </form>
+        ))}
       </Box>
     </Box>
   );
