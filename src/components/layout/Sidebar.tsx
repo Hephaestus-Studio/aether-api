@@ -11,7 +11,6 @@ import { invoke } from "@tauri-apps/api/core";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import FileTree from "@/components/explorer/FileTree";
 import EnvEditor from "@/components/environment/EnvEditor";
-import GitStatus from "@/components/tools/GitStatus";
 import type { WorkspaceTree } from "@/types/workspace";
 import classes from "./Sidebar.module.css";
 
@@ -66,10 +65,6 @@ export default function Sidebar() {
         return "Explorer";
       case "environment":
         return "Environments";
-      case "git":
-        return "Git Control";
-      case "settings":
-        return "Settings";
       default:
         return activeView;
     }
@@ -128,10 +123,6 @@ export default function Sidebar() {
       <Box className={classes.body}>
         {activeView === "explorer" && <FileTree />}
         {activeView === "environment" && <EnvEditor />}
-        {activeView === "git" && <GitStatus />}
-        {activeView === "settings" && (
-          <Box className={classes.settingsText}>Workspace and layout configs</Box>
-        )}
       </Box>
 
       <Modal

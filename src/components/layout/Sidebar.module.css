@@ -7,16 +7,16 @@
 }
 
 .header {
-  height: 35px;
+  height: calc(var(--aether-font-size-base) * 2.7);
   display: flex;
   align-items: center;
-  padding: 0 12px 0 16px;
+  padding: 0 calc(var(--aether-spacing-md)) 0 calc(var(--aether-spacing-lg));
   border-bottom: 1px solid var(--border-color);
 }
 
 .title {
-  font-weight: 600;
-  font-size: var(--aether-font-size-xs);
+  font-weight: var(--aether-font-weight-semibold);
+  font-size: calc(var(--aether-font-size-base) - 2px);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text-muted);
@@ -25,21 +25,15 @@
 .body {
   flex: 1;
   overflow-y: auto;
-  padding: 5px 0;
-}
-
-.settingsText {
-  padding: 16px;
-  font-size: var(--aether-font-size-md);
-  color: var(--text-muted);
+  padding: calc(var(--aether-spacing-xs)) 0;
 }
 
 .sectionHeader {
-  padding: 4px 8px;
+  padding: calc(var(--aether-spacing-xs)) calc(var(--aether-spacing-sm));
   background-color: var(--bg-sidebar);
   border-top: 1px solid var(--border-color);
   border-bottom: 1px solid var(--border-color);
-  height: 28px;
+  height: calc(var(--aether-font-size-base) * 2.15);
   display: flex;
   align-items: center;
 }
@@ -50,8 +44,8 @@
 }
 
 .sectionTitle {
-  font-size: var(--aether-font-size-xs);
-  font-weight: 700;
+  font-size: calc(var(--aether-font-size-base) - 2px);
+  font-weight: var(--aether-font-weight-bold);
   color: #e2e8f0;
   text-transform: uppercase;
   letter-spacing: 0.5px;

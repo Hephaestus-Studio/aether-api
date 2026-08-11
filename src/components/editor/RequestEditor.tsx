@@ -7,8 +7,6 @@ import {
   Menu,
   Text,
   ScrollArea,
-  ActionIcon,
-  Tooltip,
 } from "@mantine/core";
 import { invoke } from "@tauri-apps/api/core";
 import {
@@ -20,7 +18,6 @@ import {
   IconAtom,
   IconArrowsExchange,
   IconBroadcast,
-  IconDots,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useTabStore } from "@/stores/tabStore";
@@ -46,11 +43,10 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
   const {
     containerRef: tabsHeaderRef,
     leftRef: tabsListRef,
-    rightRef: cookiesBtnRef,
     isColliding: isTabsColliding,
   } = useCollision<HTMLDivElement>({
     gap: 12,
-    minExpandedWidth: 460,
+    minExpandedWidth: 380,
     hysteresis: 8,
     dependencies: [request?.name, request?.headers?.length],
   });
@@ -201,60 +197,143 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
       {/* Title Row */}
       <div className={classes.titleRow}>
         <div className={classes.requestTitleGroup}>
-          <Menu shadow="md" width={150}>
-            <Tooltip label="Switch request type" position="bottom-start" withArrow>
-              <Menu.Target>
-                <Box
-                  className={classes.protocolBadge}
-                  style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
-                >
-                  {getProtocolIcon(activeProtocol)}
-                  <Text size="xs" fw={700} style={{ color: "var(--text-primary)" }}>
-                    {activeProtocol.toUpperCase()}
-                  </Text>
-                  <IconChevronDown
-                    size={12}
-                    style={{ color: "var(--text-muted)", marginLeft: 2 }}
-                  />
-                </Box>
-              </Menu.Target>
-            </Tooltip>
+          <Menu shadow="md" width={230} position="bottom-start">
+            <Menu.Target>
+              <Box
+                className={classes.protocolBadge}
+                style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
+              >
+                {getProtocolIcon(activeProtocol)}
+                <Text size="xs" fw={700} style={{ color: "var(--text-primary)" }}>
+                  {activeProtocol.toUpperCase()}
+                </Text>
+                <IconChevronDown
+                  size={12}
+                  style={{ color: "var(--text-muted)", marginLeft: 2 }}
+                />
+              </Box>
+            </Menu.Target>
             <Menu.Dropdown className={classes.protocolDropdownDropdown}>
               <Menu.Item
                 leftSection={<IconGlobe size={16} color="#00b4d8" />}
                 onClick={() => handleProtocolChange("http")}
               >
-                HTTP
+                <span style={{ width: 88, display: "inline-block" }}>HTTP</span>
               </Menu.Item>
               <Menu.Item
                 leftSection={<IconPlug size={16} color="#ff9f1c" />}
-                onClick={() => handleProtocolChange("websocket")}
+                disabled
               >
-                WebSocket
+                <div style={{ display: "inline-flex", alignItems: "center" }}>
+                  <span style={{ width: 88, display: "inline-block" }}>WebSocket</span>
+                  <span
+                    style={{
+                      fontSize: 9.5,
+                      fontWeight: 500,
+                      padding: "1px 6px",
+                      borderRadius: 4,
+                      backgroundColor: "rgba(255, 255, 255, 0.08)",
+                      color: "#8e8e93",
+                      whiteSpace: "nowrap",
+                      lineHeight: 1.3,
+                      letterSpacing: "0.2px",
+                    }}
+                  >
+                    Coming soon
+                  </span>
+                </div>
               </Menu.Item>
               <Menu.Item
                 leftSection={<IconBolt size={16} color="#ffca3a" />}
-                onClick={() => handleProtocolChange("socketio")}
+                disabled
               >
-                Socket.IO
+                <div style={{ display: "inline-flex", alignItems: "center" }}>
+                  <span style={{ width: 88, display: "inline-block" }}>Socket.IO</span>
+                  <span
+                    style={{
+                      fontSize: 9.5,
+                      fontWeight: 500,
+                      padding: "1px 6px",
+                      borderRadius: 4,
+                      backgroundColor: "rgba(255, 255, 255, 0.08)",
+                      color: "#8e8e93",
+                      whiteSpace: "nowrap",
+                      lineHeight: 1.3,
+                      letterSpacing: "0.2px",
+                    }}
+                  >
+                    Coming soon
+                  </span>
+                </div>
               </Menu.Item>
               <Menu.Item
                 leftSection={<IconAtom size={16} color="#ff007f" />}
-                onClick={() => handleProtocolChange("graphql")}
+                disabled
               >
-                GraphQL
+                <div style={{ display: "inline-flex", alignItems: "center" }}>
+                  <span style={{ width: 88, display: "inline-block" }}>GraphQL</span>
+                  <span
+                    style={{
+                      fontSize: 9.5,
+                      fontWeight: 500,
+                      padding: "1px 6px",
+                      borderRadius: 4,
+                      backgroundColor: "rgba(255, 255, 255, 0.08)",
+                      color: "#8e8e93",
+                      whiteSpace: "nowrap",
+                      lineHeight: 1.3,
+                      letterSpacing: "0.2px",
+                    }}
+                  >
+                    Coming soon
+                  </span>
+                </div>
               </Menu.Item>
               <Menu.Item
                 leftSection={<IconArrowsExchange size={16} color="#007acc" />}
-                onClick={() => handleProtocolChange("grpc")}
+                disabled
               >
-                gRPC
+                <div style={{ display: "inline-flex", alignItems: "center" }}>
+                  <span style={{ width: 88, display: "inline-block" }}>gRPC</span>
+                  <span
+                    style={{
+                      fontSize: 9.5,
+                      fontWeight: 500,
+                      padding: "1px 6px",
+                      borderRadius: 4,
+                      backgroundColor: "rgba(255, 255, 255, 0.08)",
+                      color: "#8e8e93",
+                      whiteSpace: "nowrap",
+                      lineHeight: 1.3,
+                      letterSpacing: "0.2px",
+                    }}
+                  >
+                    Coming soon
+                  </span>
+                </div>
               </Menu.Item>
               <Menu.Item
                 leftSection={<IconBroadcast size={16} color="#7209b7" />}
-                onClick={() => handleProtocolChange("mqtt")}
+                disabled
               >
-                MQTT
+                <div style={{ display: "inline-flex", alignItems: "center" }}>
+                  <span style={{ width: 88, display: "inline-block" }}>MQTT</span>
+                  <span
+                    style={{
+                      fontSize: 9.5,
+                      fontWeight: 500,
+                      padding: "1px 6px",
+                      borderRadius: 4,
+                      backgroundColor: "rgba(255, 255, 255, 0.08)",
+                      color: "#8e8e93",
+                      whiteSpace: "nowrap",
+                      lineHeight: 1.3,
+                      letterSpacing: "0.2px",
+                    }}
+                  >
+                    Coming soon
+                  </span>
+                </div>
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
@@ -351,17 +430,6 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
                   </Menu.Item>
                 </Menu.Dropdown>
               </Menu>
-
-              <Menu shadow="md" width={140} position="bottom-end">
-                <Menu.Target>
-                  <ActionIcon variant="subtle" color="gray" size="sm" className={classes.moreBtn}>
-                    <IconDots size={16} />
-                  </ActionIcon>
-                </Menu.Target>
-                <Menu.Dropdown>
-                  <Menu.Item>Cookies</Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
             </div>
           ) : (
             <div className={classes.tabListContainer}>
@@ -381,17 +449,6 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
                     <Tabs.Tab value="body">Body</Tabs.Tab>
                   </Tabs.List>
                 </ScrollArea>
-              </div>
-              <div ref={cookiesBtnRef}>
-                <Button
-                  variant="transparent"
-                  size="xs"
-                  color="blue"
-                  className={classes.cookiesBtn}
-                  style={{ fontWeight: 500 }}
-                >
-                  Cookies
-                </Button>
               </div>
             </div>
           )}

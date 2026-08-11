@@ -5,10 +5,10 @@ export interface HttpMethodDefinition {
 }
 
 export const HTTP_METHODS: HttpMethodDefinition[] = [
-  { name: "GET", color: "#22c55e", bgColor: "rgba(34, 197, 94, 0.15)" },
-  { name: "POST", color: "#f59e0b", bgColor: "rgba(245, 158, 11, 0.15)" },
-  { name: "PUT", color: "#3b82f6", bgColor: "rgba(59, 130, 246, 0.15)" },
-  { name: "PATCH", color: "#a855f7", bgColor: "rgba(168, 85, 247, 0.15)" },
+  { name: "GET", color: "#4ade80", bgColor: "rgba(74, 222, 128, 0.15)" },
+  { name: "POST", color: "#facc15", bgColor: "rgba(250, 204, 21, 0.15)" },
+  { name: "PUT", color: "#38bdf8", bgColor: "rgba(56, 189, 248, 0.15)" },
+  { name: "PATCH", color: "#c084fc", bgColor: "rgba(192, 132, 252, 0.15)" },
   { name: "DELETE", color: "#f87171", bgColor: "rgba(248, 113, 113, 0.15)" },
   { name: "HEAD", color: "#34d399", bgColor: "rgba(52, 211, 153, 0.15)" },
   { name: "OPTIONS", color: "#f472b6", bgColor: "rgba(244, 114, 182, 0.15)" },

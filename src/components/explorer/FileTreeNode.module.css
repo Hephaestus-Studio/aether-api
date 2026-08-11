@@ -4,8 +4,8 @@
 }
 
 .button {
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: calc(var(--aether-spacing-xs) / 2 + 1px) calc(var(--aether-spacing-sm));
+  border-radius: var(--aether-radius-sm);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -49,13 +49,13 @@
   z-index: 99999;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 2px 8px;
-  height: 24px;
+  gap: calc(var(--aether-spacing-xs) + 2px);
+  padding: calc(var(--aether-spacing-xs) / 2) calc(var(--aether-spacing-sm));
+  height: calc(var(--aether-font-size-base) * 1.85);
   box-sizing: border-box;
-  font-size: 12px;
+  font-size: calc(var(--aether-font-size-base) - 1.5px);
   line-height: 1;
-  border-radius: 4px;
+  border-radius: var(--aether-radius-sm);
   background-color: var(--bg-secondary, #1a1b1e);
   border: 1px solid var(--mantine-color-blue-5, #339af0);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
@@ -66,26 +66,37 @@
 
 .label {
   color: var(--text-primary);
-  font-size: var(--aether-font-size-md);
+  font-size: calc(var(--aether-font-size-base) - 1.5px);
+  font-weight: var(--aether-font-weight-normal);
+  letter-spacing: 0.15px;
+  line-height: 1.3;
 }
 
 .childrenContainer {
-  padding-left: 14px;
+  padding-left: calc(var(--aether-spacing-md) + 2px);
   border-left: 1px solid var(--border-color);
-  margin-left: 14px;
-  margin-top: 2px;
+  margin-left: calc(var(--aether-spacing-md) + 2px);
+  margin-top: calc(var(--aether-spacing-xs) / 2);
 }
 
 .indentPlaceholder {
-  width: 12px;
+  width: calc(var(--aether-spacing-md));
 }
 
 .methodTag {
-  font-size: calc(var(--aether-font-size-base) - 4px);
-  font-weight: 800;
-  width: 32px;
+  font-size: calc(var(--aether-font-size-base) - 3.5px);
+  font-weight: var(--aether-font-weight-bold);
+  width: calc(var(--aether-font-size-base) * 2.5);
   text-align: left;
   display: inline-block;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.5px;
+  line-height: 1;
   user-select: none;
+}
+
+.gitBadge {
+  font-size: calc(var(--aether-font-size-base) - 3.5px);
+  font-weight: 600;
+  padding-right: calc(var(--aether-spacing-xs));
+  line-height: 1;
 }

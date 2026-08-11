@@ -12,14 +12,14 @@ interface WorkspaceState {
   treeData: WorkspaceTreeNode[] | null;
   gitStatus: GitStatus | null;
   isLoading: boolean;
-  activeView: "explorer" | "environment" | "git" | "settings";
+  activeView: "explorer" | "environment";
 
   setWorkspacePath: (path: string | null) => void;
   setTreeData: (tree: WorkspaceTreeNode[] | null) => void;
   setWorkspaceInfo: (info: WorkspaceInfo | null) => void;
   setGitStatus: (status: GitStatus | null) => void;
   setLoading: (loading: boolean) => void;
-  setActiveView: (view: "explorer" | "environment" | "git" | "settings") => void;
+  setActiveView: (view: "explorer" | "environment") => void;
   reset: () => void;
 }
 

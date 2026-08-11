@@ -453,11 +453,9 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
             </Group>
             {!isFolder && nodeGitStatus && (
               <Text
-                size="10px"
+                className={classes.gitBadge}
                 style={{
                   color: getGitColor(nodeGitStatus),
-                  fontWeight: 600,
-                  paddingRight: 4,
                 }}
               >
                 {nodeGitStatus === "untracked" ? "U" : "M"}

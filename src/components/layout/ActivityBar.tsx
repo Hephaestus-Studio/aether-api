@@ -1,10 +1,10 @@
 import { Box, Tooltip, UnstyledButton, Stack } from "@mantine/core";
-import { IconFolders, IconWorld, IconGitBranch, IconSettings } from "@tabler/icons-react";
+import { IconFolders, IconWorld } from "@tabler/icons-react";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import classes from "./ActivityBar.module.css";
 
 interface ActivityBarProps {
-  activeView: "explorer" | "environment" | "git" | "settings";
+  activeView: "explorer" | "environment";
   sidebarOpened: boolean;
   setSidebarOpened: (opened: boolean) => void;
 }
@@ -19,11 +19,9 @@ export default function ActivityBar({
   const views = [
     { id: "explorer" as const, label: "Explorer", icon: IconFolders },
     { id: "environment" as const, label: "Environments", icon: IconWorld },
-    { id: "git" as const, label: "Git Control", icon: IconGitBranch },
-    { id: "settings" as const, label: "Settings", icon: IconSettings },
   ];
 
-  const handleTabClick = (viewId: "explorer" | "environment" | "git" | "settings") => {
+  const handleTabClick = (viewId: "explorer" | "environment") => {
     if (activeView === viewId && sidebarOpened) {
       setSidebarOpened(false);
     } else {
