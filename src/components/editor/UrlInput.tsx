@@ -41,10 +41,7 @@ export default function UrlInput({
     useWorkspaceStore.getState().setActiveView("environment");
   };
 
-  const handlePlaceholderMouseDown = (
-    e: React.MouseEvent<HTMLSpanElement>,
-    startIndex: number,
-  ) => {
+  const handlePlaceholderMouseDown = (e: React.MouseEvent<HTMLSpanElement>, startIndex: number) => {
     if (!inputRef.current) return;
 
     let offset = 0;

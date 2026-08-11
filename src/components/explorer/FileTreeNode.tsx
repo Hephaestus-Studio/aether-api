@@ -451,10 +451,7 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
                   <span className={classes.folderIconWrapper}>{getFolderIcon()}</span>
                 </>
               ) : (
-                <span
-                  className={classes.methodTag}
-                  style={{ color: getMethodColor(node.method) }}
-                >
+                <span className={classes.methodTag} style={{ color: getMethodColor(node.method) }}>
                   {getMethodText(node.method)}
                 </span>
               )}

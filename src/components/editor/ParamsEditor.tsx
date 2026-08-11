@@ -14,7 +14,10 @@ export default function ParamsEditor({ params, onChange }: Readonly<ParamsEditor
   const showDescription = width >= 500 || width === 0;
 
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [dropTarget, setDropTarget] = useState<{ index: number; position: "above" | "below" } | null>(null);
+  const [dropTarget, setDropTarget] = useState<{
+    index: number;
+    position: "above" | "below";
+  } | null>(null);
 
   // Automatically ensure there is always one blank row at the bottom of the table
   useEffect(() => {

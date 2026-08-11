@@ -131,20 +131,24 @@ export default function MonacoEditor({
       const model = editor.getModel();
       if (!model || model.isDisposed?.()) return;
 
-      if (value !== undefined && value !== editor.getValue()) {
-        editor.executeEdits("", [
-          {
-            range: model.getFullModelRange(),
-            text: value,
-            forceMoveMarkers: true,
-          },
-        ]);
-        editor.pushUndoStop();
+      if (value !== undefined && value !== model.getValue()) {
+        if (options?.readOnly) {
+          model.setValue(value);
+        } else {
+          editor.executeEdits("", [
+            {
+              range: model.getFullModelRange(),
+              text: value,
+              forceMoveMarkers: true,
+            },
+          ]);
+          editor.pushUndoStop();
+        }
       }
     } catch (err) {
       console.warn("Failed to update Monaco editor value:", err);
     }
-  }, [value]);
+  }, [value, options?.readOnly]);
 
   // Sync language changes safely
   useEffect(() => {

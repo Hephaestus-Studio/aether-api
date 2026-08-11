@@ -228,10 +228,7 @@ export default function App() {
   return (
     <MantineProvider theme={theme} forceColorScheme="dark">
       <Notifications position="top-right" zIndex={1000} />
-      <div
-        className="window-root"
-        style={{ display: "flex", flexDirection: "column" }}
-      >
+      <div className="window-root" style={{ display: "flex", flexDirection: "column" }}>
         <TitleBar />
         <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
           <AppShell />

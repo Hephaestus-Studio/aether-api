@@ -1,13 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  Box,
-  TextInput,
-  Button,
-  Tabs,
-  Menu,
-  Text,
-  ScrollArea,
-} from "@mantine/core";
+import { Box, TextInput, Button, Tabs, Menu, Text, ScrollArea } from "@mantine/core";
 import { invoke } from "@tauri-apps/api/core";
 import {
   IconDeviceFloppy,
@@ -207,10 +199,7 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
                 <Text size="xs" fw={700} style={{ color: "var(--text-primary)" }}>
                   {activeProtocol.toUpperCase()}
                 </Text>
-                <IconChevronDown
-                  size={12}
-                  style={{ color: "var(--text-muted)", marginLeft: 2 }}
-                />
+                <IconChevronDown size={12} style={{ color: "var(--text-muted)", marginLeft: 2 }} />
               </Box>
             </Menu.Target>
             <Menu.Dropdown className={classes.protocolDropdownDropdown}>
@@ -220,10 +209,7 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
               >
                 <span style={{ width: 88, display: "inline-block" }}>HTTP</span>
               </Menu.Item>
-              <Menu.Item
-                leftSection={<IconPlug size={16} color="#ff9f1c" />}
-                disabled
-              >
+              <Menu.Item leftSection={<IconPlug size={16} color="#ff9f1c" />} disabled>
                 <div style={{ display: "inline-flex", alignItems: "center" }}>
                   <span style={{ width: 88, display: "inline-block" }}>WebSocket</span>
                   <span
@@ -243,10 +229,7 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
                   </span>
                 </div>
               </Menu.Item>
-              <Menu.Item
-                leftSection={<IconBolt size={16} color="#ffca3a" />}
-                disabled
-              >
+              <Menu.Item leftSection={<IconBolt size={16} color="#ffca3a" />} disabled>
                 <div style={{ display: "inline-flex", alignItems: "center" }}>
                   <span style={{ width: 88, display: "inline-block" }}>Socket.IO</span>
                   <span
@@ -266,10 +249,7 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
                   </span>
                 </div>
               </Menu.Item>
-              <Menu.Item
-                leftSection={<IconAtom size={16} color="#ff007f" />}
-                disabled
-              >
+              <Menu.Item leftSection={<IconAtom size={16} color="#ff007f" />} disabled>
                 <div style={{ display: "inline-flex", alignItems: "center" }}>
                   <span style={{ width: 88, display: "inline-block" }}>GraphQL</span>
                   <span
@@ -289,10 +269,7 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
                   </span>
                 </div>
               </Menu.Item>
-              <Menu.Item
-                leftSection={<IconArrowsExchange size={16} color="#007acc" />}
-                disabled
-              >
+              <Menu.Item leftSection={<IconArrowsExchange size={16} color="#007acc" />} disabled>
                 <div style={{ display: "inline-flex", alignItems: "center" }}>
                   <span style={{ width: 88, display: "inline-block" }}>gRPC</span>
                   <span
@@ -312,10 +289,7 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
                   </span>
                 </div>
               </Menu.Item>
-              <Menu.Item
-                leftSection={<IconBroadcast size={16} color="#7209b7" />}
-                disabled
-              >
+              <Menu.Item leftSection={<IconBroadcast size={16} color="#7209b7" />} disabled>
                 <div style={{ display: "inline-flex", alignItems: "center" }}>
                   <span style={{ width: 88, display: "inline-block" }}>MQTT</span>
                   <span

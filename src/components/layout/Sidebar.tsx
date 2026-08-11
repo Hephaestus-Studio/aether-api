@@ -73,7 +73,12 @@ export default function Sidebar() {
   return (
     <Box className={classes.container}>
       <Box className={classes.header}>
-        <Group justify="space-between" align="center" style={{ width: "100%", minWidth: 0 }} wrap="nowrap">
+        <Group
+          justify="space-between"
+          align="center"
+          style={{ width: "100%", minWidth: 0 }}
+          wrap="nowrap"
+        >
           <span className={classes.title}>{getTitle()}</span>
           <ActionIcon variant="subtle" size="sm" className={classes.actionIcon}>
             <IconDots size={16} />
@@ -83,10 +88,18 @@ export default function Sidebar() {
 
       {activeView === "explorer" && workspacePath && (
         <Box className={classes.sectionHeader}>
-          <Group justify="space-between" align="center" style={{ width: "100%", minWidth: 0 }} gap={0} wrap="nowrap">
+          <Group
+            justify="space-between"
+            align="center"
+            style={{ width: "100%", minWidth: 0 }}
+            gap={0}
+            wrap="nowrap"
+          >
             <div className={classes.sectionHeaderLeft}>
               <IconChevronDown size={14} className={classes.chevronIcon} />
-              <span className={classes.sectionTitle} title={getFolderName()}>{getFolderName()}</span>
+              <span className={classes.sectionTitle} title={getFolderName()}>
+                {getFolderName()}
+              </span>
             </div>
             <div className={classes.actionsGroup}>
               <ActionIcon

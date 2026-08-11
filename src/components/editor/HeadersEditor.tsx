@@ -1,7 +1,13 @@
 import { useState, useEffect } from "react";
 import { Box, Table, TextInput, Checkbox, ActionIcon, Text, ScrollArea } from "@mantine/core";
 import { useElementSize } from "@mantine/hooks";
-import { IconTrash, IconInfoCircle, IconEye, IconEyeOff, IconGripVertical } from "@tabler/icons-react";
+import {
+  IconTrash,
+  IconInfoCircle,
+  IconEye,
+  IconEyeOff,
+  IconGripVertical,
+} from "@tabler/icons-react";
 import type { KeyValuePair } from "@/types/request";
 
 interface HeadersEditorProps {
@@ -37,7 +43,10 @@ export default function HeadersEditor({ headers, onChange }: Readonly<HeadersEdi
   const showDescription = width >= 500 || width === 0;
 
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [dropTarget, setDropTarget] = useState<{ index: number; position: "above" | "below" } | null>(null);
+  const [dropTarget, setDropTarget] = useState<{
+    index: number;
+    position: "above" | "below";
+  } | null>(null);
 
   // Automatically ensure there is always one blank row at the bottom of the custom headers list
   useEffect(() => {

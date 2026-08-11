@@ -118,10 +118,14 @@ export default function ResponseBody({ response, isActive = true }: Readonly<Res
   };
 
   const handleCopy = () => {
-    const rawBody = response?.body || "";
-    navigator.clipboard.writeText(rawBody);
+    const textToCopy =
+      mode === "pretty" ? formattedContent || response?.body || "" : response?.body || "";
+    navigator.clipboard.writeText(textToCopy);
     notifications.show({
-      message: "Response body copied to clipboard!",
+      message:
+        mode === "pretty"
+          ? "Pretty response copied to clipboard!"
+          : "Raw response copied to clipboard!",
       color: "indigo",
     });
   };
