@@ -217,7 +217,7 @@ export default function App() {
     return (
       <MantineProvider theme={theme} forceColorScheme="dark">
         <Notifications position="top-right" zIndex={1000} />
-        <div style={{ height: "100vh", position: "relative", overflow: "hidden" }}>
+        <div className="window-root">
           <WelcomeScreen />
           <ResizeBorders />
         </div>
@@ -229,7 +229,8 @@ export default function App() {
     <MantineProvider theme={theme} forceColorScheme="dark">
       <Notifications position="top-right" zIndex={1000} />
       <div
-        style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}
+        className="window-root"
+        style={{ display: "flex", flexDirection: "column" }}
       >
         <TitleBar />
         <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
