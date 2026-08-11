@@ -1,7 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import { Box, SegmentedControl, Menu, Button, ActionIcon, Text } from "@mantine/core";
 import { useElementSize } from "@mantine/hooks";
-import { IconChevronDown, IconCopy, IconSearch, IconDownload } from "@tabler/icons-react";
+import {
+  IconChevronDown,
+  IconCopy,
+  IconSearch,
+  IconDownload,
+  IconTextWrap,
+  IconTextWrapDisabled,
+} from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import MonacoEditor from "@/components/common/MonacoEditor";
 import { useConfigStore } from "@/stores/configStore";
@@ -116,6 +123,28 @@ export default function ResponseBody({ response, isActive = true }: Readonly<Res
     notifications.show({
       message: "Response body copied to clipboard!",
       color: "indigo",
+    });
+  };
+
+  const [wrapLines, setWrapLines] = useState<boolean>(() => {
+    const saved = localStorage.getItem("aether_response_wrap_lines");
+    return saved !== null ? saved === "true" : true;
+  });
+
+  const handleToggleWrap = () => {
+    setWrapLines((prev) => {
+      const next = !prev;
+      localStorage.setItem("aether_response_wrap_lines", String(next));
+      if (editorRef.current) {
+        try {
+          if (!editorRef.current.isDisposed?.() && editorRef.current.getModel?.()) {
+            editorRef.current.updateOptions({ wordWrap: next ? "on" : "off" });
+          }
+        } catch (err) {
+          console.warn("Could not update Monaco wordWrap:", err);
+        }
+      }
+      return next;
     });
   };
 
@@ -260,6 +289,17 @@ export default function ResponseBody({ response, isActive = true }: Readonly<Res
         </Box>
 
         <Box className={classes.bodyControlRight}>
+          {(mode === "pretty" || mode === "raw") && (
+            <ActionIcon
+              variant={wrapLines ? "light" : "subtle"}
+              color={wrapLines ? "indigo" : "gray"}
+              size="sm"
+              onClick={handleToggleWrap}
+              title={wrapLines ? "Unwrap Lines" : "Wrap Lines"}
+            >
+              {wrapLines ? <IconTextWrap size={16} /> : <IconTextWrapDisabled size={16} />}
+            </ActionIcon>
+          )}
           <ActionIcon
             variant="subtle"
             color="gray"
@@ -319,6 +359,7 @@ export default function ResponseBody({ response, isActive = true }: Readonly<Res
             }
             options={{
               readOnly: true,
+              wordWrap: wrapLines ? "on" : "off",
               minimap: { enabled: false },
               folding: true,
               lineNumbers: "on",
