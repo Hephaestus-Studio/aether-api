@@ -5,6 +5,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useTabStore } from "@/stores/tabStore";
 import { IconMinus, IconSquare, IconCopy, IconX } from "@tabler/icons-react";
+import AboutModal from "@/components/modals/AboutModal";
 import logoUrl from "@/assets/logo.svg";
 import classes from "./TitleBar.module.css";
 
@@ -13,6 +14,7 @@ export default function TitleBar() {
   const { workspacePath } = useWorkspaceStore();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [isMaximized, setIsMaximized] = useState(false);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const toggleTerminal = useTabStore((s) => s.toggleTerminal);
   const toggleEnvPanel = useTabStore((s) => s.toggleEnvPanel);
@@ -192,10 +194,42 @@ export default function TitleBar() {
                 </div>
               )}
 
-              {activeMenu === menu && menu !== "File" && menu !== "View" && (
+              {activeMenu === menu && menu === "Edit" && (
                 <div className={classes.dropdownMenu}>
-                  <div className={classes.dropdownItem} style={{ opacity: 0.5, cursor: "default" }}>
-                    <span>Not Implemented</span>
+                  <div className={classes.dropdownItem} onClick={() => document.execCommand("undo")}>
+                    <span>Undo</span>
+                    <span className={classes.dropdownShortcut}>Ctrl+Z</span>
+                  </div>
+                  <div className={classes.dropdownItem} onClick={() => document.execCommand("redo")}>
+                    <span>Redo</span>
+                    <span className={classes.dropdownShortcut}>Ctrl+Y</span>
+                  </div>
+                  <div className={classes.divider} />
+                  <div className={classes.dropdownItem} onClick={() => document.execCommand("cut")}>
+                    <span>Cut</span>
+                    <span className={classes.dropdownShortcut}>Ctrl+X</span>
+                  </div>
+                  <div className={classes.dropdownItem} onClick={() => document.execCommand("copy")}>
+                    <span>Copy</span>
+                    <span className={classes.dropdownShortcut}>Ctrl+C</span>
+                  </div>
+                  <div className={classes.dropdownItem} onClick={() => document.execCommand("paste")}>
+                    <span>Paste</span>
+                    <span className={classes.dropdownShortcut}>Ctrl+V</span>
+                  </div>
+                </div>
+              )}
+
+              {activeMenu === menu && menu === "Help" && (
+                <div className={classes.dropdownMenu}>
+                  <div
+                    className={classes.dropdownItem}
+                    onClick={() => {
+                      setIsAboutOpen(true);
+                      setActiveMenu(null);
+                    }}
+                  >
+                    <span>About</span>
                   </div>
                 </div>
               )}
@@ -233,6 +267,9 @@ export default function TitleBar() {
           </button>
         </div>
       </div>
+
+      {/* About Modal Dialog */}
+      <AboutModal opened={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
     </div>
   );
 }
