@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Box, TextInput, Button, Tabs, Menu, ScrollArea } from "@mantine/core";
+import { Box, TextInput, Button, Tabs, Menu, ScrollArea, Tooltip } from "@mantine/core";
 import { invoke } from "@tauri-apps/api/core";
 import {
   IconChevronDown,
@@ -9,10 +9,12 @@ import {
   IconAtom,
   IconArrowsExchange,
   IconBroadcast,
+  IconCode,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useTabStore } from "@/stores/tabStore";
 import { useEnvStore } from "@/stores/envStore";
+import { useSnippetStore } from "@/stores/snippetStore";
 import { useCollision } from "@/hooks/useCollision";
 import MethodSelector from "./MethodSelector";
 import ParamsEditor from "./ParamsEditor";
@@ -20,6 +22,8 @@ import HeadersEditor from "./HeadersEditor";
 import BodyEditor from "./BodyEditor";
 import AuthEditor from "./AuthEditor";
 import UrlInput from "./UrlInput";
+import CodeSnippetModal from "@/components/snippet/CodeSnippetModal";
+import type { ParsedCurl } from "@/utils/curlParser";
 import { buildUrlWithParams, parseParamsFromUrl } from "@/utils/url";
 import type { HttpRequestDetails } from "@/types/request";
 import classes from "./RequestEditor.module.css";
@@ -53,6 +57,7 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
   const setResponse = useTabStore((s) => s.setResponse);
   const setTabLoading = useTabStore((s) => s.setLoading);
   const setResponsePanelOpened = useTabStore((s) => s.setResponsePanelOpened);
+  const setSnippetModalOpen = useSnippetStore((s) => s.setSnippetModalOpen);
 
   const activeProtocol = useTabStore((s) => s.protocols[tabId]) || "http";
   const setProtocol = useTabStore((s) => s.setProtocol);
@@ -189,6 +194,39 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
       updateTab(tabId, { name: updatedFields.name });
     }
     markDirty(tabId);
+  };
+
+  const handleImportCurl = (parsed: ParsedCurl) => {
+    if (!request) return;
+
+    const updates: Partial<HttpRequestDetails> = {
+      method: parsed.method,
+      url: parsed.url,
+    };
+
+    if (parsed.headers && parsed.headers.length > 0) {
+      updates.headers = parsed.headers;
+    }
+    if (parsed.auth) {
+      updates.auth = parsed.auth;
+    }
+    if (parsed.body) {
+      updates.body = parsed.body;
+    }
+
+    const parsedParams = parseParamsFromUrl(parsed.url, request.params);
+    if (parsedParams && parsedParams.length > 0) {
+      updates.params = parsedParams;
+    }
+
+    handleChange(updates);
+
+    notifications.show({
+      title: "cURL Command Imported",
+      message: `Converted ${parsed.method} request with ${parsed.headers?.length || 0} headers into active request`,
+      color: "green",
+      autoClose: 3000,
+    });
   };
 
   if (!request) return null;
@@ -330,7 +368,6 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
                     color: "#8e8e93",
                     whiteSpace: "nowrap",
                     lineHeight: 1.3,
-                    letterSpacing: "0.2px",
                   }}
                 >
                   Coming soon
@@ -350,7 +387,19 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
           />
         </div>
 
+        <Tooltip label="Code Snippets" position="bottom">
+          <Button
+            variant="default"
+            leftSection={<IconCode size={15} />}
+            onClick={() => setSnippetModalOpen(true)}
+            className={classes.snippetBtn}
+          >
+            Code
+          </Button>
+        </Tooltip>
+
         <Button
+          variant="default"
           onClick={handleSave}
           disabled={!isDirty}
           className={classes.saveBtn}
@@ -366,7 +415,8 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
           <UrlInput
             value={request.url}
             onChange={(val) => handleChange({ url: val })}
-            placeholder="Enter URL or paste text"
+            onImportCurl={handleImportCurl}
+            placeholder="Enter URL or paste cURL text"
             className={classes.urlInput}
           />
         </div>
@@ -476,6 +526,9 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
           <BodyEditor body={request.body} onChange={(val) => handleChange({ body: val })} />
         </Tabs.Panel>
       </Tabs>
+
+      {/* Code Snippet Generator Modal */}
+      <CodeSnippetModal request={request} />
     </Box>
   );
 }

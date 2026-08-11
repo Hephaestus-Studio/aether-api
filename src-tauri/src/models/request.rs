@@ -81,6 +81,8 @@ pub enum AuthConfig {
     Bearer { bearer: BearerAuth },
     /// Basic Access authentication.
     Basic { basic: BasicAuth },
+    /// API Key authentication.
+    ApiKey { apikey: ApiKeyAuth },
     /// Inherit the authentication settings from the parent folder or collection.
     Inherit,
 }
@@ -90,6 +92,8 @@ pub enum AuthConfig {
 pub struct BearerAuth {
     /// The token value, which supports dynamic variable interpolation (e.g. `{{token}}`).
     pub token: String, // Supports {{variable}} interpolation
+    /// Optional prefix for the bearer header (defaults to "Bearer" if None or empty).
+    pub prefix: Option<String>,
 }
 
 /// Basic access authentication configuration.
@@ -99,6 +103,18 @@ pub struct BasicAuth {
     pub username: String,
     /// Password/token for basic authentication.
     pub password: String,
+}
+
+/// API Key authentication configuration.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ApiKeyAuth {
+    /// Name of the key (e.g., `X-API-Key` or `apiKey`).
+    pub key: String,
+    /// Secret value of the API key.
+    pub value: String,
+    /// Where to add the API key: `"header"` or `"query"`.
+    #[serde(rename = "addTo")]
+    pub add_to: String,
 }
 
 /// Supported body formats for HTTP requests.

@@ -8,8 +8,9 @@ export interface KeyValuePair {
 export type AuthConfig =
   | { type: "none" }
   | { type: "inherit" }
-  | { type: "bearer"; bearer: { token: string } }
-  | { type: "basic"; basic: { username: string; password: string } };
+  | { type: "bearer"; bearer: { token: string; prefix?: string } }
+  | { type: "basic"; basic: { username: string; password: string } }
+  | { type: "apikey"; apikey: { key: string; value: string; addTo: "header" | "query" } };
 
 export type RequestBody =
   | { type: "none"; content?: string }

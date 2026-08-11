@@ -382,9 +382,20 @@ impl HttpExecutor {
     /// Applies requested authorization settings to the outgoing request.
     fn apply_auth(builder: reqwest::RequestBuilder, auth: &AuthConfig) -> reqwest::RequestBuilder {
         match auth {
-            AuthConfig::Bearer { bearer } => builder.bearer_auth(&bearer.token),
+            AuthConfig::Bearer { bearer } => {
+                let prefix = bearer.prefix.as_deref().unwrap_or("Bearer").trim();
+                let prefix_str = if prefix.is_empty() { "Bearer" } else { prefix };
+                builder.header("Authorization", format!("{} {}", prefix_str, bearer.token))
+            }
             AuthConfig::Basic { basic } => {
                 builder.basic_auth(&basic.username, Some(&basic.password))
+            }
+            AuthConfig::ApiKey { apikey } => {
+                if apikey.add_to == "query" {
+                    builder.query(&[(&apikey.key, &apikey.value)])
+                } else {
+                    builder.header(&apikey.key, &apikey.value)
+                }
             }
             AuthConfig::None | AuthConfig::Inherit => builder,
         }

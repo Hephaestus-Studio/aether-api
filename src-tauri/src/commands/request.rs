@@ -214,8 +214,15 @@ pub async fn execute_request(
     let resolved_auth = match &request.auth {
         crate::models::request::AuthConfig::Bearer { bearer } => {
             let r_token = VariableResolver::resolve_string(&bearer.token, &vars_ref)?;
+            let r_prefix = match &bearer.prefix {
+                Some(p) => Some(VariableResolver::resolve_string(p, &vars_ref)?),
+                None => None,
+            };
             crate::models::request::AuthConfig::Bearer {
-                bearer: crate::models::request::BearerAuth { token: r_token },
+                bearer: crate::models::request::BearerAuth {
+                    token: r_token,
+                    prefix: r_prefix,
+                },
             }
         }
         crate::models::request::AuthConfig::Basic { basic } => {
@@ -225,6 +232,17 @@ pub async fn execute_request(
                 basic: crate::models::request::BasicAuth {
                     username: r_user,
                     password: r_pass,
+                },
+            }
+        }
+        crate::models::request::AuthConfig::ApiKey { apikey } => {
+            let r_key = VariableResolver::resolve_string(&apikey.key, &vars_ref)?;
+            let r_val = VariableResolver::resolve_string(&apikey.value, &vars_ref)?;
+            crate::models::request::AuthConfig::ApiKey {
+                apikey: crate::models::request::ApiKeyAuth {
+                    key: r_key,
+                    value: r_val,
+                    add_to: apikey.add_to.clone(),
                 },
             }
         }

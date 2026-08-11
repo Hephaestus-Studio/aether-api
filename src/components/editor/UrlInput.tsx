@@ -3,11 +3,13 @@ import { Box, HoverCard } from "@mantine/core";
 import { useEnvStore } from "@/stores/envStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { parseUrlPlaceholders } from "@/utils/placeholder";
+import { parseCurl, isCurlCommand, type ParsedCurl } from "@/utils/curlParser";
 import classes from "./UrlInput.module.css";
 
 interface UrlInputProps {
   value: string;
   onChange: (value: string) => void;
+  onImportCurl?: (parsed: ParsedCurl) => void;
   placeholder?: string;
   className?: string;
 }
@@ -15,7 +17,8 @@ interface UrlInputProps {
 export default function UrlInput({
   value,
   onChange,
-  placeholder = "Enter URL or paste text",
+  onImportCurl,
+  placeholder = "Enter URL or paste cURL text",
   className,
 }: Readonly<UrlInputProps>) {
   const activeVariables = useEnvStore((s) => s.activeVariables);
@@ -60,6 +63,29 @@ export default function UrlInput({
     const targetCaret = startIndex + offset;
     inputRef.current.focus();
     inputRef.current.setSelectionRange(targetCaret, targetCaret);
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pastedText = e.clipboardData.getData("text");
+    if (isCurlCommand(pastedText)) {
+      e.preventDefault();
+      const parsed = parseCurl(pastedText);
+      if (parsed && onImportCurl) {
+        onImportCurl(parsed);
+      }
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (isCurlCommand(val)) {
+      const parsed = parseCurl(val);
+      if (parsed && onImportCurl) {
+        onImportCurl(parsed);
+        return;
+      }
+    }
+    onChange(val);
   };
 
   let charOffset = 0;
@@ -151,7 +177,8 @@ export default function UrlInput({
           ref={inputRef}
           type="text"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={handleInputChange}
+          onPaste={handlePaste}
           onScroll={handleScroll}
           onSelect={handleScroll}
           onKeyUp={handleScroll}

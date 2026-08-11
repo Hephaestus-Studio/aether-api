@@ -1,0 +1,69 @@
+.modalContent {
+  background-color: #1a1a1c !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7) !important;
+}
+
+.modalHeader {
+  background-color: #1a1a1c !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 16px 20px !important;
+}
+
+.modalTitle {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: var(--text-primary) !important;
+}
+
+.modalBody {
+  padding: 20px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.settingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.settingInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.settingLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.settingDesc {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.controlField {
+  width: 140px;
+}
+
+.controlField :global(.mantine-Input-input) {
+  background-color: var(--bg-app);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  height: 32px;
+  border-radius: var(--aether-radius-sm);
+}
+
+.controlField :global(.mantine-Select-dropdown) {
+  background-color: var(--bg-sidebar) !important;
+  border-color: var(--border-color) !important;
+}

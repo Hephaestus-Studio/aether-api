@@ -77,35 +77,58 @@
   border: none !important;
 }
 
+.snippetBtn {
+  height: 36px !important;
+  padding: 0 12px !important;
+  font-weight: 600 !important;
+  font-size: var(--aether-font-size-md) !important;
+  border-radius: var(--aether-radius-md) !important;
+  flex-shrink: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.snippetBtn:hover {
+  background-color: rgba(255, 255, 255, 0.09) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
 .saveBtn {
-  height: 36px;
-  width: 88px;
-  min-width: 88px;
-  font-weight: var(--aether-font-weight-semibold);
-  font-size: var(--aether-font-size-md);
-  padding: 0;
-  border-radius: var(--aether-radius-md);
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  transition: all 0.15s ease;
+  height: 36px !important;
+  width: 88px !important;
+  min-width: 88px !important;
+  font-weight: 600 !important;
+  font-size: var(--aether-font-size-md) !important;
+  padding: 0 !important;
+  border-radius: var(--aether-radius-md) !important;
+  flex-shrink: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: #27272a !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #f4f4f5 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
 }
 
 .saveBtn:hover:not(:disabled):not([data-disabled]) {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: var(--text-primary);
+  background-color: #3f3f46 !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  color: #ffffff !important;
 }
 
 .saveBtn:disabled,
 .saveBtn[data-disabled] {
-  opacity: 0.35;
+  opacity: 0.4 !important;
   cursor: not-allowed !important;
-  background-color: transparent !important;
+  background-color: rgba(255, 255, 255, 0.03) !important;
   color: var(--text-muted) !important;
   border-color: var(--border-color) !important;
 }

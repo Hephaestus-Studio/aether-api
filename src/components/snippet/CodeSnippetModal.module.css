@@ -1,0 +1,127 @@
+.modalContent {
+  background-color: #18181a !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7) !important;
+}
+
+.modalHeader {
+  background-color: #18181a !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 14px 20px !important;
+}
+
+.modalTitle {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: var(--text-primary) !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modalBody {
+  padding: 16px 20px 20px 20px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.topBarLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.langSelect {
+  width: 210px;
+}
+
+.langSelect :global(.mantine-Select-input) {
+  background-color: var(--bg-app);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  height: 34px;
+  border-radius: var(--aether-radius-sm);
+  font-weight: 600;
+}
+
+.langSelect :global(.mantine-Select-dropdown) {
+  background-color: var(--bg-sidebar) !important;
+  border-color: var(--border-color) !important;
+}
+
+.topBarRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.actionBtn {
+  height: 34px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--aether-radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.actionBtn:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.codeContainer {
+  background-color: #0d0d0f;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  display: flex;
+  overflow: hidden;
+  max-height: 480px;
+  position: relative;
+}
+
+.lineNumbers {
+  padding: 14px 12px 14px 14px;
+  background-color: #121215;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  user-select: none;
+  text-align: right;
+  font-family: var(--aether-font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #52525b;
+  min-width: 44px;
+  white-space: pre !important;
+}
+
+.codeScroll {
+  flex: 1;
+  padding: 14px 16px;
+  overflow: auto;
+}
+
+.codePre {
+  margin: 0;
+  font-family: var(--aether-font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #e4e4e7;
+  white-space: pre;
+  word-break: normal;
+}
