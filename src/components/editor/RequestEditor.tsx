@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-import { Box, TextInput, Button, Tabs, Menu, Text, ScrollArea } from "@mantine/core";
+import { Box, TextInput, Button, Tabs, Menu, ScrollArea } from "@mantine/core";
 import { invoke } from "@tauri-apps/api/core";
 import {
-  IconDeviceFloppy,
   IconChevronDown,
   IconGlobe,
   IconPlug,
@@ -47,6 +46,7 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
   const isCompact = isTabsColliding;
   const [loading, setLoading] = useState(false);
   const activeEnvironmentName = useEnvStore((s) => s.activeEnvironmentName);
+  const isDirty = useTabStore((s) => s.tabs.find((t) => t.id === tabId)?.isDirty);
   const markDirty = useTabStore((s) => s.markDirty);
   const markClean = useTabStore((s) => s.markClean);
   const updateTab = useTabStore((s) => s.updateTab);
@@ -106,25 +106,35 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
     setLoading(true);
     setTabLoading(tabId, true);
     try {
-      // Auto-save the request details to disk first so the backend executes the latest state
-      await invoke("update_request", { path: tabId, requestDetails: request });
-      markClean(tabId);
+      // Auto-save request details to disk only if there are unsaved changes
+      if (isDirty) {
+        await invoke("update_request", { path: tabId, requestDetails: request });
+        markClean(tabId);
+      }
 
       const response = await invoke<any>("execute_request", {
         requestPath: tabId,
+        requestDetails: request,
         activeEnvironmentName,
       });
       console.log("HTTP Response:", response);
       setResponse(tabId, response);
-    } catch (err) {
+    } catch (err: any) {
       console.error("HTTP Request execution error:", err);
-      let errorMsg = String(err);
-      if (errorMsg.includes("Tauri error")) {
-        errorMsg = "Check URL format or backend server availability.";
+      const errorMsg = String(err?.message || err);
+      if (
+        errorMsg.toLowerCase().includes("cancelled") ||
+        errorMsg.includes("RequestCancelled")
+      ) {
+        return;
+      }
+      let displayMsg = errorMsg;
+      if (displayMsg.includes("Tauri error")) {
+        displayMsg = "Check URL format or backend server availability.";
       }
       notifications.show({
         title: "Request Failed",
-        message: errorMsg,
+        message: displayMsg,
         color: "red",
       });
     } finally {
@@ -133,8 +143,24 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
     }
   };
 
+  const handleCancel = async () => {
+    try {
+      await invoke("cancel_request", { requestPath: tabId });
+      notifications.show({
+        title: "Request Cancelled",
+        message: "The HTTP request was cancelled.",
+        color: "yellow",
+      });
+    } catch (err) {
+      console.warn("Cancel request error:", err);
+    } finally {
+      setLoading(false);
+      setTabLoading(tabId, false);
+    }
+  };
+
   const handleSave = async () => {
-    if (!request) return;
+    if (!request || !isDirty) return;
     try {
       await invoke("update_request", { path: tabId, requestDetails: request });
       markClean(tabId);
@@ -186,141 +212,135 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
 
   return (
     <Box className={classes.container}>
-      {/* Title Row */}
+      {/* Title / Action Row */}
       <div className={classes.titleRow}>
-        <div className={classes.requestTitleGroup}>
-          <Menu shadow="md" width={230} position="bottom-start">
-            <Menu.Target>
-              <Box
-                className={classes.protocolBadge}
-                style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
-              >
+        <Menu shadow="md" width={220} position="bottom-start" radius="md">
+          <Menu.Target>
+            <button
+              type="button"
+              className={classes.protocolBtn}
+              title="Select Protocol"
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 {getProtocolIcon(activeProtocol)}
-                <Text size="xs" fw={700} style={{ color: "var(--text-primary)" }}>
+                <span style={{ fontSize: 12, fontWeight: 700 }}>
                   {activeProtocol.toUpperCase()}
-                </Text>
-                <IconChevronDown size={12} style={{ color: "var(--text-muted)", marginLeft: 2 }} />
-              </Box>
-            </Menu.Target>
-            <Menu.Dropdown className={classes.protocolDropdownDropdown}>
-              <Menu.Item
-                leftSection={<IconGlobe size={16} color="#00b4d8" />}
-                onClick={() => handleProtocolChange("http")}
-              >
-                <span style={{ width: 88, display: "inline-block" }}>HTTP</span>
-              </Menu.Item>
-              <Menu.Item leftSection={<IconPlug size={16} color="#ff9f1c" />} disabled>
-                <div style={{ display: "inline-flex", alignItems: "center" }}>
-                  <span style={{ width: 88, display: "inline-block" }}>WebSocket</span>
-                  <span
-                    style={{
-                      fontSize: 9.5,
-                      fontWeight: 500,
-                      padding: "1px 6px",
-                      borderRadius: 4,
-                      backgroundColor: "rgba(255, 255, 255, 0.08)",
-                      color: "#8e8e93",
-                      whiteSpace: "nowrap",
-                      lineHeight: 1.3,
-                      letterSpacing: "0.2px",
-                    }}
-                  >
-                    Coming soon
-                  </span>
-                </div>
-              </Menu.Item>
-              <Menu.Item leftSection={<IconBolt size={16} color="#ffca3a" />} disabled>
-                <div style={{ display: "inline-flex", alignItems: "center" }}>
-                  <span style={{ width: 88, display: "inline-block" }}>Socket.IO</span>
-                  <span
-                    style={{
-                      fontSize: 9.5,
-                      fontWeight: 500,
-                      padding: "1px 6px",
-                      borderRadius: 4,
-                      backgroundColor: "rgba(255, 255, 255, 0.08)",
-                      color: "#8e8e93",
-                      whiteSpace: "nowrap",
-                      lineHeight: 1.3,
-                      letterSpacing: "0.2px",
-                    }}
-                  >
-                    Coming soon
-                  </span>
-                </div>
-              </Menu.Item>
-              <Menu.Item leftSection={<IconAtom size={16} color="#ff007f" />} disabled>
-                <div style={{ display: "inline-flex", alignItems: "center" }}>
-                  <span style={{ width: 88, display: "inline-block" }}>GraphQL</span>
-                  <span
-                    style={{
-                      fontSize: 9.5,
-                      fontWeight: 500,
-                      padding: "1px 6px",
-                      borderRadius: 4,
-                      backgroundColor: "rgba(255, 255, 255, 0.08)",
-                      color: "#8e8e93",
-                      whiteSpace: "nowrap",
-                      lineHeight: 1.3,
-                      letterSpacing: "0.2px",
-                    }}
-                  >
-                    Coming soon
-                  </span>
-                </div>
-              </Menu.Item>
-              <Menu.Item leftSection={<IconArrowsExchange size={16} color="#007acc" />} disabled>
-                <div style={{ display: "inline-flex", alignItems: "center" }}>
-                  <span style={{ width: 88, display: "inline-block" }}>gRPC</span>
-                  <span
-                    style={{
-                      fontSize: 9.5,
-                      fontWeight: 500,
-                      padding: "1px 6px",
-                      borderRadius: 4,
-                      backgroundColor: "rgba(255, 255, 255, 0.08)",
-                      color: "#8e8e93",
-                      whiteSpace: "nowrap",
-                      lineHeight: 1.3,
-                      letterSpacing: "0.2px",
-                    }}
-                  >
-                    Coming soon
-                  </span>
-                </div>
-              </Menu.Item>
-              <Menu.Item leftSection={<IconBroadcast size={16} color="#7209b7" />} disabled>
-                <div style={{ display: "inline-flex", alignItems: "center" }}>
-                  <span style={{ width: 88, display: "inline-block" }}>MQTT</span>
-                  <span
-                    style={{
-                      fontSize: 9.5,
-                      fontWeight: 500,
-                      padding: "1px 6px",
-                      borderRadius: 4,
-                      backgroundColor: "rgba(255, 255, 255, 0.08)",
-                      color: "#8e8e93",
-                      whiteSpace: "nowrap",
-                      lineHeight: 1.3,
-                      letterSpacing: "0.2px",
-                    }}
-                  >
-                    Coming soon
-                  </span>
-                </div>
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
+                </span>
+              </div>
+              <IconChevronDown size={14} style={{ color: "#8e8e93" }} />
+            </button>
+          </Menu.Target>
+          <Menu.Dropdown className={classes.protocolDropdownDropdown}>
+            <Menu.Item
+              leftSection={<IconGlobe size={16} color="#00b4d8" />}
+              onClick={() => handleProtocolChange("http")}
+            >
+              <span style={{ width: 88, display: "inline-block" }}>HTTP</span>
+            </Menu.Item>
+            <Menu.Item leftSection={<IconPlug size={16} color="#ff9f1c" />} disabled>
+              <div style={{ display: "inline-flex", alignItems: "center" }}>
+                <span style={{ width: 88, display: "inline-block" }}>WebSocket</span>
+                <span
+                  style={{
+                    fontSize: 9.5,
+                    fontWeight: 500,
+                    padding: "1px 6px",
+                    borderRadius: 4,
+                    backgroundColor: "rgba(255, 255, 255, 0.08)",
+                    color: "#8e8e93",
+                    whiteSpace: "nowrap",
+                    lineHeight: 1.3,
+                    letterSpacing: "0.2px",
+                  }}
+                >
+                  Coming soon
+                </span>
+              </div>
+            </Menu.Item>
+            <Menu.Item leftSection={<IconBolt size={16} color="#ffca3a" />} disabled>
+              <div style={{ display: "inline-flex", alignItems: "center" }}>
+                <span style={{ width: 88, display: "inline-block" }}>Socket.IO</span>
+                <span
+                  style={{
+                    fontSize: 9.5,
+                    fontWeight: 500,
+                    padding: "1px 6px",
+                    borderRadius: 4,
+                    backgroundColor: "rgba(255, 255, 255, 0.08)",
+                    color: "#8e8e93",
+                    whiteSpace: "nowrap",
+                    lineHeight: 1.3,
+                    letterSpacing: "0.2px",
+                  }}
+                >
+                  Coming soon
+                </span>
+              </div>
+            </Menu.Item>
+            <Menu.Item leftSection={<IconAtom size={16} color="#ff007f" />} disabled>
+              <div style={{ display: "inline-flex", alignItems: "center" }}>
+                <span style={{ width: 88, display: "inline-block" }}>GraphQL</span>
+                <span
+                  style={{
+                    fontSize: 9.5,
+                    fontWeight: 500,
+                    padding: "1px 6px",
+                    borderRadius: 4,
+                    backgroundColor: "rgba(255, 255, 255, 0.08)",
+                    color: "#8e8e93",
+                    whiteSpace: "nowrap",
+                    lineHeight: 1.3,
+                    letterSpacing: "0.2px",
+                  }}
+                >
+                  Coming soon
+                </span>
+              </div>
+            </Menu.Item>
+            <Menu.Item leftSection={<IconArrowsExchange size={16} color="#007acc" />} disabled>
+              <div style={{ display: "inline-flex", alignItems: "center" }}>
+                <span style={{ width: 88, display: "inline-block" }}>gRPC</span>
+                <span
+                  style={{
+                    fontSize: 9.5,
+                    fontWeight: 500,
+                    padding: "1px 6px",
+                    borderRadius: 4,
+                    backgroundColor: "rgba(255, 255, 255, 0.08)",
+                    color: "#8e8e93",
+                    whiteSpace: "nowrap",
+                    lineHeight: 1.3,
+                    letterSpacing: "0.2px",
+                  }}
+                >
+                  Coming soon
+                </span>
+              </div>
+            </Menu.Item>
+            <Menu.Item leftSection={<IconBroadcast size={16} color="#7209b7" />} disabled>
+              <div style={{ display: "inline-flex", alignItems: "center" }}>
+                <span style={{ width: 88, display: "inline-block" }}>MQTT</span>
+                <span
+                  style={{
+                    fontSize: 9.5,
+                    fontWeight: 500,
+                    padding: "1px 6px",
+                    borderRadius: 4,
+                    backgroundColor: "rgba(255, 255, 255, 0.08)",
+                    color: "#8e8e93",
+                    whiteSpace: "nowrap",
+                    lineHeight: 1.3,
+                    letterSpacing: "0.2px",
+                  }}
+                >
+                  Coming soon
+                </span>
+              </div>
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
 
-          <Box
-            style={{
-              width: 1,
-              height: 16,
-              backgroundColor: "var(--border-color)",
-              margin: "0 8px",
-            }}
-          />
-
+        <div className={classes.requestNameContainer}>
           <TextInput
             variant="unstyled"
             value={request.name}
@@ -329,12 +349,11 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
             className={classes.requestNameInput}
           />
         </div>
+
         <Button
-          variant="subtle"
-          leftSection={<IconDeviceFloppy size={15} />}
           onClick={handleSave}
+          disabled={!isDirty}
           className={classes.saveBtn}
-          size="xs"
         >
           Save
         </Button>
@@ -351,14 +370,24 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
             className={classes.urlInput}
           />
         </div>
-        <Button
-          onClick={handleSend}
-          loading={loading}
-          className={classes.sendBtn}
-          style={{ backgroundColor: "var(--mantine-color-blue-6)" }}
-        >
-          Send
-        </Button>
+        {loading ? (
+          <Button
+            onClick={handleCancel}
+            color="red"
+            variant="filled"
+            className={classes.sendBtn}
+          >
+            Cancel
+          </Button>
+        ) : (
+          <Button
+            onClick={handleSend}
+            className={classes.sendBtn}
+            style={{ backgroundColor: "var(--mantine-color-blue-6)" }}
+          >
+            Send
+          </Button>
+        )}
       </div>
 
       {/* Postman Style Tabs with Responsive Dropdown Fallback */}

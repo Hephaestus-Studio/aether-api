@@ -4,18 +4,23 @@ import {
   IconFolderPlus,
   IconRefresh,
   IconFold,
-  IconDots,
+  IconFolderOpen,
   IconChevronDown,
+  IconLayoutSidebarLeftCollapse,
 } from "@tabler/icons-react";
 import { invoke } from "@tauri-apps/api/core";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import FileTree from "@/components/explorer/FileTree";
-import EnvEditor from "@/components/environment/EnvEditor";
 import type { WorkspaceTree } from "@/types/workspace";
 import classes from "./Sidebar.module.css";
 
-export default function Sidebar() {
-  const { activeView, workspacePath, setTreeData } = useWorkspaceStore();
+interface SidebarProps {
+  onClose?: () => void;
+}
+
+export default function Sidebar({ onClose }: Readonly<SidebarProps>) {
+  const { workspacePath, setTreeData, collapseAllCollections, expandAllCollections } =
+    useWorkspaceStore();
   const [modalOpened, setModalOpened] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState("");
   const [error, setError] = useState("");
@@ -59,17 +64,6 @@ export default function Sidebar() {
     return parts[parts.length - 1] || workspacePath;
   };
 
-  const getTitle = () => {
-    switch (activeView) {
-      case "explorer":
-        return "Explorer";
-      case "environment":
-        return "Environments";
-      default:
-        return activeView;
-    }
-  };
-
   return (
     <Box className={classes.container}>
       <Box className={classes.header}>
@@ -79,14 +73,22 @@ export default function Sidebar() {
           style={{ width: "100%", minWidth: 0 }}
           wrap="nowrap"
         >
-          <span className={classes.title}>{getTitle()}</span>
-          <ActionIcon variant="subtle" size="sm" className={classes.actionIcon}>
-            <IconDots size={16} />
-          </ActionIcon>
+          <span className={classes.title}>Explorer</span>
+          {onClose && (
+            <ActionIcon
+              variant="subtle"
+              size="sm"
+              className={classes.actionIcon}
+              onClick={onClose}
+              title="Collapse Explorer"
+            >
+              <IconLayoutSidebarLeftCollapse size={15} />
+            </ActionIcon>
+          )}
         </Group>
       </Box>
 
-      {activeView === "explorer" && workspacePath && (
+      {workspacePath && (
         <Box className={classes.sectionHeader}>
           <Group
             justify="space-between"
@@ -121,10 +123,20 @@ export default function Sidebar() {
                 <IconRefresh size={14} />
               </ActionIcon>
               <ActionIcon
+                onClick={expandAllCollections}
                 variant="subtle"
                 size="xs"
                 className={classes.actionIcon}
-                title="Collapse Folders"
+                title="Expand Collections"
+              >
+                <IconFolderOpen size={14} />
+              </ActionIcon>
+              <ActionIcon
+                onClick={collapseAllCollections}
+                variant="subtle"
+                size="xs"
+                className={classes.actionIcon}
+                title="Collapse Collections"
               >
                 <IconFold size={14} />
               </ActionIcon>
@@ -134,8 +146,7 @@ export default function Sidebar() {
       )}
 
       <Box className={classes.body}>
-        {activeView === "explorer" && <FileTree />}
-        {activeView === "environment" && <EnvEditor />}
+        <FileTree />
       </Box>
 
       <Modal

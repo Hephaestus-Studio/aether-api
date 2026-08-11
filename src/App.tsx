@@ -29,31 +29,32 @@ const theme = createTheme({
 
 export default function App() {
   const { workspacePath, setTreeData, setGitStatus, reset } = useWorkspaceStore();
-  const { setEnvironments, activeEnvironmentName, setActiveVariables } = useEnvStore();
+  const { setEnvironments, setActiveVariables, setEnvVariables } = useEnvStore();
 
-  // Sync active environment variables globally when active environment or workspacePath changes
+  // Sync environment variables globally when workspacePath changes
   useEffect(() => {
-    if (!workspacePath || !activeEnvironmentName) {
+    if (!workspacePath) {
       setActiveVariables([]);
+      setEnvironments([]);
       return;
     }
 
     invoke<any>("list_environments")
-      .then((envs) => {
-        if (envs) setEnvironments(envs);
-      })
-      .catch(() => {});
-
-    invoke<any>("read_environment", { name: activeEnvironmentName })
-      .then((res) => {
-        if (res && res.variables) {
-          setActiveVariables(res.variables);
-        } else {
-          setActiveVariables([]);
+      .then(async (envs) => {
+        if (envs) {
+          setEnvironments(envs);
+          for (const env of envs) {
+            try {
+              const res = await invoke<any>("read_environment", { name: env.name });
+              if (res && res.variables) {
+                setEnvVariables(env.name, res.variables);
+              }
+            } catch {}
+          }
         }
       })
-      .catch(() => setActiveVariables([]));
-  }, [workspacePath, activeEnvironmentName, setEnvironments, setActiveVariables]);
+      .catch(() => {});
+  }, [workspacePath, setEnvironments, setEnvVariables, setActiveVariables]);
   const { config, loadConfig } = useConfigStore();
   const windowLabel = getCurrentWindow().label;
 
@@ -204,6 +205,17 @@ export default function App() {
         console.error("Failed to update git status:", err);
       }
 
+      if (payload.changeType === "delete") {
+        const { tabs, closeTab } = useTabStore.getState();
+        const deletedPath = payload.eventPath;
+        const matchingTabs = tabs.filter(
+          (t) => t.id === deletedPath || t.id.startsWith(deletedPath + "/")
+        );
+        for (const t of matchingTabs) {
+          closeTab(t.id);
+        }
+      }
+
       if (payload.eventPath.includes("environments")) {
         const envs: any = await invoke("list_environments");
         setEnvironments(envs);
@@ -216,7 +228,7 @@ export default function App() {
   if (windowLabel === "welcome") {
     return (
       <MantineProvider theme={theme} forceColorScheme="dark">
-        <Notifications position="top-right" zIndex={1000} />
+        <Notifications position="bottom-right" zIndex={1000} />
         <div className="window-root">
           <WelcomeScreen />
           <ResizeBorders />
@@ -227,7 +239,7 @@ export default function App() {
 
   return (
     <MantineProvider theme={theme} forceColorScheme="dark">
-      <Notifications position="top-right" zIndex={1000} />
+      <Notifications position="bottom-right" zIndex={1000} />
       <div className="window-root" style={{ display: "flex", flexDirection: "column" }}>
         <TitleBar />
         <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>

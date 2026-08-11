@@ -72,3 +72,69 @@ code {
   position: relative;
   background-color: var(--bg-app);
 }
+
+/* Mantine Form & Input Customization */
+.mantine-Input-input,
+.mantine-TextInput-input,
+.mantine-Select-input,
+.mantine-Textarea-input {
+  font-size: 12.5px !important;
+  font-family: var(--aether-font-sans);
+  background-color: var(--bg-app) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+  border-radius: var(--aether-radius-sm);
+  min-height: 32px;
+  height: 32px;
+  padding: 0 10px;
+}
+
+.mantine-Input-input:focus,
+.mantine-TextInput-input:focus,
+.mantine-Select-input:focus,
+.mantine-Textarea-input:focus {
+  border-color: var(--border-color-active) !important;
+}
+
+.mantine-InputWrapper-label,
+.mantine-TextInput-label,
+.mantine-Select-label,
+.mantine-Textarea-label {
+  margin-bottom: 6px !important;
+  font-size: 11.5px !important;
+  font-weight: 500;
+  color: var(--text-muted) !important;
+}
+
+.mantine-InputWrapper-description {
+  margin-bottom: 6px !important;
+  font-size: 11px !important;
+}
+
+.mantine-InputWrapper-error {
+  margin-top: 5px !important;
+  font-size: 11px !important;
+}
+
+/* Modal styling improvements */
+.mantine-Modal-content {
+  background-color: var(--bg-sidebar) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
+  border-radius: 8px !important;
+}
+
+.mantine-Modal-header {
+  background-color: var(--bg-sidebar) !important;
+  padding-bottom: 8px !important;
+}
+
+.mantine-Modal-body {
+  padding-top: 4px !important;
+}
+
+.mantine-Modal-title {
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--text-primary);
+}

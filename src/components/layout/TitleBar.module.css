@@ -64,19 +64,21 @@
   border-radius: 4px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   z-index: 1100;
-  min-width: 180px;
+  min-width: 230px;
   margin-top: 4px;
   padding: 4px 0;
 }
 
 .dropdownItem {
-  padding: 6px 12px;
+  padding: 6px 14px;
   color: #cccccc;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: var(--aether-font-size-sm);
+  white-space: nowrap;
+  gap: 16px;
   transition:
     background-color 0.1s,
     color 0.1s;
@@ -91,7 +93,8 @@
   color: #707584;
   font-size: calc(var(--aether-font-size-base) - 3px);
   font-family: var(--aether-font-sans), sans-serif;
-  margin-left: 16px;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .divider {

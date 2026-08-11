@@ -29,6 +29,7 @@
 .sidebarContainer {
   flex: 1;
   height: 100%;
+  min-width: 200px;
   overflow: hidden;
 }
 

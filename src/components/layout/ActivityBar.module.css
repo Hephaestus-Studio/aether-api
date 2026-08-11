@@ -1,36 +1,47 @@
-.container {
-  width: var(--width-activity-bar);
+.collapsedStrip {
+  width: 24px;
   height: 100%;
-  background-color: var(--bg-activity);
-  border-right: 1px solid var(--border-color);
+  background-color: var(--bg-sidebar);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 10px;
+  padding: 44px 0 16px 0;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease;
+  gap: 12px;
+  border: none;
+  outline: none;
+  box-sizing: border-box;
 }
 
-.stack {
-  width: 100%;
+.collapsedStrip:hover {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
-.button {
-  height: 40px;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  border-left: 2px solid transparent;
-  transition: all 0.15s ease;
-}
-
-.button:hover {
+.collapsedStrip:hover .verticalText {
   color: var(--text-primary);
-  background-color: rgba(255, 255, 255, 0.02);
 }
 
-.buttonActive {
-  color: var(--mantine-color-indigo-4) !important;
-  border-left: 2px solid var(--mantine-color-indigo-4);
-  background-color: rgba(255, 255, 255, 0.04) !important;
+.collapsedStrip:hover .collapsedIcon {
+  color: var(--aether-color-primary-base);
+}
+
+.collapsedIcon {
+  color: var(--text-muted);
+  transition: color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.verticalText {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  transition: color 0.15s ease;
+  white-space: nowrap;
 }

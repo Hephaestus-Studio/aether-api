@@ -120,6 +120,23 @@ pub async fn update_request(
     } else {
         ws_state.path.join(&path)
     };
+
+    if file_path.exists() {
+        if let Ok(existing) =
+            crate::engine::yaml_parser::read_and_validate_yaml::<Request>(&file_path)
+        {
+            if existing.content_equals(&request_details) {
+                tracing::debug!(
+                    "Request content unchanged for {}, skipping file write",
+                    file_path.display()
+                );
+                return Ok(());
+            }
+            // Preserve original created_at timestamp
+            request_details.created_at = existing.created_at;
+        }
+    }
+
     request_details.updated_at = chrono::Utc::now();
     crate::engine::yaml_parser::atomic_write_yaml(&file_path, &request_details)?;
     tracing::debug!(
@@ -140,6 +157,7 @@ pub async fn update_request(
 #[tauri::command]
 pub async fn execute_request(
     request_path: String,
+    request_details: Option<Request>,
     active_environment_name: Option<String>,
     state: State<'_, AppState>,
     app_handle: tauri::AppHandle,
@@ -152,12 +170,16 @@ pub async fn execute_request(
     let ws = state.workspace.lock().await;
     let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
 
-    let file_path = if Path::new(&request_path).is_absolute() {
-        PathBuf::from(&request_path)
+    let request: Request = if let Some(details) = request_details {
+        details
     } else {
-        ws_state.path.join(&request_path)
+        let file_path = if Path::new(&request_path).is_absolute() {
+            PathBuf::from(&request_path)
+        } else {
+            ws_state.path.join(&request_path)
+        };
+        crate::engine::yaml_parser::read_and_validate_yaml(&file_path)?
     };
-    let request: Request = crate::engine::yaml_parser::read_and_validate_yaml(&file_path)?;
 
     let variables = get_all_variables(&ws_state.path, active_environment_name.as_deref()).await?;
     let vars_ref: HashMap<String, &crate::models::environment::Variable> =
@@ -464,4 +486,31 @@ async fn load_environment_variables(
         map.insert(var.name.clone(), var);
     }
     Ok(map)
+}
+
+/// Tauri command to save a response body (binary base64 or text) directly to a file path.
+#[tauri::command]
+pub async fn save_response_to_file(
+    file_path: String,
+    content: String,
+    is_binary: bool,
+) -> Result<(), AppError> {
+    tracing::info!("Saving response to file: {}", file_path);
+    let path = PathBuf::from(&file_path);
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent).map_err(AppError::Io)?;
+    }
+
+    if is_binary {
+        use base64::Engine as _;
+        let bytes = base64::engine::general_purpose::STANDARD
+            .decode(&content)
+            .map_err(|e| AppError::SchemaValidationError(format!("Failed to decode base64: {}", e)))?;
+        std::fs::write(&path, &bytes).map_err(AppError::Io)?;
+    } else {
+        std::fs::write(&path, content.as_bytes()).map_err(AppError::Io)?;
+    }
+
+    tracing::info!("Successfully saved response to {}", file_path);
+    Ok(())
 }

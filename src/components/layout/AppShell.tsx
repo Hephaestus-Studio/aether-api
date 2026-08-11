@@ -8,6 +8,7 @@ import EditorTabs from "./EditorTabs";
 import StatusBar from "./StatusBar";
 import SplitPane from "./SplitPane";
 import TerminalPanel from "./TerminalPanel";
+import EnvironmentPanel from "@/components/environment/EnvironmentPanel";
 import RequestEditor from "@/components/editor/RequestEditor";
 import ResponseViewer from "@/components/response/ResponseViewer";
 import QuickOpen from "@/components/tools/QuickOpen";
@@ -15,18 +16,25 @@ import CommandPalette from "@/components/tools/CommandPalette";
 import classes from "./AppShell.module.css";
 
 export default function AppShell() {
-  const { workspaceInfo, activeView, setWorkspaceInfo } = useWorkspaceStore();
+  const { workspaceInfo, setWorkspaceInfo } = useWorkspaceStore();
   const [sidebarOpened, setSidebarOpened] = useState(true);
   const [quickOpenOpened, setQuickOpenOpened] = useState(false);
   const [commandPaletteOpened, setCommandPaletteOpened] = useState(false);
 
   const activeTabId = useTabStore((s) => s.activeTabId);
-  const terminalOpened = useTabStore((s) => s.terminalOpened);
+  const bottomPanelOpened = useTabStore((s) => s.bottomPanelOpened);
+  const activeBottomPanelTab = useTabStore((s) => s.activeBottomPanelTab);
   const responsePanelOpened = useTabStore((s) => s.responsePanelOpened);
   const layoutOrientation = useTabStore((s) => s.layoutOrientation);
 
+  const MIN_SIDEBAR_WIDTH = 280;
+  const MAX_SIDEBAR_WIDTH = 600;
+
   const [sidebarWidth, setSidebarWidth] = useState(() => {
-    return workspaceInfo?.settings?.sidebarWidth || 280;
+    return Math.max(
+      MIN_SIDEBAR_WIDTH,
+      workspaceInfo?.settings?.sidebarWidth || 280,
+    );
   });
 
   const sidebarWidthRef = useRef(sidebarWidth);
@@ -43,14 +51,11 @@ export default function AppShell() {
       const deltaX = moveEvent.clientX - startX;
       const newWidth = startWidth + deltaX;
 
-      if (newWidth < 150) {
-        setSidebarOpened(false);
-      } else if (newWidth > 600) {
-        setSidebarWidth(600);
-      } else {
-        setSidebarOpened(true);
-        setSidebarWidth(newWidth);
-      }
+      const clampedWidth = Math.min(
+        MAX_SIDEBAR_WIDTH,
+        Math.max(MIN_SIDEBAR_WIDTH, newWidth),
+      );
+      setSidebarWidth(clampedWidth);
     };
 
     const handleMouseUp = () => {
@@ -62,7 +67,7 @@ export default function AppShell() {
           ...workspaceInfo,
           settings: {
             ...workspaceInfo.settings,
-            sidebarWidth: sidebarWidthRef.current,
+            sidebarWidth: Math.max(MIN_SIDEBAR_WIDTH, sidebarWidthRef.current),
           },
         });
       }
@@ -72,23 +77,22 @@ export default function AppShell() {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
-  const navWidth = sidebarOpened ? sidebarWidth + 48 : 48;
+  const navWidth = sidebarOpened
+    ? Math.max(MIN_SIDEBAR_WIDTH, sidebarWidth)
+    : 24;
 
   return (
     <Box className={classes.shellRoot}>
       {/* Middle row: Sidebar on left + Main Workspace on right */}
       <Box className={classes.workspaceRow}>
-        {/* Navbar: ActivityBar (48px) + Sidebar */}
+        {/* Navbar: ActivityBar (24px thin strip when collapsed) or Sidebar (when expanded) */}
         <Box className={classes.navbar} style={{ width: navWidth }}>
-          <ActivityBar
-            activeView={activeView}
-            sidebarOpened={sidebarOpened}
-            setSidebarOpened={setSidebarOpened}
-          />
-          {sidebarOpened && (
+          {!sidebarOpened ? (
+            <ActivityBar setSidebarOpened={setSidebarOpened} />
+          ) : (
             <>
               <Box className={classes.sidebarContainer}>
-                <Sidebar />
+                <Sidebar onClose={() => setSidebarOpened(false)} />
               </Box>
               <div className={classes.resizeHandle} onMouseDown={handleResizeMouseDown} />
             </>
@@ -100,7 +104,7 @@ export default function AppShell() {
           <EditorTabs />
           <Box className={classes.editorWrapper}>
             <SplitPane
-              collapsed={!terminalOpened}
+              collapsed={!bottomPanelOpened}
               topPanel={
                 activeTabId ? (
                   <SplitPane
@@ -117,7 +121,30 @@ export default function AppShell() {
                   </Box>
                 )
               }
-              bottomPanel={terminalOpened ? <TerminalPanel /> : null}
+              bottomPanel={
+                bottomPanelOpened ? (
+                  <Box style={{ height: "100%", width: "100%", position: "relative" }}>
+                    <Box
+                      style={{
+                        height: "100%",
+                        width: "100%",
+                        display: activeBottomPanelTab === "terminal" ? "block" : "none",
+                      }}
+                    >
+                      <TerminalPanel />
+                    </Box>
+                    <Box
+                      style={{
+                        height: "100%",
+                        width: "100%",
+                        display: activeBottomPanelTab === "environment" ? "block" : "none",
+                      }}
+                    >
+                      <EnvironmentPanel />
+                    </Box>
+                  </Box>
+                ) : null
+              }
               orientation="vertical"
             />
           </Box>

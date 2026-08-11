@@ -23,7 +23,9 @@ interface FileTreeNodeProps {
 let activeDraggedNode: { node: WorkspaceTreeNode; parentNode?: WorkspaceTreeNode } | null = null;
 
 export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNodeProps>) {
-  const [expanded, setExpanded] = useState(false);
+  const expanded = useWorkspaceStore((s) => !!s.expandedNodeIds[node.id]);
+  const toggleNodeExpanded = useWorkspaceStore((s) => s.toggleNodeExpanded);
+  const setNodeExpanded = useWorkspaceStore((s) => s.setNodeExpanded);
   const [modalType, setModalType] = useState<"newFolder" | "rename" | "delete" | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [error, setError] = useState("");
@@ -106,7 +108,7 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
         isDirty: false,
       });
     } else {
-      setExpanded(!expanded);
+      toggleNodeExpanded(node.id);
     }
   };
 
@@ -131,7 +133,7 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
         isDirty: false,
       });
 
-      setExpanded(true);
+      setNodeExpanded(node.id, true);
     } catch (err: any) {
       console.error("Failed to auto-create request:", err);
       alert(err.message || String(err));
@@ -233,6 +235,20 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
         await invoke("delete_item", {
           path: node.id,
         });
+
+        // Close deleted tab(s) if currently open
+        const { tabs, closeTab } = useTabStore.getState();
+        const targetPath = node.path || node.id;
+        const matchingTabs = tabs.filter(
+          (t) =>
+            t.id === targetPath ||
+            t.id === node.id ||
+            t.id.startsWith(targetPath + "/") ||
+            t.id.startsWith(node.id + "/")
+        );
+        for (const t of matchingTabs) {
+          closeTab(t.id);
+        }
       }
 
       setModalType(null);
@@ -407,7 +423,7 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
       }
 
       if (pos === "inside") {
-        setExpanded(true);
+        setNodeExpanded(node.id, true);
       }
 
       if (workspacePath) {

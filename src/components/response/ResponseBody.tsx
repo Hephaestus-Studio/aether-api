@@ -10,6 +10,8 @@ import {
   IconTextWrapDisabled,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
+import { invoke } from "@tauri-apps/api/core";
+import { save } from "@tauri-apps/plugin-dialog";
 import MonacoEditor from "@/components/common/MonacoEditor";
 import { useConfigStore } from "@/stores/configStore";
 import MonacoErrorBoundary from "@/components/common/MonacoErrorBoundary";
@@ -106,15 +108,81 @@ export default function ResponseBody({ response, isActive = true }: Readonly<Res
     }
   }, [response?.body, initialLanguage, mode, language]);
 
-  const handleDownloadResponse = () => {
-    const rawBody = response?.body || "";
-    const blob = new Blob([rawBody], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `response-${Date.now()}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const getSuggestedFilename = () => {
+    const contentTypeHeader =
+      response?.headers?.find(([k]: [string, string]) => k.toLowerCase() === "content-type")?.[1]?.toLowerCase() || "";
+
+    if (contentTypeHeader.includes("application/json")) return "response.json";
+    if (contentTypeHeader.includes("text/html")) return "response.html";
+    if (contentTypeHeader.includes("application/xml") || contentTypeHeader.includes("text/xml")) return "response.xml";
+    if (contentTypeHeader.includes("image/png")) return "image.png";
+    if (contentTypeHeader.includes("image/jpeg") || contentTypeHeader.includes("image/jpg")) return "image.jpg";
+    if (contentTypeHeader.includes("image/gif")) return "image.gif";
+    if (contentTypeHeader.includes("image/svg")) return "image.svg";
+    if (contentTypeHeader.includes("image/webp")) return "image.webp";
+    if (contentTypeHeader.includes("application/pdf")) return "document.pdf";
+    if (contentTypeHeader.includes("application/zip")) return "archive.zip";
+    if (contentTypeHeader.includes("application/gzip") || contentTypeHeader.includes("application/x-tar")) return "archive.tar.gz";
+    if (contentTypeHeader.includes("audio/mpeg") || contentTypeHeader.includes("audio/mp3")) return "audio.mp3";
+    if (contentTypeHeader.includes("video/mp4")) return "video.mp4";
+    if (response?.bodyType === "binary") return `response-${Date.now()}.bin`;
+    return `response-${Date.now()}.txt`;
+  };
+
+  const handleDownloadResponse = async () => {
+    try {
+      const defaultPath = getSuggestedFilename();
+      const selectedPath = await save({
+        defaultPath,
+        title: "Save Response",
+      });
+
+      if (!selectedPath) return;
+
+      const isBinary = response?.bodyType === "binary";
+      await invoke("save_response_to_file", {
+        filePath: selectedPath,
+        content: response?.body || "",
+        isBinary,
+      });
+
+      notifications.show({
+        title: "Download Complete",
+        message: `Response saved successfully to ${selectedPath.split("/").pop() || selectedPath}`,
+        color: "teal",
+      });
+    } catch (err: any) {
+      console.error("Save response error:", err);
+      // Web fallback if running outside Tauri
+      try {
+        const rawBody = response?.body || "";
+        const isBinary = response?.bodyType === "binary";
+        let blob: Blob;
+        if (isBinary) {
+          const byteCharacters = atob(rawBody);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          blob = new Blob([byteArray]);
+        } else {
+          blob = new Blob([rawBody], { type: "text/plain" });
+        }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = getSuggestedFilename();
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (fallbackErr) {
+        notifications.show({
+          title: "Download Failed",
+          message: String(err?.message || err),
+          color: "red",
+        });
+      }
+    }
   };
 
   const handleCopy = () => {

@@ -34,6 +34,13 @@ interface TabState {
   terminalOpened: boolean;
   toggleTerminal: () => void;
   setTerminalOpened: (opened: boolean) => void;
+  bottomPanelOpened: boolean;
+  activeBottomPanelTab: "terminal" | "environment";
+  openBottomPanel: (tab?: "terminal" | "environment") => void;
+  closeBottomPanel: () => void;
+  toggleEnvPanel: () => void;
+  setEnvPanelOpened: (opened: boolean) => void;
+  setActiveBottomPanelTab: (tab: "terminal" | "environment") => void;
   responsePanelOpened: boolean;
   toggleResponsePanel: () => void;
   setResponsePanelOpened: (opened: boolean) => void;
@@ -116,14 +123,28 @@ export const useTabStore = create<TabState>((set, get) => ({
     activeTabId,
     protocols = {},
     terminalOpened = false,
+    bottomPanelOpened,
+    activeBottomPanelTab,
     layoutOrientation = "horizontal",
+  }: {
+    tabs: TabItem[];
+    activeTabId: string | null;
+    protocols?: Record<string, string>;
+    terminalOpened?: boolean;
+    bottomPanelOpened?: boolean;
+    activeBottomPanelTab?: "terminal" | "environment";
+    layoutOrientation?: "horizontal" | "vertical";
   }) => {
+    const isBottomOpen = bottomPanelOpened ?? terminalOpened ?? false;
+    const currentBottomTab = activeBottomPanelTab ?? "terminal";
     set({
       tabs,
       activeTabId,
       protocols,
       responsePanelOpened: false,
-      terminalOpened,
+      bottomPanelOpened: isBottomOpen,
+      activeBottomPanelTab: currentBottomTab,
+      terminalOpened: isBottomOpen && currentBottomTab === "terminal",
       layoutOrientation,
     });
   },
@@ -229,15 +250,80 @@ export const useTabStore = create<TabState>((set, get) => ({
     });
   },
 
+  bottomPanelOpened: false,
+  activeBottomPanelTab: "terminal",
+  openBottomPanel: (tab) => {
+    set({
+      bottomPanelOpened: true,
+      activeBottomPanelTab: tab || get().activeBottomPanelTab,
+      terminalOpened: (tab || get().activeBottomPanelTab) === "terminal",
+    });
+  },
+  closeBottomPanel: () => {
+    set({
+      bottomPanelOpened: false,
+      terminalOpened: false,
+    });
+  },
+  setActiveBottomPanelTab: (tab) => {
+    set({
+      activeBottomPanelTab: tab,
+      terminalOpened: tab === "terminal",
+    });
+  },
   terminalOpened: false,
   toggleTerminal: () => {
-    set({
-      terminalOpened: !get().terminalOpened,
-    });
+    const { bottomPanelOpened, activeBottomPanelTab } = get();
+    if (!bottomPanelOpened) {
+      set({
+        bottomPanelOpened: true,
+        activeBottomPanelTab: "terminal",
+        terminalOpened: true,
+      });
+    } else if (activeBottomPanelTab === "terminal") {
+      set({
+        bottomPanelOpened: false,
+        terminalOpened: false,
+      });
+    } else {
+      set({
+        activeBottomPanelTab: "terminal",
+        terminalOpened: true,
+      });
+    }
   },
   setTerminalOpened: (opened: boolean) => {
     set({
+      bottomPanelOpened: opened,
+      activeBottomPanelTab: "terminal",
       terminalOpened: opened,
+    });
+  },
+  toggleEnvPanel: () => {
+    const { bottomPanelOpened, activeBottomPanelTab } = get();
+    if (!bottomPanelOpened) {
+      set({
+        bottomPanelOpened: true,
+        activeBottomPanelTab: "environment",
+        terminalOpened: false,
+      });
+    } else if (activeBottomPanelTab === "environment") {
+      set({
+        bottomPanelOpened: false,
+        terminalOpened: false,
+      });
+    } else {
+      set({
+        activeBottomPanelTab: "environment",
+        terminalOpened: false,
+      });
+    }
+  },
+  setEnvPanelOpened: (opened: boolean) => {
+    set({
+      bottomPanelOpened: opened,
+      activeBottomPanelTab: "environment",
+      terminalOpened: false,
     });
   },
   responsePanelOpened: true,
@@ -274,6 +360,8 @@ if (typeof window !== "undefined") {
         activeTabId: state.activeTabId,
         protocols: state.protocols,
         terminalOpened: state.terminalOpened,
+        bottomPanelOpened: state.bottomPanelOpened,
+        activeBottomPanelTab: state.activeBottomPanelTab,
         layoutOrientation: state.layoutOrientation,
       });
     }

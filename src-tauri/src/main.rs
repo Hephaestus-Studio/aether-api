@@ -62,6 +62,7 @@ fn main() {
             commands::request::update_request,
             commands::request::execute_request,
             commands::request::cancel_request,
+            commands::request::save_response_to_file,
             commands::environment::list_environments,
             commands::environment::read_environment,
             commands::environment::create_environment,

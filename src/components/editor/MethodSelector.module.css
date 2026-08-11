@@ -2,10 +2,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: calc(var(--aether-spacing-sm) + 2px);
-  height: calc(var(--aether-font-size-base) * 2.6);
-  min-width: calc(var(--aether-font-size-base) * 6.8);
-  padding: 0 calc(var(--aether-spacing-md) + 2px);
+  gap: 8px;
+  height: 36px;
+  width: 96px;
+  min-width: 96px;
+  padding: 0 12px;
   background-color: #18181b;
   border: 1px solid #27272a;
   border-radius: var(--aether-radius-md);
@@ -16,6 +17,7 @@
     box-shadow 0.15s ease,
     background-color 0.15s ease;
   outline: none;
+  flex-shrink: 0;
 }
 
 .methodButton:hover {

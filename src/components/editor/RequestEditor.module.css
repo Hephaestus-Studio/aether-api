@@ -11,39 +11,103 @@
 .titleRow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
-.requestTitleGroup {
+.protocolBtn {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
+  height: 36px;
+  width: 96px;
+  min-width: 96px;
+  padding: 0 12px;
+  background-color: #18181b;
+  border: 1px solid #27272a;
+  border-radius: var(--aether-radius-md);
+  cursor: pointer;
+  user-select: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+  outline: none;
+  flex-shrink: 0;
+}
+
+.protocolBtn:hover {
+  background-color: #202023;
+  border-color: #3f3f46;
+}
+
+.requestNameContainer {
+  display: flex;
+  align-items: center;
   flex: 1;
+  border: 1px solid var(--border-color);
+  border-radius: var(--aether-radius-md);
+  background-color: var(--bg-app);
+  height: 36px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.requestNameContainer:focus-within {
+  border-color: #0084ff;
+  box-shadow: 0 0 0 1px #0084ff;
 }
 
 .requestNameInput {
-  font-size: var(--aether-font-size-lg);
-  font-weight: var(--aether-font-weight-semibold);
-  color: var(--text-primary);
   flex: 1;
+  width: 100%;
 }
 
 .requestNameInput :global(.mantine-Input-input) {
-  padding: 0;
-  height: auto;
-  font-size: var(--aether-font-size-lg);
+  font-size: var(--aether-font-size-md);
   font-weight: var(--aether-font-weight-semibold);
+  padding: 0 12px;
+  height: 34px;
+  color: var(--text-primary);
+  background-color: transparent !important;
+  border: none !important;
 }
 
 .saveBtn {
-  color: var(--text-muted);
-  font-weight: var(--aether-font-weight-medium);
+  height: 36px;
+  width: 88px;
+  min-width: 88px;
+  font-weight: var(--aether-font-weight-semibold);
+  font-size: var(--aether-font-size-md);
+  padding: 0;
+  border-radius: var(--aether-radius-md);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  transition: all 0.15s ease;
 }
 
-.saveBtn:hover {
-  background-color: var(--bg-tab-active);
+.saveBtn:hover:not(:disabled):not([data-disabled]) {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
   color: var(--text-primary);
+}
+
+.saveBtn:disabled,
+.saveBtn[data-disabled] {
+  opacity: 0.35;
+  cursor: not-allowed !important;
+  background-color: transparent !important;
+  color: var(--text-muted) !important;
+  border-color: var(--border-color) !important;
 }
 
 .addressBarRow {
@@ -86,10 +150,17 @@
 
 .sendBtn {
   height: 36px;
+  width: 88px;
+  min-width: 88px;
   font-weight: var(--aether-font-weight-semibold);
   font-size: var(--aether-font-size-md);
-  padding: 0 16px;
+  padding: 0;
   border-radius: var(--aether-radius-md);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
 }
 
 .tabs {

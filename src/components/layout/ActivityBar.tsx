@@ -1,54 +1,23 @@
-import { Box, Tooltip, UnstyledButton, Stack } from "@mantine/core";
-import { IconFolders, IconWorld } from "@tabler/icons-react";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { Tooltip, UnstyledButton } from "@mantine/core";
+import { IconFolders } from "@tabler/icons-react";
 import classes from "./ActivityBar.module.css";
 
 interface ActivityBarProps {
-  activeView: "explorer" | "environment";
-  sidebarOpened: boolean;
-  setSidebarOpened: (opened: boolean) => void;
+  setSidebarOpened: (opened: boolean | ((prev: boolean) => boolean)) => void;
 }
 
 export default function ActivityBar({
-  activeView,
-  sidebarOpened,
   setSidebarOpened,
 }: Readonly<ActivityBarProps>) {
-  const setActiveView = useWorkspaceStore((s) => s.setActiveView);
-
-  const views = [
-    { id: "explorer" as const, label: "Explorer", icon: IconFolders },
-    { id: "environment" as const, label: "Environments", icon: IconWorld },
-  ];
-
-  const handleTabClick = (viewId: "explorer" | "environment") => {
-    if (activeView === viewId && sidebarOpened) {
-      setSidebarOpened(false);
-    } else {
-      setActiveView(viewId);
-      setSidebarOpened(true);
-    }
-  };
-
   return (
-    <Box className={classes.container}>
-      <Stack gap={12} className={classes.stack}>
-        {views.map((v) => {
-          const Icon = v.icon;
-          const isActive = activeView === v.id && sidebarOpened;
-
-          return (
-            <Tooltip key={v.id} label={v.label} position="right" withArrow>
-              <UnstyledButton
-                onClick={() => handleTabClick(v.id)}
-                className={`${classes.button} ${isActive ? classes.buttonActive : ""}`}
-              >
-                <Icon size={20} stroke={1.5} />
-              </UnstyledButton>
-            </Tooltip>
-          );
-        })}
-      </Stack>
-    </Box>
+    <Tooltip label="Show Explorer" position="right" withArrow>
+      <UnstyledButton
+        onClick={() => setSidebarOpened(true)}
+        className={classes.collapsedStrip}
+      >
+        <IconFolders size={13} className={classes.collapsedIcon} />
+        <span className={classes.verticalText}>EXPLORER</span>
+      </UnstyledButton>
+    </Tooltip>
   );
 }

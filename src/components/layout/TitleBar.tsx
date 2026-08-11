@@ -15,6 +15,7 @@ export default function TitleBar() {
   const [isMaximized, setIsMaximized] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const toggleTerminal = useTabStore((s) => s.toggleTerminal);
+  const toggleEnvPanel = useTabStore((s) => s.toggleEnvPanel);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -127,7 +128,7 @@ export default function TitleBar() {
     await closeWorkspace();
   };
 
-  const menuItems = ["File", "Edit", "Selection", "View", "Go", "Run", "Terminal", "Help"];
+  const menuItems = ["File", "Edit", "View", "Help"];
 
   return (
     <div className={classes.titleBar} data-tauri-drag-region>
@@ -150,7 +151,7 @@ export default function TitleBar() {
               {activeMenu === menu && menu === "File" && (
                 <div className={classes.dropdownMenu}>
                   <div className={classes.dropdownItem} onClick={handleOpenFolder}>
-                    <span>Open Folder...</span>
+                    <span>Open Workspace</span>
                     <span className={classes.dropdownShortcut}>Ctrl+O</span>
                   </div>
                   {workspacePath && (
@@ -167,26 +168,20 @@ export default function TitleBar() {
                 </div>
               )}
 
-              {activeMenu === menu && menu === "Terminal" && (
-                <div className={classes.dropdownMenu}>
-                  <div
-                    className={classes.dropdownItem}
-                    onClick={() => {
-                      toggleTerminal();
-                      setActiveMenu(null);
-                    }}
-                  >
-                    <span>Toggle Terminal</span>
-                    <span className={classes.dropdownShortcut}>Ctrl+`</span>
-                  </div>
-                </div>
-              )}
-
               {activeMenu === menu && menu === "View" && (
                 <div className={classes.dropdownMenu}>
                   <div
                     className={classes.dropdownItem}
                     onClick={() => {
+                      toggleEnvPanel();
+                      setActiveMenu(null);
+                    }}
+                  >
+                    <span>Toggle Environments</span>
+                  </div>
+                  <div
+                    className={classes.dropdownItem}
+                    onClick={() => {
                       toggleTerminal();
                       setActiveMenu(null);
                     }}
@@ -197,7 +192,7 @@ export default function TitleBar() {
                 </div>
               )}
 
-              {activeMenu === menu && menu !== "File" && menu !== "Terminal" && menu !== "View" && (
+              {activeMenu === menu && menu !== "File" && menu !== "View" && (
                 <div className={classes.dropdownMenu}>
                   <div className={classes.dropdownItem} style={{ opacity: 0.5, cursor: "default" }}>
                     <span>Not Implemented</span>

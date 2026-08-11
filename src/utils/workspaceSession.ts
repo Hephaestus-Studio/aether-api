@@ -6,6 +6,8 @@ export interface PersistedTabSession {
   activeTabId: string | null;
   protocols?: Record<string, string>;
   terminalOpened?: boolean;
+  bottomPanelOpened?: boolean;
+  activeBottomPanelTab?: "terminal" | "environment";
   layoutOrientation?: "horizontal" | "vertical";
 }
 
@@ -14,6 +16,8 @@ export interface RestoredSessionResult {
   activeTabId: string | null;
   protocols: Record<string, string>;
   terminalOpened: boolean;
+  bottomPanelOpened?: boolean;
+  activeBottomPanelTab?: "terminal" | "environment";
   layoutOrientation?: "horizontal" | "vertical";
 }
 
@@ -32,7 +36,9 @@ export function saveWorkspaceSession(
     tabs: TabItem[];
     activeTabId: string | null;
     protocols: Record<string, string>;
-    terminalOpened: boolean;
+    terminalOpened?: boolean;
+    bottomPanelOpened?: boolean;
+    activeBottomPanelTab?: "terminal" | "environment";
     layoutOrientation?: "horizontal" | "vertical";
   },
 ): void {
@@ -44,6 +50,8 @@ export function saveWorkspaceSession(
       activeTabId: session.activeTabId,
       protocols: session.protocols,
       terminalOpened: session.terminalOpened,
+      bottomPanelOpened: session.bottomPanelOpened,
+      activeBottomPanelTab: session.activeBottomPanelTab,
       layoutOrientation: session.layoutOrientation,
     };
 
@@ -112,6 +120,8 @@ export async function restoreWorkspaceSession(
       activeTabId,
       protocols: data.protocols || {},
       terminalOpened: data.terminalOpened ?? false,
+      bottomPanelOpened: data.bottomPanelOpened ?? data.terminalOpened ?? false,
+      activeBottomPanelTab: data.activeBottomPanelTab || "terminal",
       layoutOrientation: data.layoutOrientation || "horizontal",
     };
   } catch (err) {

@@ -44,7 +44,7 @@ impl std::fmt::Display for HttpMethod {
 /// A generic key-value pair structure with enabling capability.
 ///
 /// Used for query parameters, headers, variables, etc.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct KeyValuePair {
     /// The key.
     pub key: String,
@@ -70,7 +70,7 @@ impl KeyValuePair {
 }
 
 /// Authentication configurations supported by requests.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "type", rename_all = "lowercase")]
 #[derive(Default)]
 pub enum AuthConfig {
@@ -86,14 +86,14 @@ pub enum AuthConfig {
 }
 
 /// Bearer authentication configuration.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct BearerAuth {
     /// The token value, which supports dynamic variable interpolation (e.g. `{{token}}`).
     pub token: String, // Supports {{variable}} interpolation
 }
 
 /// Basic access authentication configuration.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct BasicAuth {
     /// Username for basic authentication.
     pub username: String,
@@ -102,7 +102,7 @@ pub struct BasicAuth {
 }
 
 /// Supported body formats for HTTP requests.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "type", rename_all = "kebab-case")]
 pub enum RequestBody {
     /// No body content. Can contain an optional text/string payload.
@@ -128,7 +128,7 @@ impl Default for RequestBody {
 }
 
 /// Represents an individual field in a multipart form body.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MultipartField {
     /// Field key name.
     pub key: String,
@@ -142,7 +142,7 @@ pub struct MultipartField {
 }
 
 /// Supported types for multipart fields.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum MultipartFieldType {
     /// A text value field.
@@ -152,7 +152,7 @@ pub enum MultipartFieldType {
 }
 
 /// Execution settings configured for an API request.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct RequestSettings {
     /// Maximum execution time in milliseconds before timing out.
@@ -180,7 +180,7 @@ impl Default for RequestSettings {
 ///
 /// Contains all configuration data necessary to execute an HTTP request,
 /// including method, URL, parameters, headers, authentication, body, and options.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Request {
     /// Version of the request schema, e.g., "1.0.0".
@@ -251,5 +251,19 @@ impl Request {
             body: RequestBody::default(),
             settings: RequestSettings::default(),
         }
+    }
+
+    /// Compares all user-editable content fields, ignoring timestamps (`created_at`, `updated_at`).
+    pub fn content_equals(&self, other: &Request) -> bool {
+        self.name == other.name
+            && self.description == other.description
+            && self.method == other.method
+            && self.url == other.url
+            && self.params == other.params
+            && self.headers == other.headers
+            && self.auth == other.auth
+            && self.body == other.body
+            && self.settings == other.settings
+            && self.seq == other.seq
     }
 }
