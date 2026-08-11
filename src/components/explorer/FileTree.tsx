@@ -14,10 +14,11 @@ export default function FileTree() {
     return (
       <Box
         style={{
-          padding: 16,
-          fontSize: "calc(var(--aether-font-size-base) - 1.5px)",
+          padding: "16px 12px",
+          fontSize: "11.5px",
           color: "var(--text-muted)",
           textAlign: "center",
+          lineHeight: 1.4,
         }}
       >
         No collections yet. Click the "+" icon at the top of Explorer to create one.
@@ -26,7 +27,7 @@ export default function FileTree() {
   }
 
   return (
-    <Box style={{ padding: "0 8px" }}>
+    <Box style={{ padding: "2px 6px", minWidth: 0, overflowX: "hidden" }}>
       {rootNodes.map((node) => (
         <FileTreeNode key={node.id} node={node} parentNode={collectionsNode} />
       ))}

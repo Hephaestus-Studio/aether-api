@@ -20,19 +20,23 @@
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 2; /* ABOVE nativeInput to capture hover events on pills */
+  z-index: 2; /* ABOVE nativeInput to capture hover events on variables */
   pointer-events: none;
-  display: flex;
-  align-items: center;
+  display: block;
   padding: 0 12px;
-  font-family: inherit;
+  margin: 0;
+  border: none;
+  font-family: var(--aether-font-sans);
   font-size: 13px;
+  font-weight: 400;
   line-height: 34px;
   white-space: pre;
   overflow-x: hidden;
   overflow-y: hidden;
   color: var(--text-primary);
   box-sizing: border-box;
+  letter-spacing: normal;
+  text-align: left;
 }
 
 .nativeInput {
@@ -40,70 +44,69 @@
   width: 100%;
   height: 34px;
   padding: 0 12px;
-  font-family: inherit;
-  font-size: 13px;
-  line-height: 34px;
+  margin: 0;
   border: none;
   outline: none;
+  font-family: var(--aether-font-sans);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 34px;
+  letter-spacing: normal;
+  text-align: left;
   background: transparent;
   color: transparent !important;
   caret-color: var(--text-primary);
   z-index: 1; /* BELOW overlay */
   box-sizing: border-box;
+  white-space: pre;
 }
 
 .nativeInput::placeholder {
   color: var(--text-muted);
 }
 
-.pillResolved {
-  display: inline-flex;
-  align-items: center;
-  background: rgba(99, 102, 241, 0.18);
-  border: 1px solid rgba(165, 180, 252, 0.4);
-  color: #a5b4fc;
-  border-radius: 6px;
-  padding: 0 6px;
-  height: 22px;
-  font-size: 12px;
-  font-weight: 500;
+.varResolved {
+  display: inline;
+  color: #a5b4fc; /* Soft indigo / lavender matching Aether theme */
   font-family: inherit;
-  line-height: 1;
-  margin: 0 1px;
-  cursor: pointer;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  padding: 0;
+  margin: 0;
+  border: none;
+  cursor: text;
   pointer-events: auto; /* CAPTURES HOVER */
-  transition: all 0.15s ease;
+  transition: color 0.15s ease;
 }
 
-.pillResolved:hover {
-  background: rgba(99, 102, 241, 0.3);
-  border-color: rgba(165, 180, 252, 0.7);
+.varResolved:hover {
   color: #c7d2fe;
-}
-
-.pillUnresolved {
-  display: inline-flex;
-  align-items: center;
-  background: rgba(239, 68, 68, 0.18);
-  border: 1px solid rgba(248, 113, 113, 0.4);
-  color: #f87171;
-  border-radius: 6px;
-  padding: 0 6px;
-  height: 22px;
-  font-size: 12px;
-  font-weight: 500;
-  font-family: inherit;
-  line-height: 1;
-  margin: 0 1px;
+  text-decoration: underline;
   cursor: pointer;
-  pointer-events: auto; /* CAPTURES HOVER */
-  transition: all 0.15s ease;
 }
 
-.pillUnresolved:hover {
-  background: rgba(239, 68, 68, 0.3);
-  border-color: rgba(248, 113, 113, 0.7);
+.varUnresolved {
+  display: inline;
+  color: #f87171; /* Red for unresolved variables */
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  padding: 0;
+  margin: 0;
+  border: none;
+  cursor: text;
+  pointer-events: auto; /* CAPTURES HOVER */
+  transition: color 0.15s ease;
+}
+
+.varUnresolved:hover {
   color: #fca5a5;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 /* HoverCard Dropdown styling matching Postman reference */

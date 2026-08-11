@@ -30,7 +30,10 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
   const [isDragging, setIsDragging] = useState(false);
   const [dropPosition, setDropPosition] = useState<"above" | "below" | "inside" | null>(null);
   const openTab = useTabStore((s) => s.openTab);
+  const replaceTabId = useTabStore((s) => s.replaceTabId);
+  const activeTabId = useTabStore((s) => s.activeTabId);
   const isFolder = node.nodeType === "collection" || node.nodeType === "folder";
+  const isActive = !isFolder && (activeTabId === node.path || activeTabId === node.id);
   const { gitStatus, workspacePath, setTreeData } = useWorkspaceStore();
 
   const getNodeGitStatus = () => {
@@ -65,37 +68,33 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
   };
 
   const getChevron = () => {
-    if (!isFolder) {
-      return <Box className={classes.indentPlaceholder} />;
-    }
+    if (!isFolder) return null;
     return expanded ? <IconChevronDown size={12} /> : <IconChevronRight size={12} />;
   };
 
   const getMethodText = (method?: string) => {
     const m = (method || "GET").toUpperCase();
     if (m === "DELETE") return "DEL";
+    if (m === "OPTIONS") return "OPT";
     return m;
   };
 
-  const getIcon = () => {
-    switch (node.nodeType) {
-      case "collection":
-        return expanded ? (
-          <IconFolderOpen size={16} color="var(--mantine-color-indigo-4)" />
-        ) : (
-          <IconFolder size={16} color="var(--mantine-color-indigo-4)" />
-        );
-      case "folder":
-        return expanded ? <IconFolderOpen size={16} /> : <IconFolder size={16} />;
-      case "request":
-        return (
-          <span className={classes.methodTag} style={{ color: getMethodColor(node.method) }}>
-            {getMethodText(node.method)}
-          </span>
-        );
-      default:
-        return <IconSettings size={16} />;
+  const getFolderIcon = () => {
+    if (node.nodeType === "collection") {
+      return expanded ? (
+        <IconFolderOpen size={14} color="var(--mantine-color-indigo-4)" />
+      ) : (
+        <IconFolder size={14} color="var(--mantine-color-indigo-4)" />
+      );
     }
+    if (node.nodeType === "folder") {
+      return expanded ? (
+        <IconFolderOpen size={14} color="var(--text-muted)" />
+      ) : (
+        <IconFolder size={14} color="var(--text-muted)" />
+      );
+    }
+    return <IconSettings size={14} />;
   };
 
   const handleNodeClick = () => {
@@ -205,7 +204,6 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
     }
   };
 
-  const replaceTabId = useTabStore((s) => s.replaceTabId);
   const updateTab = useTabStore((s) => s.updateTab);
 
   const handleModalSubmit = async (e: React.FormEvent) => {
@@ -432,6 +430,7 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
             onClick={handleNodeClick}
             className={clsx(
               classes.button,
+              isActive && classes.active,
               isDragging && classes.dragging,
               dropPosition === "above" && classes.dropAbove,
               dropPosition === "below" && classes.dropBelow,
@@ -443,23 +442,35 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
+            title={node.name.replace(/\.(yml|yaml|json)$/i, "")}
           >
-            <Group gap={6}>
-              {getChevron()}
-              {getIcon()}
-              <Text className={classes.label} style={{ color: getGitColor(nodeGitStatus) }}>
+            <div className={classes.nodeContent}>
+              {isFolder ? (
+                <>
+                  <span className={classes.chevronWrapper}>{getChevron()}</span>
+                  <span className={classes.folderIconWrapper}>{getFolderIcon()}</span>
+                </>
+              ) : (
+                <span
+                  className={classes.methodTag}
+                  style={{ color: getMethodColor(node.method) }}
+                >
+                  {getMethodText(node.method)}
+                </span>
+              )}
+              <span className={classes.label} style={{ color: getGitColor(nodeGitStatus) }}>
                 {node.name.replace(/\.(yml|yaml|json)$/i, "")}
-              </Text>
-            </Group>
+              </span>
+            </div>
             {!isFolder && nodeGitStatus && (
-              <Text
+              <span
                 className={classes.gitBadge}
                 style={{
                   color: getGitColor(nodeGitStatus),
                 }}
               >
                 {nodeGitStatus === "untracked" ? "U" : "M"}
-              </Text>
+              </span>
             )}
           </UnstyledButton>
         </Menu.ContextMenu>

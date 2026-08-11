@@ -73,7 +73,7 @@ export default function Sidebar() {
   return (
     <Box className={classes.container}>
       <Box className={classes.header}>
-        <Group justify="space-between" align="center" style={{ width: "100%" }}>
+        <Group justify="space-between" align="center" style={{ width: "100%", minWidth: 0 }} wrap="nowrap">
           <span className={classes.title}>{getTitle()}</span>
           <ActionIcon variant="subtle" size="sm" className={classes.actionIcon}>
             <IconDots size={16} />
@@ -83,16 +83,16 @@ export default function Sidebar() {
 
       {activeView === "explorer" && workspacePath && (
         <Box className={classes.sectionHeader}>
-          <Group justify="space-between" align="center" style={{ width: "100%" }} gap={0}>
-            <Group gap={4} className={classes.sectionHeaderLeft}>
+          <Group justify="space-between" align="center" style={{ width: "100%", minWidth: 0 }} gap={0} wrap="nowrap">
+            <div className={classes.sectionHeaderLeft}>
               <IconChevronDown size={14} className={classes.chevronIcon} />
-              <span className={classes.sectionTitle}>{getFolderName()}</span>
-            </Group>
-            <Group gap={2} className={classes.actionsGroup}>
+              <span className={classes.sectionTitle} title={getFolderName()}>{getFolderName()}</span>
+            </div>
+            <div className={classes.actionsGroup}>
               <ActionIcon
                 onClick={() => setModalOpened(true)}
                 variant="subtle"
-                size="sm"
+                size="xs"
                 className={classes.actionIcon}
                 title="New Collection"
               >
@@ -101,7 +101,7 @@ export default function Sidebar() {
               <ActionIcon
                 onClick={handleRefresh}
                 variant="subtle"
-                size="sm"
+                size="xs"
                 className={classes.actionIcon}
                 title="Refresh Explorer"
               >
@@ -109,13 +109,13 @@ export default function Sidebar() {
               </ActionIcon>
               <ActionIcon
                 variant="subtle"
-                size="sm"
+                size="xs"
                 className={classes.actionIcon}
                 title="Collapse Folders"
               >
                 <IconFold size={14} />
               </ActionIcon>
-            </Group>
+            </div>
           </Group>
         </Box>
       )}

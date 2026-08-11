@@ -41,12 +41,41 @@ export default function UrlInput({
     useWorkspaceStore.getState().setActiveView("environment");
   };
 
+  const handlePlaceholderMouseDown = (
+    e: React.MouseEvent<HTMLSpanElement>,
+    startIndex: number,
+  ) => {
+    if (!inputRef.current) return;
+
+    let offset = 0;
+    if (document.caretPositionFromPoint) {
+      const pos = document.caretPositionFromPoint(e.clientX, e.clientY);
+      if (pos) {
+        offset = pos.offset;
+      }
+    } else if ((document as any).caretRangeFromPoint) {
+      const range = (document as any).caretRangeFromPoint(e.clientX, e.clientY);
+      if (range) {
+        offset = range.startOffset;
+      }
+    }
+
+    const targetCaret = startIndex + offset;
+    inputRef.current.focus();
+    inputRef.current.setSelectionRange(targetCaret, targetCaret);
+  };
+
+  let charOffset = 0;
+
   return (
     <Box className={classes.wrapper}>
       <div className={classes.inputContainer}>
         {/* Synchronized Overlay Layer (z-index: 2, pointer-events: none) */}
         <div ref={overlayRef} className={classes.overlay}>
           {segments.map((seg, idx) => {
+            const start = charOffset;
+            charOffset += seg.text.length;
+
             if (!seg.isPlaceholder) {
               return <span key={idx}>{seg.text}</span>;
             }
@@ -65,7 +94,8 @@ export default function UrlInput({
               >
                 <HoverCard.Target>
                   <span
-                    className={isResolved ? classes.pillResolved : classes.pillUnresolved}
+                    className={isResolved ? classes.varResolved : classes.varUnresolved}
+                    onMouseDown={(e) => handlePlaceholderMouseDown(e, start)}
                     onClick={() => inputRef.current?.focus()}
                   >
                     {seg.text}
@@ -126,6 +156,9 @@ export default function UrlInput({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onScroll={handleScroll}
+          onSelect={handleScroll}
+          onKeyUp={handleScroll}
+          onClick={handleScroll}
           placeholder={placeholder}
           className={`${classes.nativeInput} ${className || ""}`}
           spellCheck={false}

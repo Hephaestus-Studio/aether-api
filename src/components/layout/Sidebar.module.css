@@ -4,60 +4,83 @@
   background-color: var(--bg-sidebar);
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .header {
-  height: calc(var(--aether-font-size-base) * 2.7);
+  height: 32px;
   display: flex;
   align-items: center;
-  padding: 0 calc(var(--aether-spacing-md)) 0 calc(var(--aether-spacing-lg));
+  padding: 0 8px 0 12px;
   border-bottom: 1px solid var(--border-color);
+  min-width: 0;
 }
 
 .title {
-  font-weight: var(--aether-font-weight-semibold);
-  font-size: calc(var(--aether-font-size-base) - 2px);
+  font-weight: var(--aether-font-weight-semibold, 600);
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
   color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .body {
   flex: 1;
   overflow-y: auto;
-  padding: calc(var(--aether-spacing-xs)) 0;
+  overflow-x: hidden;
+  padding: 2px 0;
+  min-width: 0;
 }
 
 .sectionHeader {
-  padding: calc(var(--aether-spacing-xs)) calc(var(--aether-spacing-sm));
+  padding: 0 6px 0 8px;
   background-color: var(--bg-sidebar);
   border-top: 1px solid var(--border-color);
   border-bottom: 1px solid var(--border-color);
-  height: calc(var(--aether-font-size-base) * 2.15);
+  height: 26px;
   display: flex;
   align-items: center;
+  min-width: 0;
+  user-select: none;
 }
 
 .sectionHeaderLeft {
   color: #cccccc;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .sectionTitle {
-  font-size: calc(var(--aether-font-size-base) - 2px);
-  font-weight: var(--aether-font-weight-bold);
+  font-size: 11px;
+  font-weight: var(--aether-font-weight-bold, 700);
   color: #e2e8f0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .chevronIcon {
   color: #8a8e99;
+  flex-shrink: 0;
 }
 
 .actionsGroup {
   display: flex;
+  align-items: center;
+  gap: 2px;
   opacity: 0;
+  flex-shrink: 0;
   transition: opacity 0.15s ease;
 }
 
