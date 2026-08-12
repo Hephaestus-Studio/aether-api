@@ -26,9 +26,7 @@ export const useEnvStore = create<EnvState>((set, get) => ({
   setActiveEnvironment: (name) => {
     const { variablesByEnv } = get();
     const envKey = (name || "global").toLowerCase();
-    const existing = Object.entries(variablesByEnv).find(
-      ([k]) => k.toLowerCase() === envKey
-    )?.[1];
+    const existing = Object.entries(variablesByEnv).find(([k]) => k.toLowerCase() === envKey)?.[1];
 
     set({
       activeEnvironmentName: name,

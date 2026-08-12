@@ -11,6 +11,7 @@
 .typeRow {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 16px;
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 12px;
@@ -55,18 +56,6 @@
 }
 
 .compactLangBtn:hover {
-  background-color: rgba(0, 132, 255, 0.1);
-}
-
-.beautifyBtn {
-  color: #0084ff;
-  font-size: 12px;
-  font-weight: 500;
-  height: 26px;
-  padding: 0 8px;
-}
-
-.beautifyBtn:hover {
   background-color: rgba(0, 132, 255, 0.1);
 }
 
@@ -233,22 +222,239 @@
   max-width: 180px;
 }
 
-.binaryContainer {
+/* Binary Body Editor Styles */
+.binaryWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding-top: 4px;
+}
+
+.binaryDropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 20px;
+  width: 100%;
+  border: 1px dashed var(--border-color);
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.01);
+  text-align: center;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.binaryDropzone:hover {
+  border-color: var(--aether-color-primary-base, #0084ff);
+  background-color: rgba(0, 132, 255, 0.03);
+}
+
+.dropzoneIconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: rgba(0, 132, 255, 0.08);
+  border: 1px solid rgba(0, 132, 255, 0.18);
+  color: #0084ff;
+  margin-bottom: 2px;
+}
+
+.dropzoneTitle {
+  font-size: var(--aether-font-size-sm, 13px);
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.1px;
+}
+
+.dropzoneSubtitle {
+  font-size: var(--aether-font-size-xs, 12px);
+  color: var(--text-muted);
+  max-width: 480px;
+  line-height: 1.45;
+}
+
+.selectFileBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  height: 30px;
+  font-size: var(--aether-font-size-xs, 12px);
+  font-weight: 500;
+  color: #ffffff;
+  background-color: #0084ff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: background-color 0.15s ease;
+}
+
+.selectFileBtn:hover {
+  background-color: #0073e6;
+}
+
+/* Selected File Card */
+.fileCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  width: 100%;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.015);
+}
+
+.fileCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fileStatusTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #34c759;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.fileCardBody {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  background-color: rgba(255, 255, 255, 0.01);
-  max-width: 450px;
 }
 
-.binaryPath {
-  font-size: var(--aether-font-size-sm);
-  color: var(--text-primary);
+.fileIconBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  background-color: rgba(0, 132, 255, 0.08);
+  border: 1px solid rgba(0, 132, 255, 0.2);
+  color: #0084ff;
+  flex-shrink: 0;
+}
+
+.fileMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
   flex: 1;
+  min-width: 0;
+}
+
+.fileName {
+  font-size: var(--aether-font-size-sm, 13px);
+  font-weight: 600;
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.filePathRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fullPathText {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--aether-font-mono, monospace);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.copyPathBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.copyPathBtn:hover {
+  color: var(--text-primary);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.fileActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.changeFileBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 10px;
+  height: 26px;
+  font-size: var(--aether-font-size-xs, 12px);
+  font-weight: 500;
+  color: var(--text-primary);
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.changeFileBtn:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.removeFileBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 10px;
+  height: 26px;
+  font-size: var(--aether-font-size-xs, 12px);
+  font-weight: 500;
+  color: #ff453a;
+  background-color: rgba(255, 69, 58, 0.1);
+  border: 1px solid rgba(255, 69, 58, 0.2);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.removeFileBtn:hover {
+  background-color: rgba(255, 69, 58, 0.2);
+}
+
+/* Info Banner */
+.binaryInfoBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  width: 100%;
+  border-radius: 5px;
+  background-color: rgba(0, 132, 255, 0.04);
+  border: 1px solid rgba(0, 132, 255, 0.12);
+  color: var(--text-muted);
+  font-size: 12px;
 }

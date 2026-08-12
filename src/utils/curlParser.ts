@@ -1,8 +1,4 @@
-import type {
-  KeyValuePair,
-  AuthConfig,
-  RequestBody,
-} from "@/types/request";
+import type { KeyValuePair, AuthConfig, RequestBody } from "@/types/request";
 
 export interface ParsedCurl {
   method: string;
@@ -175,7 +171,10 @@ export function parseCurl(curlStr: string): ParsedCurl | null {
     }
 
     // Positional argument -> URL (if not set yet)
-    if (!url && (token.startsWith("http://") || token.startsWith("https://") || token.includes("."))) {
+    if (
+      !url &&
+      (token.startsWith("http://") || token.startsWith("https://") || token.includes("."))
+    ) {
       url = token;
     }
   }
@@ -228,7 +227,7 @@ export function parseCurl(curlStr: string): ParsedCurl | null {
   let body: RequestBody | undefined = undefined;
   if (bodyContent) {
     const contentTypeHeader = Object.entries(rawHeaders).find(
-      ([k]) => k.toLowerCase() === "content-type"
+      ([k]) => k.toLowerCase() === "content-type",
     )?.[1];
 
     if (contentTypeHeader && contentTypeHeader.includes("application/x-www-form-urlencoded")) {

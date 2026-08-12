@@ -1,10 +1,6 @@
 import { useState } from "react";
-import {
-  Box,
-  TextInput,
-  Select,
-  ActionIcon,
-} from "@mantine/core";
+import { Box, Select, ActionIcon } from "@mantine/core";
+import UndoableTextInput from "@/components/common/UndoableTextInput";
 import {
   IconShieldOff,
   IconKey,
@@ -230,9 +226,11 @@ export default function AuthEditor({ auth, onChange }: Readonly<AuthEditorProps>
               <div className={classes.fieldRow}>
                 <div className={classes.fieldLabel}>
                   <span>Token</span>
-                  <span className={classes.fieldHint}>Supports &#123;&#123;variable&#125;&#125;</span>
+                  <span className={classes.fieldHint}>
+                    Supports &#123;&#123;variable&#125;&#125;
+                  </span>
                 </div>
-                <TextInput
+                <UndoableTextInput
                   type={showSecret["bearer_token"] ? "text" : "password"}
                   value={auth.bearer.token}
                   onChange={(e) =>
@@ -251,7 +249,11 @@ export default function AuthEditor({ auth, onChange }: Readonly<AuthEditorProps>
                       onClick={() => toggleSecret("bearer_token")}
                       title={showSecret["bearer_token"] ? "Hide token" : "Show token"}
                     >
-                      {showSecret["bearer_token"] ? <IconEyeOff size={14} /> : <IconEye size={14} />}
+                      {showSecret["bearer_token"] ? (
+                        <IconEyeOff size={14} />
+                      ) : (
+                        <IconEye size={14} />
+                      )}
                     </ActionIcon>
                   }
                 />
@@ -262,7 +264,7 @@ export default function AuthEditor({ auth, onChange }: Readonly<AuthEditorProps>
                   <span>Header Prefix</span>
                   <span className={classes.fieldHint}>Default: Bearer</span>
                 </div>
-                <TextInput
+                <UndoableTextInput
                   value={auth.bearer.prefix ?? "Bearer"}
                   onChange={(e) =>
                     onChange({
@@ -300,7 +302,7 @@ export default function AuthEditor({ auth, onChange }: Readonly<AuthEditorProps>
                       color="gray"
                       onClick={() =>
                         copyToClipboard(
-                          `Authorization: ${auth.bearer.prefix || "Bearer"} ${auth.bearer.token}`
+                          `Authorization: ${auth.bearer.prefix || "Bearer"} ${auth.bearer.token}`,
                         )
                       }
                       title="Copy header string"
@@ -333,9 +335,11 @@ export default function AuthEditor({ auth, onChange }: Readonly<AuthEditorProps>
               <div className={classes.fieldRow}>
                 <div className={classes.fieldLabel}>
                   <span>Username</span>
-                  <span className={classes.fieldHint}>Supports &#123;&#123;variable&#125;&#125;</span>
+                  <span className={classes.fieldHint}>
+                    Supports &#123;&#123;variable&#125;&#125;
+                  </span>
                 </div>
-                <TextInput
+                <UndoableTextInput
                   value={auth.basic.username}
                   onChange={(e) =>
                     onChange({
@@ -351,9 +355,11 @@ export default function AuthEditor({ auth, onChange }: Readonly<AuthEditorProps>
               <div className={classes.fieldRow}>
                 <div className={classes.fieldLabel}>
                   <span>Password</span>
-                  <span className={classes.fieldHint}>Supports &#123;&#123;variable&#125;&#125;</span>
+                  <span className={classes.fieldHint}>
+                    Supports &#123;&#123;variable&#125;&#125;
+                  </span>
                 </div>
-                <TextInput
+                <UndoableTextInput
                   type={showSecret["basic_password"] ? "text" : "password"}
                   value={auth.basic.password}
                   onChange={(e) =>
@@ -405,8 +411,8 @@ export default function AuthEditor({ auth, onChange }: Readonly<AuthEditorProps>
                       onClick={() =>
                         copyToClipboard(
                           `Authorization: Basic ${safeBtoa(
-                            `${auth.basic.username}:${auth.basic.password}`
-                          )}`
+                            `${auth.basic.username}:${auth.basic.password}`,
+                          )}`,
                         )
                       }
                       title="Copy header string"
@@ -441,7 +447,7 @@ export default function AuthEditor({ auth, onChange }: Readonly<AuthEditorProps>
                   <span>Key Name</span>
                   <span className={classes.fieldHint}>e.g. X-API-Key</span>
                 </div>
-                <TextInput
+                <UndoableTextInput
                   value={auth.apikey.key}
                   onChange={(e) =>
                     onChange({
@@ -457,9 +463,11 @@ export default function AuthEditor({ auth, onChange }: Readonly<AuthEditorProps>
               <div className={classes.fieldRow}>
                 <div className={classes.fieldLabel}>
                   <span>Value</span>
-                  <span className={classes.fieldHint}>Supports &#123;&#123;variable&#125;&#125;</span>
+                  <span className={classes.fieldHint}>
+                    Supports &#123;&#123;variable&#125;&#125;
+                  </span>
                 </div>
-                <TextInput
+                <UndoableTextInput
                   type={showSecret["api_key"] ? "text" : "password"}
                   value={auth.apikey.value}
                   onChange={(e) =>
@@ -521,7 +529,9 @@ export default function AuthEditor({ auth, onChange }: Readonly<AuthEditorProps>
                   <div className={classes.previewCodeBlock}>
                     <div className={classes.previewCodeText}>
                       <span className={classes.previewKey}>
-                        {auth.apikey.addTo === "query" ? `?${auth.apikey.key}=` : `${auth.apikey.key}:`}
+                        {auth.apikey.addTo === "query"
+                          ? `?${auth.apikey.key}=`
+                          : `${auth.apikey.key}:`}
                       </span>
                       <span className={classes.previewVal}>
                         {showSecret["api_key"]
@@ -539,7 +549,7 @@ export default function AuthEditor({ auth, onChange }: Readonly<AuthEditorProps>
                         copyToClipboard(
                           auth.apikey.addTo === "query"
                             ? `${auth.apikey.key}=${auth.apikey.value}`
-                            : `${auth.apikey.key}: ${auth.apikey.value}`
+                            : `${auth.apikey.key}: ${auth.apikey.value}`,
                         )
                       }
                       title="Copy string"

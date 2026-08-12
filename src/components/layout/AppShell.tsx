@@ -31,10 +31,7 @@ export default function AppShell() {
   const MAX_SIDEBAR_WIDTH = 600;
 
   const [sidebarWidth, setSidebarWidth] = useState(() => {
-    return Math.max(
-      MIN_SIDEBAR_WIDTH,
-      workspaceInfo?.settings?.sidebarWidth || 280,
-    );
+    return Math.max(MIN_SIDEBAR_WIDTH, workspaceInfo?.settings?.sidebarWidth || 280);
   });
 
   const sidebarWidthRef = useRef(sidebarWidth);
@@ -51,10 +48,7 @@ export default function AppShell() {
       const deltaX = moveEvent.clientX - startX;
       const newWidth = startWidth + deltaX;
 
-      const clampedWidth = Math.min(
-        MAX_SIDEBAR_WIDTH,
-        Math.max(MIN_SIDEBAR_WIDTH, newWidth),
-      );
+      const clampedWidth = Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, newWidth));
       setSidebarWidth(clampedWidth);
     };
 
@@ -77,9 +71,7 @@ export default function AppShell() {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
-  const navWidth = sidebarOpened
-    ? Math.max(MIN_SIDEBAR_WIDTH, sidebarWidth)
-    : 24;
+  const navWidth = sidebarOpened ? Math.max(MIN_SIDEBAR_WIDTH, sidebarWidth) : 24;
 
   return (
     <Box className={classes.shellRoot}>

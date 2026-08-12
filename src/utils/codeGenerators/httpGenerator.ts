@@ -1,6 +1,11 @@
 import type { GeneratorParams } from "./types";
 
-export function generateHttp({ request, resolvedUrl, resolvedHeaders, options }: GeneratorParams): string {
+export function generateHttp({
+  request,
+  resolvedUrl,
+  resolvedHeaders,
+  options,
+}: GeneratorParams): string {
   const opts = options.http;
   const method = (request.method || "GET").toUpperCase();
   const rawUrl = resolvedUrl || request.url || "https://example.com";

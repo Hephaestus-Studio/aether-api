@@ -3,21 +3,75 @@ import type { SnippetLanguageId } from "./types";
 
 interface Token {
   text: string;
-  type: "keyword" | "flag" | "method" | "string" | "number" | "headerKey" | "comment" | "continuation" | "plain";
+  type:
+    | "keyword"
+    | "flag"
+    | "method"
+    | "string"
+    | "number"
+    | "headerKey"
+    | "comment"
+    | "continuation"
+    | "plain";
 }
 
 const KEYWORDS = new Set([
-  "curl", "wget", "http", "echo",
-  "use", "fn", "async", "let", "mut", "pub", "struct", "enum", "impl", "mod", "match", "Result", "Ok", "Err",
-  "import", "from", "def", "return", "class", "public", "static", "void", "new", "throws",
-  "package", "func", "type", "var", "nil", "defer",
-  "const", "function", "await", "try", "catch", "if", "else", "true", "false", "null", "undefined",
-  "requests", "Headers", "fetch", "Response", "Request", "OkHttpClient", "MediaType", "RequestBody"
+  "curl",
+  "wget",
+  "http",
+  "echo",
+  "use",
+  "fn",
+  "async",
+  "let",
+  "mut",
+  "pub",
+  "struct",
+  "enum",
+  "impl",
+  "mod",
+  "match",
+  "Result",
+  "Ok",
+  "Err",
+  "import",
+  "from",
+  "def",
+  "return",
+  "class",
+  "public",
+  "static",
+  "void",
+  "new",
+  "throws",
+  "package",
+  "func",
+  "type",
+  "var",
+  "nil",
+  "defer",
+  "const",
+  "function",
+  "await",
+  "try",
+  "catch",
+  "if",
+  "else",
+  "true",
+  "false",
+  "null",
+  "undefined",
+  "requests",
+  "Headers",
+  "fetch",
+  "Response",
+  "Request",
+  "OkHttpClient",
+  "MediaType",
+  "RequestBody",
 ]);
 
-const HTTP_METHODS = new Set([
-  "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"
-]);
+const HTTP_METHODS = new Set(["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]);
 
 export function highlightSnippet(code: string, languageId: SnippetLanguageId): React.ReactNode[] {
   const lines = code.split("\n");
@@ -38,25 +92,41 @@ function highlightLine(line: string, languageId: SnippetLanguageId): React.React
 
   // Handle comments
   if (line.trim().startsWith("//") || line.trim().startsWith("#")) {
-    return [<span key="comment" style={{ color: "#71717a", fontStyle: "italic" }}>{line}</span>];
+    return [
+      <span key="comment" style={{ color: "#71717a", fontStyle: "italic" }}>
+        {line}
+      </span>,
+    ];
   }
 
   // Handle Raw HTTP Request lines
   if (languageId === "http") {
-    const httpReqMatch = line.match(/^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s+(\S+)\s+(HTTP\/\d\.\d)$/i);
+    const httpReqMatch = line.match(
+      /^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s+(\S+)\s+(HTTP\/\d\.\d)$/i,
+    );
     if (httpReqMatch) {
       return [
-        <span key="m" style={{ color: "#38bdf8", fontWeight: "bold" }}>{httpReqMatch[1]} </span>,
-        <span key="p" style={{ color: "#facc15" }}>{httpReqMatch[2]} </span>,
-        <span key="v" style={{ color: "#c084fc" }}>{httpReqMatch[3]}</span>,
+        <span key="m" style={{ color: "#38bdf8", fontWeight: "bold" }}>
+          {httpReqMatch[1]}{" "}
+        </span>,
+        <span key="p" style={{ color: "#facc15" }}>
+          {httpReqMatch[2]}{" "}
+        </span>,
+        <span key="v" style={{ color: "#c084fc" }}>
+          {httpReqMatch[3]}
+        </span>,
       ];
     }
 
     const headerMatch = line.match(/^([\w-]+):\s*(.*)$/);
     if (headerMatch) {
       return [
-        <span key="hk" style={{ color: "#38bdf8", fontWeight: 600 }}>{headerMatch[1]}: </span>,
-        <span key="hv" style={{ color: "#4ade80" }}>{headerMatch[2]}</span>,
+        <span key="hk" style={{ color: "#38bdf8", fontWeight: 600 }}>
+          {headerMatch[1]}:{" "}
+        </span>,
+        <span key="hv" style={{ color: "#4ade80" }}>
+          {headerMatch[2]}
+        </span>,
       ];
     }
   }
@@ -146,17 +216,41 @@ function highlightLine(line: string, languageId: SnippetLanguageId): React.React
   return tokens.map((token, i) => {
     switch (token.type) {
       case "keyword":
-        return <span key={i} style={{ color: "#c084fc", fontWeight: 600 }}>{token.text}</span>;
+        return (
+          <span key={i} style={{ color: "#c084fc", fontWeight: 600 }}>
+            {token.text}
+          </span>
+        );
       case "flag":
-        return <span key={i} style={{ color: "#facc15" }}>{token.text}</span>;
+        return (
+          <span key={i} style={{ color: "#facc15" }}>
+            {token.text}
+          </span>
+        );
       case "method":
-        return <span key={i} style={{ color: "#38bdf8", fontWeight: "bold" }}>{token.text}</span>;
+        return (
+          <span key={i} style={{ color: "#38bdf8", fontWeight: "bold" }}>
+            {token.text}
+          </span>
+        );
       case "string":
-        return <span key={i} style={{ color: "#4ade80" }}>{token.text}</span>;
+        return (
+          <span key={i} style={{ color: "#4ade80" }}>
+            {token.text}
+          </span>
+        );
       case "number":
-        return <span key={i} style={{ color: "#ff9f1c" }}>{token.text}</span>;
+        return (
+          <span key={i} style={{ color: "#ff9f1c" }}>
+            {token.text}
+          </span>
+        );
       case "continuation":
-        return <span key={i} style={{ color: "#f472b6", fontWeight: "bold" }}>{token.text}</span>;
+        return (
+          <span key={i} style={{ color: "#f472b6", fontWeight: "bold" }}>
+            {token.text}
+          </span>
+        );
       default:
         return <span key={i}>{token.text}</span>;
     }

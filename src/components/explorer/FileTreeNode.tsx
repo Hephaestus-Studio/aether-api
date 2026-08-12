@@ -244,7 +244,7 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
             t.id === targetPath ||
             t.id === node.id ||
             t.id.startsWith(targetPath + "/") ||
-            t.id.startsWith(node.id + "/")
+            t.id.startsWith(node.id + "/"),
         );
         for (const t of matchingTabs) {
           closeTab(t.id);

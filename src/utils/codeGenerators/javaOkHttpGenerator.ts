@@ -1,6 +1,11 @@
 import type { GeneratorParams } from "./types";
 
-export function generateJavaOkHttp({ request, resolvedUrl, resolvedHeaders, options }: GeneratorParams): string {
+export function generateJavaOkHttp({
+  request,
+  resolvedUrl,
+  resolvedHeaders,
+  options,
+}: GeneratorParams): string {
   const opts = options.java_okhttp;
   const method = (request.method || "GET").toUpperCase();
   const targetUrl = resolvedUrl || request.url || "https://example.com";
@@ -12,7 +17,9 @@ export function generateJavaOkHttp({ request, resolvedUrl, resolvedHeaders, opti
   lines.push("");
   lines.push("public class ApiClient {");
   lines.push(`${indentChar}public static void main(String[] args) throws IOException {`);
-  lines.push(`${indentChar}${indentChar}OkHttpClient client = new OkHttpClient().newBuilder().build();`);
+  lines.push(
+    `${indentChar}${indentChar}OkHttpClient client = new OkHttpClient().newBuilder().build();`,
+  );
 
   let bodyStr = "";
   if (request.body && request.body.type !== "none") {
@@ -23,19 +30,22 @@ export function generateJavaOkHttp({ request, resolvedUrl, resolvedHeaders, opti
   if (opts.trimBody) bodyStr = bodyStr.trim();
 
   if (bodyStr || method === "POST" || method === "PUT" || method === "PATCH") {
-    const contentType = resolvedHeaders["Content-Type"] || resolvedHeaders["content-type"] || "text/plain";
+    const contentType =
+      resolvedHeaders["Content-Type"] || resolvedHeaders["content-type"] || "text/plain";
     lines.push(
-      `${indentChar}${indentChar}MediaType mediaType = MediaType.parse("${contentType}");`
+      `${indentChar}${indentChar}MediaType mediaType = MediaType.parse("${contentType}");`,
     );
     const escapedBody = bodyStr.replace(/"/g, '\\"').replace(/\n/g, "\\n");
     lines.push(
-      `${indentChar}${indentChar}RequestBody body = RequestBody.create(mediaType, "${escapedBody}");`
+      `${indentChar}${indentChar}RequestBody body = RequestBody.create(mediaType, "${escapedBody}");`,
     );
   }
 
   lines.push(`${indentChar}${indentChar}Request request = new Request.Builder()`);
   lines.push(`${indentChar}${indentChar}${indentChar}.url("${targetUrl}")`);
-  lines.push(`${indentChar}${indentChar}${indentChar}.method("${method}", ${bodyStr ? "body" : "null"})`);
+  lines.push(
+    `${indentChar}${indentChar}${indentChar}.method("${method}", ${bodyStr ? "body" : "null"})`,
+  );
 
   Object.entries(resolvedHeaders).forEach(([k, v]) => {
     lines.push(`${indentChar}${indentChar}${indentChar}.addHeader("${k}", "${v}")`);

@@ -458,6 +458,17 @@ impl HttpExecutor {
 
                 Ok(builder.multipart(form))
             }
+
+            RequestBody::Binary { file_path } => {
+                if !file_path.is_empty() {
+                    let file_bytes = tokio::fs::read(file_path).await.map_err(AppError::Io)?;
+                    Ok(builder
+                        .header(CONTENT_TYPE, "application/octet-stream")
+                        .body(file_bytes))
+                } else {
+                    Ok(builder)
+                }
+            }
         }
     }
 }

@@ -1,6 +1,11 @@
 import type { GeneratorParams } from "./types";
 
-export function generateCurl({ request, resolvedUrl, resolvedHeaders, options }: GeneratorParams): string {
+export function generateCurl({
+  request,
+  resolvedUrl,
+  resolvedHeaders,
+  options,
+}: GeneratorParams): string {
   const opts = options.curl;
   const method = (request.method || "GET").toUpperCase();
   const q = opts.quoteType === "single" ? "'" : '"';

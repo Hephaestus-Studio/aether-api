@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
-import { Box, Table, TextInput, Checkbox, ActionIcon, Text, ScrollArea } from "@mantine/core";
+import { Box, Table, Checkbox, ActionIcon, Text, ScrollArea } from "@mantine/core";
 import { useElementSize } from "@mantine/hooks";
 import {
   IconTrash,
+  IconGripVertical,
   IconInfoCircle,
   IconEye,
   IconEyeOff,
-  IconGripVertical,
 } from "@tabler/icons-react";
+import UndoableTextInput from "@/components/common/UndoableTextInput";
 import type { KeyValuePair } from "@/types/request";
 
 interface HeadersEditorProps {
@@ -334,7 +335,7 @@ export default function HeadersEditor({ headers, onChange }: Readonly<HeadersEdi
                     />
                   </Table.Td>
                   <Table.Td style={{ padding: 0, height: 32 }}>
-                    <TextInput
+                    <UndoableTextInput
                       value={h.key}
                       onChange={(e) => handleItemChange(idx, { key: e.target.value })}
                       placeholder="Key"
@@ -343,7 +344,7 @@ export default function HeadersEditor({ headers, onChange }: Readonly<HeadersEdi
                     />
                   </Table.Td>
                   <Table.Td style={{ padding: 0, height: 32 }}>
-                    <TextInput
+                    <UndoableTextInput
                       value={h.value}
                       onChange={(e) => handleItemChange(idx, { value: e.target.value })}
                       placeholder="Value"
@@ -353,7 +354,7 @@ export default function HeadersEditor({ headers, onChange }: Readonly<HeadersEdi
                   </Table.Td>
                   {showDescription && (
                     <Table.Td style={{ padding: 0, height: 32 }}>
-                      <TextInput
+                      <UndoableTextInput
                         value={h.description || ""}
                         onChange={(e) => handleItemChange(idx, { description: e.target.value })}
                         placeholder="Description"

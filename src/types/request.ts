@@ -19,7 +19,8 @@ export type RequestBody =
   | { type: "text"; content: string }
   | { type: "yaml"; content: string }
   | { type: "formUrlencoded"; content: KeyValuePair[] }
-  | { type: "multipartForm"; content: MultipartField[] };
+  | { type: "multipartForm"; content: MultipartField[] }
+  | { type: "binary"; filePath: string };
 
 export interface MultipartField {
   key: string;

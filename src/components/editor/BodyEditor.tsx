@@ -1,21 +1,20 @@
 import { useState, useEffect } from "react";
+import { Box, Radio, Group, Select, Checkbox, ActionIcon, Text, Menu, Button } from "@mantine/core";
 import {
-  Box,
-  Radio,
-  Group,
-  Select,
-  Checkbox,
-  TextInput,
-  ActionIcon,
-  Text,
-  Menu,
-  Button,
-} from "@mantine/core";
-import { IconTrash, IconChevronDown } from "@tabler/icons-react";
+  IconTrash,
+  IconChevronDown,
+  IconUpload,
+  IconFile,
+  IconFolderOpen,
+  IconCopy,
+  IconCheck,
+  IconInfoCircle,
+} from "@tabler/icons-react";
 import MonacoEditor from "@/components/common/MonacoEditor";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useConfigStore } from "@/stores/configStore";
 import MonacoErrorBoundary from "@/components/common/MonacoErrorBoundary";
+import UndoableTextInput from "@/components/common/UndoableTextInput";
 import { useCollision } from "@/hooks/useCollision";
 import type { RequestBody, KeyValuePair, MultipartField } from "@/types/request";
 import classes from "./BodyEditor.module.css";
@@ -26,14 +25,6 @@ interface BodyEditorProps {
 }
 
 export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>) {
-  const {
-    containerRef: typeRowRef,
-    leftRef: radiosRef,
-    rightRef: langSelectRef,
-    isColliding: isBodyColliding,
-  } = useCollision<HTMLDivElement>({ gap: 16, minExpandedWidth: 590, hysteresis: 8 });
-
-  const isCompact = isBodyColliding;
   const { config } = useConfigStore();
   // Translate RequestBody types to Postman body types: none, multipartForm, formUrlencoded, raw, binary
   const [bodyType, setBodyType] = useState<string>(() => {
@@ -57,6 +48,24 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
 
   const [binaryPath, setBinaryPath] = useState<string>("");
 
+  const minExpandedWidth = bodyType === "raw" ? 580 : 500;
+
+  const {
+    containerRef: typeRowRef,
+    leftRef: radiosRef,
+    rightRef: langSelectRef,
+    isColliding: isBodyColliding,
+  } = useCollision<HTMLDivElement>({
+    gap: 16,
+    minExpandedWidth,
+    hysteresis: 8,
+    dependencies: [bodyType],
+  });
+
+  const isCompact = isBodyColliding;
+
+  const [copiedPath, setCopiedPath] = useState(false);
+
   // Sync types on load/update
   useEffect(() => {
     if (
@@ -69,7 +78,10 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
     } else {
       setBodyType(body.type);
     }
-  }, [body.type]);
+    if (body.type === "binary") {
+      setBinaryPath(body.filePath || "");
+    }
+  }, [body]);
 
   const handleTypeChange = (type: string) => {
     setBodyType(type);
@@ -91,7 +103,7 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
         content: [{ key: "", value: "", fieldType: "text", enabled: true }],
       });
     } else if (type === "binary") {
-      onChange({ type: "none" }); // Simulated locally
+      onChange({ type: "binary", filePath: binaryPath });
     }
   };
 
@@ -224,12 +236,25 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
         multiple: false,
         directory: false,
       });
-      if (selected) {
-        setBinaryPath(selected as string);
+      if (selected && typeof selected === "string") {
+        setBinaryPath(selected);
+        onChange({ type: "binary", filePath: selected });
       }
     } catch (err) {
       console.error("Error opening dialog:", err);
     }
+  };
+
+  const handleCopyBinaryPath = () => {
+    if (!binaryPath) return;
+    navigator.clipboard.writeText(binaryPath);
+    setCopiedPath(true);
+    setTimeout(() => setCopiedPath(false), 2000);
+  };
+
+  const handleRemoveBinary = () => {
+    setBinaryPath("");
+    onChange({ type: "binary", filePath: "" });
   };
 
   const monacoLang = () => {
@@ -269,23 +294,6 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
         return "HTML";
       default:
         return "Text";
-    }
-  };
-
-  const handleBeautify = () => {
-    if (bodyType === "raw") {
-      const content =
-        body.type === "json" || body.type === "xml" || body.type === "text" || body.type === "yaml"
-          ? body.content
-          : "";
-      if (rawLang === "json" && content) {
-        try {
-          const parsed = JSON.parse(content);
-          onChange({ type: "json", content: JSON.stringify(parsed, null, 2) });
-        } catch {
-          // ignore invalid json formatting errors
-        }
-      }
     }
   };
 
@@ -342,18 +350,6 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
                 </Menu>
               )}
             </Group>
-
-            {bodyType === "raw" && rawLang === "json" && (
-              <Button
-                variant="transparent"
-                size="xs"
-                color="blue"
-                onClick={handleBeautify}
-                className={classes.beautifyBtn}
-              >
-                Beautify
-              </Button>
-            )}
           </Box>
         ) : (
           <Box className={classes.typeRow}>
@@ -378,7 +374,10 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
             </div>
 
             {bodyType === "raw" && (
-              <div ref={langSelectRef}>
+              <div
+                ref={langSelectRef}
+                style={{ display: "flex", alignItems: "center", marginLeft: "auto" }}
+              >
                 <Select
                   value={rawLang}
                   onChange={(val) => handleRawLangChange(val || "text")}
@@ -452,6 +451,33 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
                   // theme already defined or failed safely
                 }
               }}
+              onMount={(editor, monaco) => {
+                try {
+                  editor.addAction({
+                    id: "format-raw-body-document",
+                    label: "Format Document",
+                    keybindings: [monaco.KeyMod.Shift | monaco.KeyMod.Alt | monaco.KeyCode.KeyF],
+                    contextMenuGroupId: "1_modification",
+                    contextMenuOrder: 1.5,
+                    run: (ed: any) => {
+                      const val = ed.getValue();
+                      if (!val) return;
+                      try {
+                        const parsed = JSON.parse(val);
+                        const formatted = JSON.stringify(parsed, null, 2);
+                        ed.setValue(formatted);
+                        handleContentChange(formatted);
+                      } catch {
+                        try {
+                          ed.getAction("editor.action.formatDocument")?.run();
+                        } catch {}
+                      }
+                    },
+                  });
+                } catch (err) {
+                  console.warn("Failed to add format action:", err);
+                }
+              }}
             />
           </MonacoErrorBoundary>
         </Box>
@@ -480,7 +506,7 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
                     />
                   </td>
                   <td>
-                    <TextInput
+                    <UndoableTextInput
                       value={item.key}
                       onChange={(e) => handleUrlencodedChange(idx, { key: e.target.value })}
                       placeholder="Key"
@@ -489,7 +515,7 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
                     />
                   </td>
                   <td>
-                    <TextInput
+                    <UndoableTextInput
                       value={item.value}
                       onChange={(e) => handleUrlencodedChange(idx, { value: e.target.value })}
                       placeholder="Value"
@@ -498,7 +524,7 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
                     />
                   </td>
                   <td>
-                    <TextInput
+                    <UndoableTextInput
                       value={item.description || ""}
                       onChange={(e) => handleUrlencodedChange(idx, { description: e.target.value })}
                       placeholder="Description"
@@ -548,7 +574,7 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
                     />
                   </td>
                   <td>
-                    <TextInput
+                    <UndoableTextInput
                       value={item.key}
                       onChange={(e) => handleMultipartChange(idx, { key: e.target.value })}
                       placeholder="Key"
@@ -568,7 +594,7 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
                   </td>
                   <td>
                     {item.fieldType === "text" ? (
-                      <TextInput
+                      <UndoableTextInput
                         value={item.value}
                         onChange={(e) => handleMultipartChange(idx, { value: e.target.value })}
                         placeholder="Value"
@@ -610,13 +636,93 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
       )}
 
       {bodyType === "binary" && (
-        <Box className={classes.binaryContainer}>
-          <button type="button" onClick={handleSelectBinary} className={classes.fileBtn}>
-            Choose File
-          </button>
-          <Text className={classes.binaryPath} title={binaryPath}>
-            {binaryPath ? binaryPath : "No file selected"}
-          </Text>
+        <Box className={classes.binaryWrapper}>
+          {!binaryPath ? (
+            <div className={classes.binaryDropzone} onClick={handleSelectBinary}>
+              <div className={classes.dropzoneIconWrapper}>
+                <IconUpload size={22} />
+              </div>
+              <Text className={classes.dropzoneTitle}>Select a Binary File</Text>
+              <Text className={classes.dropzoneSubtitle}>
+                Choose any file (image, audio, pdf, archive, binary stream) to include directly in
+                the HTTP request body.
+              </Text>
+              <button
+                type="button"
+                className={classes.selectFileBtn}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSelectBinary();
+                }}
+              >
+                <IconFolderOpen size={14} />
+                Browse File
+              </button>
+            </div>
+          ) : (
+            <div className={classes.fileCard}>
+              <div className={classes.fileCardHeader}>
+                <div className={classes.fileStatusTag}>
+                  <IconFile size={13} />
+                  Binary Payload Ready
+                </div>
+                <div className={classes.fileActions}>
+                  <button
+                    type="button"
+                    className={classes.changeFileBtn}
+                    onClick={handleSelectBinary}
+                  >
+                    <IconFolderOpen size={13} />
+                    Change
+                  </button>
+                  <button
+                    type="button"
+                    className={classes.removeFileBtn}
+                    onClick={handleRemoveBinary}
+                  >
+                    <IconTrash size={13} />
+                    Remove
+                  </button>
+                </div>
+              </div>
+
+              <div className={classes.fileCardBody}>
+                <div className={classes.fileIconBox}>
+                  <IconFile size={20} />
+                </div>
+                <div className={classes.fileMeta}>
+                  <Text className={classes.fileName} title={binaryPath.split(/[\\/]/).pop()}>
+                    {binaryPath.split(/[\\/]/).pop()}
+                  </Text>
+                  <div className={classes.filePathRow}>
+                    <Text className={classes.fullPathText} title={binaryPath}>
+                      {binaryPath}
+                    </Text>
+                    <button
+                      type="button"
+                      className={classes.copyPathBtn}
+                      onClick={handleCopyBinaryPath}
+                      title="Copy file path"
+                    >
+                      {copiedPath ? (
+                        <IconCheck size={12} color="#34c759" />
+                      ) : (
+                        <IconCopy size={12} />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className={classes.binaryInfoBanner}>
+            <IconInfoCircle size={14} style={{ flexShrink: 0 }} />
+            <Text size="xs">
+              Binary content will be transmitted as an unencoded byte stream (
+              <code style={{ color: "#0084ff" }}>application/octet-stream</code>).
+            </Text>
+          </div>
         </Box>
       )}
     </Box>

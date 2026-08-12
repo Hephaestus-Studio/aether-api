@@ -39,7 +39,9 @@ export default function LanguageSettingsModal() {
             </div>
             <Switch
               checked={options.curl.multiline}
-              onChange={(e) => updateLanguageOptions("curl", { multiline: e.currentTarget.checked })}
+              onChange={(e) =>
+                updateLanguageOptions("curl", { multiline: e.currentTarget.checked })
+              }
             />
           </div>
 
@@ -60,7 +62,8 @@ export default function LanguageSettingsModal() {
             <div className={classes.settingInfo}>
               <div className={classes.settingLabel}>Line continuation character</div>
               <div className={classes.settingDesc}>
-                Set character used to mark continuation (\ for Linux/macOS, ^ for Cmd, ` for PowerShell)
+                Set character used to mark continuation (\ for Linux/macOS, ^ for Cmd, ` for
+                PowerShell)
               </div>
             </div>
             <Select
@@ -97,7 +100,7 @@ export default function LanguageSettingsModal() {
               }
               data={[
                 { label: "single (')", value: "single" },
-                { label: "double (\")", value: "double" },
+                { label: 'double (")', value: "double" },
               ]}
               allowDeselect={false}
             />
@@ -127,7 +130,9 @@ export default function LanguageSettingsModal() {
             </div>
             <Switch
               checked={options.curl.followRedirects}
-              onChange={(e) => updateLanguageOptions("curl", { followRedirects: e.currentTarget.checked })}
+              onChange={(e) =>
+                updateLanguageOptions("curl", { followRedirects: e.currentTarget.checked })
+              }
             />
           </div>
 
@@ -233,7 +238,9 @@ export default function LanguageSettingsModal() {
           <div className={classes.settingRow}>
             <div className={classes.settingInfo}>
               <div className={classes.settingLabel}>Set indentation type</div>
-              <div className={classes.settingDesc}>Select the character used to indent lines of code</div>
+              <div className={classes.settingDesc}>
+                Select the character used to indent lines of code
+              </div>
             </div>
             <Select
               className={classes.controlField}
@@ -255,7 +262,8 @@ export default function LanguageSettingsModal() {
             <div className={classes.settingInfo}>
               <div className={classes.settingLabel}>Set request timeout</div>
               <div className={classes.settingDesc}>
-                Set number of milliseconds the request should wait before timing out (0 for infinity)
+                Set number of milliseconds the request should wait before timing out (0 for
+                infinity)
               </div>
             </div>
             <TextInput
@@ -311,9 +319,12 @@ export default function LanguageSettingsModal() {
             <Switch
               checked={(options as any)[selectedLanguage]?.trimBody ?? false}
               onChange={(e) =>
-                updateLanguageOptions(selectedLanguage as any, {
-                  trimBody: e.currentTarget.checked,
-                } as any)
+                updateLanguageOptions(
+                  selectedLanguage as any,
+                  {
+                    trimBody: e.currentTarget.checked,
+                  } as any,
+                )
               }
             />
           </div>

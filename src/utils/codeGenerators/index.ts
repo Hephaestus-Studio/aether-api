@@ -85,10 +85,7 @@ export const DEFAULT_SNIPPET_OPTIONS: SnippetOptions = {
   },
 };
 
-export function generateSnippet(
-  languageId: SnippetLanguageId,
-  params: GeneratorParams
-): string {
+export function generateSnippet(languageId: SnippetLanguageId, params: GeneratorParams): string {
   switch (languageId) {
     case "curl":
       return generateCurl(params);

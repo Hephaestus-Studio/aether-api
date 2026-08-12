@@ -34,10 +34,8 @@ export default function AboutModal({ opened, onClose }: Readonly<AboutModalProps
       <div className={classes.appDesc}>
         High-Performance Native Desktop API Testing & Development Environment.
       </div>
-      
-      <div className={classes.copyright}>
-        © 2026 Hephaestus Studio. All rights reserved.
-      </div>
+
+      <div className={classes.copyright}>© 2026 Hephaestus Studio. All rights reserved.</div>
     </Modal>
   );
 }

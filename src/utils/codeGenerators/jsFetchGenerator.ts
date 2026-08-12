@@ -1,6 +1,11 @@
 import type { GeneratorParams } from "./types";
 
-export function generateJsFetch({ request, resolvedUrl, resolvedHeaders, options }: GeneratorParams): string {
+export function generateJsFetch({
+  request,
+  resolvedUrl,
+  resolvedHeaders,
+  options,
+}: GeneratorParams): string {
   const opts = options.js_fetch;
   const method = (request.method || "GET").toUpperCase();
   const targetUrl = resolvedUrl || request.url || "https://example.com";

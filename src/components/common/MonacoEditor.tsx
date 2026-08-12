@@ -88,6 +88,7 @@ export default function MonacoEditor({
           if (!editorInstance || editorInstance.isDisposed?.()) return;
           const currentVal = editorInstance.getValue();
           if (currentVal !== valueRef.current) {
+            valueRef.current = currentVal;
             onChangeRef.current?.(currentVal);
           }
         });
@@ -122,7 +123,51 @@ export default function MonacoEditor({
     };
   }, []); // Run only once per DOM mount
 
-  // Sync value changes safely
+  // Ensure container click focuses editor & handle paste fallbacks
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !isReady) return;
+
+    const handleContainerClick = () => {
+      const editor = editorRef.current;
+      if (editor && !editor.isDisposed?.()) {
+        editor.focus();
+      }
+    };
+
+    const handlePasteEvent = (e: ClipboardEvent) => {
+      const editor = editorRef.current;
+      if (!editor || editor.isDisposed?.()) return;
+      const text = e.clipboardData?.getData("text");
+      if (text) {
+        const model = editor.getModel();
+        const selection = editor.getSelection();
+        if (model && selection) {
+          editor.executeEdits("clipboard-paste", [
+            {
+              range: selection,
+              text,
+              forceMoveMarkers: true,
+            },
+          ]);
+          editor.pushUndoStop();
+          const currentVal = model.getValue();
+          valueRef.current = currentVal;
+          onChangeRef.current?.(currentVal);
+        }
+      }
+    };
+
+    container.addEventListener("click", handleContainerClick);
+    container.addEventListener("paste", handlePasteEvent);
+
+    return () => {
+      container.removeEventListener("click", handleContainerClick);
+      container.removeEventListener("paste", handlePasteEvent);
+    };
+  }, [isReady]);
+
+  // Sync value changes safely (only when external value prop changes)
   useEffect(() => {
     const editor = editorRef.current;
     if (!editor || editor.isDisposed?.()) return;
@@ -131,11 +176,12 @@ export default function MonacoEditor({
       const model = editor.getModel();
       if (!model || model.isDisposed?.()) return;
 
-      if (value !== undefined && value !== model.getValue()) {
+      if (value !== undefined && value !== valueRef.current && value !== model.getValue()) {
+        valueRef.current = value;
         if (options?.readOnly) {
           model.setValue(value);
         } else {
-          editor.executeEdits("", [
+          editor.executeEdits("external-sync", [
             {
               range: model.getFullModelRange(),
               text: value,

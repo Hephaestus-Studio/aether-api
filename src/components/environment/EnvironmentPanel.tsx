@@ -92,10 +92,7 @@ export default function EnvironmentPanel() {
   };
 
   const handleAddVariable = () => {
-    setActiveVariables([
-      ...activeVariables,
-      { key: "", value: "", type: "text", enabled: true },
-    ]);
+    setActiveVariables([...activeVariables, { key: "", value: "", type: "text", enabled: true }]);
     setEnvDirty(activeEnvironmentName || "global", true);
   };
 
@@ -205,7 +202,9 @@ export default function EnvironmentPanel() {
   const handleDeleteEnvironment = async () => {
     if (!activeEnvironmentName || activeEnvironmentName.toLowerCase() === "global") return;
 
-    if (!window.confirm(`Are you sure you want to delete environment '${activeEnvironmentName}'?`)) {
+    if (
+      !window.confirm(`Are you sure you want to delete environment '${activeEnvironmentName}'?`)
+    ) {
       return;
     }
 
@@ -249,7 +248,8 @@ export default function EnvironmentPanel() {
           />
 
           {allEnvTabs.map((env) => {
-            const isActive = (activeEnvironmentName || "global").toLowerCase() === env.name.toLowerCase();
+            const isActive =
+              (activeEnvironmentName || "global").toLowerCase() === env.name.toLowerCase();
             return (
               <button
                 key={env.name}
@@ -380,9 +380,7 @@ export default function EnvironmentPanel() {
                   <Box className={classes.colCheck}>
                     <Checkbox
                       checked={v.enabled}
-                      onChange={(e) =>
-                        handleItemChange(idx, { enabled: e.currentTarget.checked })
-                      }
+                      onChange={(e) => handleItemChange(idx, { enabled: e.currentTarget.checked })}
                       size="xs"
                     />
                   </Box>

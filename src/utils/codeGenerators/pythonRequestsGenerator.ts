@@ -1,6 +1,11 @@
 import type { GeneratorParams } from "./types";
 
-export function generatePythonRequests({ request, resolvedUrl, resolvedHeaders, options }: GeneratorParams): string {
+export function generatePythonRequests({
+  request,
+  resolvedUrl,
+  resolvedHeaders,
+  options,
+}: GeneratorParams): string {
   const opts = options.python_requests;
   const method = (request.method || "GET").toLowerCase();
   const targetUrl = resolvedUrl || request.url || "https://example.com";

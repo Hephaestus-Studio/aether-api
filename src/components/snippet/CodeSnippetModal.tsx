@@ -1,11 +1,6 @@
 import { useState, useMemo } from "react";
 import { Modal, Select, Tooltip } from "@mantine/core";
-import {
-  IconTerminal2,
-  IconSettings,
-  IconCopy,
-  IconCheck,
-} from "@tabler/icons-react";
+import { IconTerminal2, IconSettings, IconCopy, IconCheck } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useSnippetStore } from "@/stores/snippetStore";
 import { useEnvStore } from "@/stores/envStore";
@@ -42,7 +37,7 @@ export default function CodeSnippetModal({ request }: Readonly<CodeSnippetModalP
     const varMap = new Map(
       (activeVariables || [])
         .filter((v: EnvVariableItem) => v.enabled)
-        .map((v: EnvVariableItem) => [v.key, v.value])
+        .map((v: EnvVariableItem) => [v.key, v.value]),
     );
 
     const replaceVars = (str: string): string => {

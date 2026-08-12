@@ -135,6 +135,12 @@ pub enum RequestBody {
     FormUrlencoded { content: Vec<KeyValuePair> },
     /// Multipart form data (`multipart/form-data`).
     MultipartForm { content: Vec<MultipartField> },
+    /// Raw binary file body.
+    #[serde(rename = "binary")]
+    Binary {
+        #[serde(rename = "filePath", default)]
+        file_path: String,
+    },
 }
 
 impl Default for RequestBody {

@@ -302,6 +302,10 @@ pub async fn execute_request(
             }
             crate::models::request::RequestBody::MultipartForm { content: rf }
         }
+        crate::models::request::RequestBody::Binary { file_path } => {
+            let rpath = VariableResolver::resolve_string(file_path, &vars_ref)?;
+            crate::models::request::RequestBody::Binary { file_path: rpath }
+        }
     };
 
     let resolved_request = Request {
@@ -523,7 +527,9 @@ pub async fn save_response_to_file(
         use base64::Engine as _;
         let bytes = base64::engine::general_purpose::STANDARD
             .decode(&content)
-            .map_err(|e| AppError::SchemaValidationError(format!("Failed to decode base64: {}", e)))?;
+            .map_err(|e| {
+                AppError::SchemaValidationError(format!("Failed to decode base64: {}", e))
+            })?;
         std::fs::write(&path, &bytes).map_err(AppError::Io)?;
     } else {
         std::fs::write(&path, content.as_bytes()).map_err(AppError::Io)?;

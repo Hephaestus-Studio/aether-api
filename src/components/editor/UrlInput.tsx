@@ -4,6 +4,7 @@ import { useEnvStore } from "@/stores/envStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { parseUrlPlaceholders } from "@/utils/placeholder";
 import { parseCurl, isCurlCommand, type ParsedCurl } from "@/utils/curlParser";
+import { useUndoableInput } from "@/hooks/useUndoableInput";
 import classes from "./UrlInput.module.css";
 
 interface UrlInputProps {
@@ -26,6 +27,9 @@ export default function UrlInput({
 
   const inputRef = useRef<HTMLInputElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+
+  const { handleChange: handleUndoableChange, handleKeyDown: handleUndoableKeyDown } =
+    useUndoableInput(value, onChange);
 
   const segments = parseUrlPlaceholders(value, activeVariables);
 
@@ -85,7 +89,7 @@ export default function UrlInput({
         return;
       }
     }
-    onChange(val);
+    handleUndoableChange(val);
   };
 
   let charOffset = 0;
@@ -99,75 +103,81 @@ export default function UrlInput({
             const start = charOffset;
             charOffset += seg.text.length;
 
-            if (!seg.isPlaceholder) {
-              return <span key={idx}>{seg.text}</span>;
+            if (seg.isPlaceholder) {
+              const isResolved = seg.isResolved;
+              return (
+                <HoverCard
+                  key={idx}
+                  shadow="xl"
+                  position="bottom-start"
+                  openDelay={0}
+                  closeDelay={150}
+                  withinPortal
+                >
+                  <HoverCard.Target>
+                    <span
+                      className={isResolved ? classes.varResolved : classes.varUnresolved}
+                      onMouseDown={(e) => handlePlaceholderMouseDown(e, start)}
+                      onClick={() => inputRef.current?.focus()}
+                    >
+                      {seg.text}
+                    </span>
+                  </HoverCard.Target>
+
+                  <HoverCard.Dropdown className={classes.hoverCardDropdown}>
+                    {isResolved ? (
+                      <>
+                        <div className={classes.hoverValueBox}>
+                          {seg.resolvedValue || "(empty string)"}
+                        </div>
+                        <div className={classes.hoverFooter}>
+                          <div className={classes.envSection}>
+                            <span className={classes.envBadge}>E</span>
+                            <span className={classes.envText}>
+                              {activeEnvironmentName === "global"
+                                ? "Global"
+                                : activeEnvironmentName || "Global"}
+                            </span>
+                          </div>
+                          <span className={classes.varsRequest} onClick={handleOpenEnvEditor}>
+                            Open Environment Editor →
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className={classes.hoverValueBoxUnresolved}>
+                          Unresolved variable: {seg.varName}
+                        </div>
+                        <div className={classes.hoverFooter}>
+                          <div className={classes.envSection}>
+                            <span className={classes.envBadgeUnresolved}>!</span>
+                            <span className={classes.envText}>
+                              Not defined in{" "}
+                              {activeEnvironmentName === "global"
+                                ? "Global"
+                                : activeEnvironmentName || "Global"}
+                            </span>
+                          </div>
+                          <span className={classes.varsRequest} onClick={handleOpenEnvEditor}>
+                            Open Environment Editor →
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </HoverCard.Dropdown>
+                </HoverCard>
+              );
             }
 
-            const isResolved = seg.isResolved;
-
             return (
-              <HoverCard
+              <span
                 key={idx}
-                shadow="xl"
-                position="bottom-start"
-                openDelay={0}
-                closeDelay={150}
-                zIndex={3000}
-                withinPortal
+                className={classes.normalText}
+                onMouseDown={(e) => handlePlaceholderMouseDown(e, start)}
               >
-                <HoverCard.Target>
-                  <span
-                    className={isResolved ? classes.varResolved : classes.varUnresolved}
-                    onMouseDown={(e) => handlePlaceholderMouseDown(e, start)}
-                    onClick={() => inputRef.current?.focus()}
-                  >
-                    {seg.text}
-                  </span>
-                </HoverCard.Target>
-
-                <HoverCard.Dropdown className={classes.hoverCardDropdown}>
-                  {isResolved ? (
-                    <>
-                      <div className={classes.hoverValueBox}>
-                        {seg.resolvedValue || "(empty string)"}
-                      </div>
-                      <div className={classes.hoverFooter}>
-                        <div className={classes.envSection}>
-                          <span className={classes.envBadge}>E</span>
-                          <span className={classes.envText}>
-                            {activeEnvironmentName === "global"
-                              ? "Global"
-                              : activeEnvironmentName || "Global"}
-                          </span>
-                        </div>
-                        <span className={classes.varsRequest} onClick={handleOpenEnvEditor}>
-                          Open Environment Editor →
-                        </span>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className={classes.hoverValueBoxUnresolved}>
-                        Unresolved variable: {seg.varName}
-                      </div>
-                      <div className={classes.hoverFooter}>
-                        <div className={classes.envSection}>
-                          <span className={classes.envBadgeUnresolved}>!</span>
-                          <span className={classes.envText}>
-                            Not defined in{" "}
-                            {activeEnvironmentName === "global"
-                              ? "Global"
-                              : activeEnvironmentName || "Global"}
-                          </span>
-                        </div>
-                        <span className={classes.varsRequest} onClick={handleOpenEnvEditor}>
-                          Open Environment Editor →
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </HoverCard.Dropdown>
-              </HoverCard>
+                {seg.text}
+              </span>
             );
           })}
         </div>
@@ -178,6 +188,7 @@ export default function UrlInput({
           type="text"
           value={value}
           onChange={handleInputChange}
+          onKeyDown={handleUndoableKeyDown}
           onPaste={handlePaste}
           onScroll={handleScroll}
           onSelect={handleScroll}

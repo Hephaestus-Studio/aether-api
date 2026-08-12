@@ -196,11 +196,17 @@ export default function TitleBar() {
 
               {activeMenu === menu && menu === "Edit" && (
                 <div className={classes.dropdownMenu}>
-                  <div className={classes.dropdownItem} onClick={() => document.execCommand("undo")}>
+                  <div
+                    className={classes.dropdownItem}
+                    onClick={() => document.execCommand("undo")}
+                  >
                     <span>Undo</span>
                     <span className={classes.dropdownShortcut}>Ctrl+Z</span>
                   </div>
-                  <div className={classes.dropdownItem} onClick={() => document.execCommand("redo")}>
+                  <div
+                    className={classes.dropdownItem}
+                    onClick={() => document.execCommand("redo")}
+                  >
                     <span>Redo</span>
                     <span className={classes.dropdownShortcut}>Ctrl+Y</span>
                   </div>
@@ -209,11 +215,17 @@ export default function TitleBar() {
                     <span>Cut</span>
                     <span className={classes.dropdownShortcut}>Ctrl+X</span>
                   </div>
-                  <div className={classes.dropdownItem} onClick={() => document.execCommand("copy")}>
+                  <div
+                    className={classes.dropdownItem}
+                    onClick={() => document.execCommand("copy")}
+                  >
                     <span>Copy</span>
                     <span className={classes.dropdownShortcut}>Ctrl+C</span>
                   </div>
-                  <div className={classes.dropdownItem} onClick={() => document.execCommand("paste")}>
+                  <div
+                    className={classes.dropdownItem}
+                    onClick={() => document.execCommand("paste")}
+                  >
                     <span>Paste</span>
                     <span className={classes.dropdownShortcut}>Ctrl+V</span>
                   </div>

@@ -1,6 +1,11 @@
 import type { GeneratorParams } from "./types";
 
-export function generateWget({ request, resolvedUrl, resolvedHeaders, options }: GeneratorParams): string {
+export function generateWget({
+  request,
+  resolvedUrl,
+  resolvedHeaders,
+  options,
+}: GeneratorParams): string {
   const opts = options.wget;
   const method = (request.method || "GET").toUpperCase();
   const targetUrl = resolvedUrl || request.url || "https://example.com";

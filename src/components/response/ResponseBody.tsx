@@ -110,20 +110,29 @@ export default function ResponseBody({ response, isActive = true }: Readonly<Res
 
   const getSuggestedFilename = () => {
     const contentTypeHeader =
-      response?.headers?.find(([k]: [string, string]) => k.toLowerCase() === "content-type")?.[1]?.toLowerCase() || "";
+      response?.headers
+        ?.find(([k]: [string, string]) => k.toLowerCase() === "content-type")?.[1]
+        ?.toLowerCase() || "";
 
     if (contentTypeHeader.includes("application/json")) return "response.json";
     if (contentTypeHeader.includes("text/html")) return "response.html";
-    if (contentTypeHeader.includes("application/xml") || contentTypeHeader.includes("text/xml")) return "response.xml";
+    if (contentTypeHeader.includes("application/xml") || contentTypeHeader.includes("text/xml"))
+      return "response.xml";
     if (contentTypeHeader.includes("image/png")) return "image.png";
-    if (contentTypeHeader.includes("image/jpeg") || contentTypeHeader.includes("image/jpg")) return "image.jpg";
+    if (contentTypeHeader.includes("image/jpeg") || contentTypeHeader.includes("image/jpg"))
+      return "image.jpg";
     if (contentTypeHeader.includes("image/gif")) return "image.gif";
     if (contentTypeHeader.includes("image/svg")) return "image.svg";
     if (contentTypeHeader.includes("image/webp")) return "image.webp";
     if (contentTypeHeader.includes("application/pdf")) return "document.pdf";
     if (contentTypeHeader.includes("application/zip")) return "archive.zip";
-    if (contentTypeHeader.includes("application/gzip") || contentTypeHeader.includes("application/x-tar")) return "archive.tar.gz";
-    if (contentTypeHeader.includes("audio/mpeg") || contentTypeHeader.includes("audio/mp3")) return "audio.mp3";
+    if (
+      contentTypeHeader.includes("application/gzip") ||
+      contentTypeHeader.includes("application/x-tar")
+    )
+      return "archive.tar.gz";
+    if (contentTypeHeader.includes("audio/mpeg") || contentTypeHeader.includes("audio/mp3"))
+      return "audio.mp3";
     if (contentTypeHeader.includes("video/mp4")) return "video.mp4";
     if (response?.bodyType === "binary") return `response-${Date.now()}.bin`;
     return `response-${Date.now()}.txt`;

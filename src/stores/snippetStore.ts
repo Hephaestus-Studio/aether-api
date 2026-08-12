@@ -16,7 +16,7 @@ interface SnippetStoreState {
   setSelectedLanguage: (lang: SnippetLanguageId) => void;
   updateLanguageOptions: <K extends keyof SnippetOptions>(
     lang: K,
-    newOpts: Partial<SnippetOptions[K]>
+    newOpts: Partial<SnippetOptions[K]>,
   ) => void;
   resetOptions: () => void;
 }
@@ -52,6 +52,6 @@ export const useSnippetStore = create<SnippetStoreState>()(
         selectedLanguage: state.selectedLanguage,
         options: state.options,
       }),
-    }
-  )
+    },
+  ),
 );

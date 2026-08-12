@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Box, TextInput, Button, Tabs, Menu, ScrollArea, Tooltip } from "@mantine/core";
+import { Box, Button, Tabs, Menu, ScrollArea, Tooltip } from "@mantine/core";
 import { invoke } from "@tauri-apps/api/core";
 import {
   IconChevronDown,
@@ -16,6 +16,7 @@ import { useTabStore } from "@/stores/tabStore";
 import { useEnvStore } from "@/stores/envStore";
 import { useSnippetStore } from "@/stores/snippetStore";
 import { useCollision } from "@/hooks/useCollision";
+import UndoableTextInput from "@/components/common/UndoableTextInput";
 import MethodSelector from "./MethodSelector";
 import ParamsEditor from "./ParamsEditor";
 import HeadersEditor from "./HeadersEditor";
@@ -127,10 +128,7 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
     } catch (err: any) {
       console.error("HTTP Request execution error:", err);
       const errorMsg = String(err?.message || err);
-      if (
-        errorMsg.toLowerCase().includes("cancelled") ||
-        errorMsg.includes("RequestCancelled")
-      ) {
+      if (errorMsg.toLowerCase().includes("cancelled") || errorMsg.includes("RequestCancelled")) {
         return;
       }
       let displayMsg = errorMsg;
@@ -169,10 +167,36 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
     try {
       await invoke("update_request", { path: tabId, requestDetails: request });
       markClean(tabId);
+      notifications.show({
+        title: "Request Saved",
+        message: `Saved changes to "${request.name || "Request"}"`,
+        color: "green",
+        autoClose: 2000,
+      });
     } catch (err) {
       console.error("Save error:", err);
+      notifications.show({
+        title: "Save Failed",
+        message: String(err),
+        color: "red",
+      });
     }
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        e.stopPropagation();
+        if (isDirty && request) {
+          handleSave();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => window.removeEventListener("keydown", handleKeyDown, true);
+  }, [isDirty, request, tabId]);
 
   const handleChange = (fields: Partial<HttpRequestDetails>) => {
     if (!request) return;
@@ -254,11 +278,7 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
       <div className={classes.titleRow}>
         <Menu shadow="md" width={220} position="bottom-start" radius="md">
           <Menu.Target>
-            <button
-              type="button"
-              className={classes.protocolBtn}
-              title="Select Protocol"
-            >
+            <button type="button" className={classes.protocolBtn} title="Select Protocol">
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 {getProtocolIcon(activeProtocol)}
                 <span style={{ fontSize: 12, fontWeight: 700 }}>
@@ -378,7 +398,7 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
         </Menu>
 
         <div className={classes.requestNameContainer}>
-          <TextInput
+          <UndoableTextInput
             variant="unstyled"
             value={request.name}
             onChange={(e) => handleChange({ name: e.target.value })}
@@ -421,12 +441,7 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
           />
         </div>
         {loading ? (
-          <Button
-            onClick={handleCancel}
-            color="red"
-            variant="filled"
-            className={classes.sendBtn}
-          >
+          <Button onClick={handleCancel} color="red" variant="filled" className={classes.sendBtn}>
             Cancel
           </Button>
         ) : (

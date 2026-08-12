@@ -209,7 +209,7 @@ export default function App() {
         const { tabs, closeTab } = useTabStore.getState();
         const deletedPath = payload.eventPath;
         const matchingTabs = tabs.filter(
-          (t) => t.id === deletedPath || t.id.startsWith(deletedPath + "/")
+          (t) => t.id === deletedPath || t.id.startsWith(deletedPath + "/"),
         );
         for (const t of matchingTabs) {
           closeTab(t.id);

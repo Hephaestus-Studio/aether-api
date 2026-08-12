@@ -1,6 +1,11 @@
 import type { GeneratorParams } from "./types";
 
-export function generateRustReqwest({ request, resolvedUrl, resolvedHeaders, options }: GeneratorParams): string {
+export function generateRustReqwest({
+  request,
+  resolvedUrl,
+  resolvedHeaders,
+  options,
+}: GeneratorParams): string {
   const opts = options.rust_reqwest;
   const method = (request.method || "GET").toLowerCase();
   const targetUrl = resolvedUrl || request.url || "https://example.com";
@@ -16,7 +21,9 @@ export function generateRustReqwest({ request, resolvedUrl, resolvedHeaders, opt
   // Client builder options
   lines.push(`${indentChar}let client = Client::builder()`);
   if (opts.timeout && opts.timeout > 0) {
-    lines.push(`${indentChar}${indentChar}.timeout(std::time::Duration::from_millis(${opts.timeout}))`);
+    lines.push(
+      `${indentChar}${indentChar}.timeout(std::time::Duration::from_millis(${opts.timeout}))`,
+    );
   }
   if (!opts.followRedirects) {
     lines.push(`${indentChar}${indentChar}.redirect(reqwest::redirect::Policy::none())`);
