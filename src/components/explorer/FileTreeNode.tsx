@@ -142,11 +142,24 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
 
   const handleDuplicate = async () => {
     try {
-      await invoke("duplicate_item", { path: node.id });
+      const result = await invoke<{
+        id: string;
+        newPath: string;
+        name: string;
+        method: string;
+      }>("duplicate_item", { path: node.id });
+
       if (workspacePath) {
         const tree = await invoke<any>("open_workspace", { directoryPath: workspacePath });
         setTreeData(tree.children);
       }
+
+      openTab({
+        id: result.newPath,
+        name: result.name,
+        method: result.method || node.method || "GET",
+        isDirty: false,
+      });
     } catch (err: any) {
       console.error("Failed to duplicate request:", err);
       alert(err.message || String(err));

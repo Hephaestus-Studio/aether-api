@@ -272,6 +272,10 @@ pub struct DuplicateResult {
     pub id: String,
     /// Absolute filesystem path.
     pub new_path: String,
+    /// Name of the duplicated request.
+    pub name: String,
+    /// HTTP method of the duplicated request.
+    pub method: String,
 }
 
 /// Tauri command to duplicate a request config file, appending copy suffixes to name and filename.
@@ -316,6 +320,9 @@ pub async fn duplicate_item(
     );
     req.seq = Some(new_seq);
 
+    let method = req.method.to_string();
+    let name = req.name.clone();
+
     crate::engine::yaml_parser::atomic_write_yaml(&dest, &req)?;
 
     let id = dest
@@ -327,6 +334,8 @@ pub async fn duplicate_item(
     Ok(DuplicateResult {
         id,
         new_path: dest.to_string_lossy().to_string(),
+        name,
+        method,
     })
 }
 
