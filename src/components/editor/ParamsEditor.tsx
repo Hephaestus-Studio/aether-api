@@ -76,51 +76,61 @@ export default function ParamsEditor({ params, onChange }: Readonly<ParamsEditor
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", index.toString());
 
-    // Create compact custom drag preview matching actual row size
-    const rowEl = e.currentTarget as HTMLElement;
-    const rect = rowEl.getBoundingClientRect();
-
+    // Create compact mini drag preview capsule
     const dragPreview = document.createElement("div");
     dragPreview.style.position = "absolute";
     dragPreview.style.top = "-9999px";
     dragPreview.style.left = "-9999px";
-    dragPreview.style.width = `${Math.min(rect.width || 320, 360)}px`;
-    dragPreview.style.height = `${rect.height || 34}px`;
-    dragPreview.style.display = "flex";
+    dragPreview.style.display = "inline-flex";
     dragPreview.style.alignItems = "center";
-    dragPreview.style.gap = "8px";
-    dragPreview.style.padding = "0 12px";
-    dragPreview.style.backgroundColor = "var(--aether-color-bg-surface, #1e1e1e)";
+    dragPreview.style.gap = "6px";
+    dragPreview.style.padding = "2px 8px";
+    dragPreview.style.height = "24px";
+    dragPreview.style.boxSizing = "border-box";
+    dragPreview.style.backgroundColor = "var(--bg-secondary, #18181a)";
     dragPreview.style.border = "1px solid var(--aether-color-primary-base, #3b82f6)";
     dragPreview.style.borderRadius = "4px";
-    dragPreview.style.boxShadow = "0 8px 24px rgba(0, 0, 0, 0.6)";
+    dragPreview.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.5)";
     dragPreview.style.color = "#ffffff";
-    dragPreview.style.fontSize = "12px";
+    dragPreview.style.fontSize = "11.5px";
+    dragPreview.style.whiteSpace = "nowrap";
     dragPreview.style.zIndex = "99999";
     dragPreview.style.pointerEvents = "none";
+    dragPreview.style.width = "auto";
+    dragPreview.style.maxWidth = "220px";
 
     const item = params[index];
     const keyText = (item.key || "param").trim();
-    const valueText = item.value ? ` = ${item.value}` : "";
+
+    const gripIcon = document.createElement("span");
+    gripIcon.style.color = "var(--text-muted, #8e8e93)";
+    gripIcon.style.fontSize = "10px";
+    gripIcon.style.lineHeight = "1";
+    gripIcon.textContent = "⋮⋮";
+
+    const checkIcon = document.createElement("span");
+    checkIcon.style.color = item.enabled
+      ? "var(--aether-color-primary-base, #3b82f6)"
+      : "var(--text-muted, #8e8e93)";
+    checkIcon.style.fontSize = "11px";
+    checkIcon.style.lineHeight = "1";
+    checkIcon.textContent = item.enabled ? "☑" : "☐";
 
     const keySpan = document.createElement("span");
     keySpan.style.fontFamily = "var(--aether-font-mono, monospace)";
-    keySpan.style.color = "#60a5fa";
-    keySpan.style.fontWeight = "600";
+    keySpan.style.color = "var(--text-primary, #ffffff)";
+    keySpan.style.fontWeight = "500";
+    keySpan.style.overflow = "hidden";
+    keySpan.style.textOverflow = "ellipsis";
+    keySpan.style.maxWidth = "160px";
     keySpan.textContent = keyText;
 
-    const valSpan = document.createElement("span");
-    valSpan.style.color = "#9ca3af";
-    valSpan.style.whiteSpace = "nowrap";
-    valSpan.style.overflow = "hidden";
-    valSpan.style.textOverflow = "ellipsis";
-    valSpan.textContent = valueText;
-
+    dragPreview.appendChild(gripIcon);
+    dragPreview.appendChild(checkIcon);
     dragPreview.appendChild(keySpan);
-    dragPreview.appendChild(valSpan);
 
     document.body.appendChild(dragPreview);
-    e.dataTransfer.setDragImage(dragPreview, 20, (rect.height || 34) / 2);
+    e.dataTransfer.setDragImage(dragPreview, 12, 12);
 
     setTimeout(() => {
       if (document.body.contains(dragPreview)) {
