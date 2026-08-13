@@ -67,7 +67,7 @@ export default function MonacoEditor({
         if (isCancelled || !containerRef.current) return;
 
         editorInstance = monaco.editor.create(containerRef.current, {
-          value: valueRef.current !== undefined ? valueRef.current : defaultValue,
+          value: value !== undefined ? value : (valueRef.current !== undefined ? valueRef.current : defaultValue),
           language,
           theme,
           automaticLayout: true,
@@ -166,7 +166,7 @@ export default function MonacoEditor({
     };
   }, [isReady]);
 
-  // Sync value changes safely (only when external value prop changes)
+  // Sync value changes safely (only when external value prop changes or editor becomes ready)
   useEffect(() => {
     const editor = editorRef.current;
     if (!editor || editor.isDisposed?.()) return;
@@ -175,27 +175,29 @@ export default function MonacoEditor({
       const model = editor.getModel();
       if (!model || model.isDisposed?.()) return;
 
-      if (value !== undefined && value !== valueRef.current) {
-        valueRef.current = value;
-        if (value !== model.getValue()) {
-          if (options?.readOnly) {
-            model.setValue(value);
-          } else {
-            editor.executeEdits("external-sync", [
-              {
-                range: model.getFullModelRange(),
-                text: value,
-                forceMoveMarkers: true,
-              },
-            ]);
-            editor.pushUndoStop();
+      if (value !== undefined) {
+        if (value !== valueRef.current || value !== model.getValue()) {
+          valueRef.current = value;
+          if (value !== model.getValue()) {
+            if (options?.readOnly) {
+              model.setValue(value);
+            } else {
+              editor.executeEdits("external-sync", [
+                {
+                  range: model.getFullModelRange(),
+                  text: value,
+                  forceMoveMarkers: true,
+                },
+              ]);
+              editor.pushUndoStop();
+            }
           }
         }
       }
     } catch (err) {
       console.warn("Failed to update Monaco editor value:", err);
     }
-  }, [value, options?.readOnly]);
+  }, [value, isReady, options?.readOnly]);
 
   // Sync language changes safely
   useEffect(() => {

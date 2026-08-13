@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Box, SegmentedControl, Menu, Button, ActionIcon, Text } from "@mantine/core";
 import { useElementSize } from "@mantine/hooks";
 import {
@@ -63,10 +63,29 @@ export default function ResponseBody({ response, isActive = true }: Readonly<Res
   const { config } = useConfigStore();
   const [mode, setMode] = useState<string>("pretty");
   const [language, setLanguage] = useState<string>("auto");
-  const [formattedContent, setFormattedContent] = useState<string>("");
   const editorRef = useRef<any>(null);
 
   const initialLanguage = response?.bodyType || "json";
+  const editorLanguage = language === "auto" ? initialLanguage : language;
+  const rawBody = response?.body || "";
+
+  // Synchronously compute formattedContent on render
+  const formattedContent = useMemo(() => {
+    if (mode === "pretty") {
+      if (editorLanguage === "json") {
+        try {
+          return JSON.stringify(JSON.parse(rawBody), null, 2);
+        } catch {
+          return rawBody;
+        }
+      } else if (editorLanguage === "xml") {
+        return formatXML(rawBody);
+      } else {
+        return rawBody;
+      }
+    }
+    return rawBody;
+  }, [rawBody, editorLanguage, mode]);
 
   // Cleanup editor ref on unmount
   useEffect(() => {
@@ -87,26 +106,6 @@ export default function ResponseBody({ response, isActive = true }: Readonly<Res
       }
     }
   }, [isActive, mode]);
-
-  useEffect(() => {
-    const rawBody = response?.body || "";
-    const activeLang = language === "auto" ? initialLanguage : language;
-    if (mode === "pretty") {
-      if (activeLang === "json") {
-        try {
-          setFormattedContent(JSON.stringify(JSON.parse(rawBody), null, 2));
-        } catch {
-          setFormattedContent(rawBody);
-        }
-      } else if (activeLang === "xml") {
-        setFormattedContent(formatXML(rawBody));
-      } else {
-        setFormattedContent(rawBody);
-      }
-    } else {
-      setFormattedContent(rawBody);
-    }
-  }, [response?.body, initialLanguage, mode, language]);
 
   const getSuggestedFilename = () => {
     const contentTypeHeader =
@@ -270,9 +269,6 @@ export default function ResponseBody({ response, isActive = true }: Readonly<Res
       </Box>
     );
   }
-
-  const editorLanguage = language === "auto" ? initialLanguage : language;
-  const rawBody = response?.body || "";
 
   const handleBeforeMount = (monaco: any) => {
     try {
