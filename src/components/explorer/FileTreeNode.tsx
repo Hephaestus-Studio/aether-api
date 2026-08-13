@@ -11,7 +11,7 @@ import { useTabStore } from "@/stores/tabStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { invoke } from "@tauri-apps/api/core";
 import type { WorkspaceTreeNode } from "@/types/workspace";
-import { getMethodColor } from "@/utils/httpMethods";
+import { getMethodColor, getMethodBgColor } from "@/utils/httpMethods";
 import clsx from "clsx";
 import classes from "./FileTreeNode.module.css";
 
@@ -481,9 +481,18 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
                   <span className={classes.folderIconWrapper}>{getFolderIcon()}</span>
                 </>
               ) : (
-                <span className={classes.methodTag} style={{ color: getMethodColor(node.method) }}>
-                  {getMethodText(node.method)}
-                </span>
+                <>
+                  <span className={classes.chevronSpacer} />
+                  <span
+                    className={classes.methodTag}
+                    style={{
+                      color: getMethodColor(node.method),
+                      backgroundColor: getMethodBgColor(node.method),
+                    }}
+                  >
+                    {getMethodText(node.method)}
+                  </span>
+                </>
               )}
               <span className={classes.label} style={{ color: getGitColor(nodeGitStatus) }}>
                 {node.name.replace(/\.(yml|yaml|json)$/i, "")}
