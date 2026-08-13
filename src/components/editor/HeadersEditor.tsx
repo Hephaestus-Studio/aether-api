@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Checkbox, ActionIcon, Text, ScrollArea, Tooltip } from "@mantine/core";
+import { Box, Checkbox, ActionIcon, ScrollArea, Tooltip } from "@mantine/core";
 import { useElementSize } from "@mantine/hooks";
 import {
   IconTrash,
@@ -59,10 +59,6 @@ export default function HeadersEditor({ headers, onChange }: Readonly<HeadersEdi
     headers[headers.length - 1].value !== ""
       ? [...headers, { key: "", value: "", enabled: true, description: "" }]
       : headers;
-
-  const activeCount =
-    headers.filter((h) => h.enabled && (h.key.trim() || h.value.trim())).length +
-    (showAutoHeaders ? AUTO_GENERATED_HEADERS.length : 0);
 
   const handleItemChange = (index: number, fields: Partial<KeyValuePair>) => {
     if (index >= headers.length) {
@@ -218,11 +214,6 @@ export default function HeadersEditor({ headers, onChange }: Readonly<HeadersEdi
   return (
     <Box ref={containerRef} className={classes.container}>
       <div className={classes.headerBar}>
-        <div className={classes.headerTitleGroup}>
-          <Text className={classes.headerTitle}>Headers</Text>
-          {activeCount > 0 && <span className={classes.countBadge}>{activeCount} active</span>}
-        </div>
-
         <button
           type="button"
           onClick={() => setShowAutoHeaders(!showAutoHeaders)}

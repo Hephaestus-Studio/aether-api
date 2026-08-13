@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Checkbox, ActionIcon, Text, ScrollArea, Tooltip } from "@mantine/core";
+import { Box, Checkbox, ActionIcon, ScrollArea, Tooltip } from "@mantine/core";
 import { useElementSize } from "@mantine/hooks";
 import {
   IconTrash,
@@ -34,8 +34,6 @@ export default function ParamsEditor({ params, onChange }: Readonly<ParamsEditor
     params[params.length - 1].value !== ""
       ? [...params, { key: "", value: "", enabled: true, description: "" }]
       : params;
-
-  const activeCount = params.filter((p) => p.enabled && (p.key.trim() || p.value.trim())).length;
 
   const handleItemChange = (index: number, fields: Partial<KeyValuePair>) => {
     if (index >= params.length) {
@@ -190,13 +188,6 @@ export default function ParamsEditor({ params, onChange }: Readonly<ParamsEditor
 
   return (
     <Box ref={containerRef} className={classes.container}>
-      <div className={classes.headerBar}>
-        <div className={classes.headerTitleGroup}>
-          <Text className={classes.headerTitle}>Query Parameters</Text>
-          {activeCount > 0 && <span className={classes.countBadge}>{activeCount} active</span>}
-        </div>
-      </div>
-
       <ScrollArea type="hover" offsetScrollbars={false}>
         <table className={classes.table}>
           <thead>
