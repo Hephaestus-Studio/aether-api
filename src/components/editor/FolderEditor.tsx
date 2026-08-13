@@ -160,6 +160,7 @@ export default function FolderEditor({ tabId, nodeType }: Readonly<FolderEditorP
                 onChange={(e) => handleFieldChange("name", e.target.value)}
                 placeholder={isCollection ? "Collection Name" : "Folder Name"}
                 className={classes.nameInput}
+                style={{ width: `${Math.max(4, (details.name || "").length + 1)}ch` }}
               />
               <span
                 className={clsx(
