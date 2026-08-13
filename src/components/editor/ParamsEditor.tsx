@@ -1,9 +1,16 @@
 import { useState } from "react";
-import { Box, Table, Checkbox, ActionIcon, Text, ScrollArea } from "@mantine/core";
+import { Box, Checkbox, ActionIcon, Text, ScrollArea, Tooltip } from "@mantine/core";
 import { useElementSize } from "@mantine/hooks";
-import { IconTrash, IconGripVertical } from "@tabler/icons-react";
+import {
+  IconTrash,
+  IconGripVertical,
+  IconChevronUp,
+  IconChevronDown,
+} from "@tabler/icons-react";
 import UndoableTextInput from "@/components/common/UndoableTextInput";
 import type { KeyValuePair } from "@/types/request";
+import clsx from "clsx";
+import classes from "./ParamsEditor.module.css";
 
 interface ParamsEditorProps {
   params: KeyValuePair[];
@@ -12,7 +19,7 @@ interface ParamsEditorProps {
 
 export default function ParamsEditor({ params, onChange }: Readonly<ParamsEditorProps>) {
   const { ref: containerRef, width } = useElementSize();
-  const showDescription = width >= 500 || width === 0;
+  const showDescription = width >= 520 || width === 0;
 
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dropTarget, setDropTarget] = useState<{
@@ -27,6 +34,8 @@ export default function ParamsEditor({ params, onChange }: Readonly<ParamsEditor
     params[params.length - 1].value !== ""
       ? [...params, { key: "", value: "", enabled: true, description: "" }]
       : params;
+
+  const activeCount = params.filter((p) => p.enabled && (p.key.trim() || p.value.trim())).length;
 
   const handleItemChange = (index: number, fields: Partial<KeyValuePair>) => {
     if (index >= params.length) {
@@ -43,14 +52,33 @@ export default function ParamsEditor({ params, onChange }: Readonly<ParamsEditor
     onChange(params.filter((_, i) => i !== index));
   };
 
+  const handleMoveUp = (index: number) => {
+    if (index <= 0 || index >= params.length) return;
+    const next = [...params];
+    const item = next[index];
+    next[index] = next[index - 1];
+    next[index - 1] = item;
+    onChange(next);
+  };
+
+  const handleMoveDown = (index: number) => {
+    if (index >= params.length - 1) return;
+    const next = [...params];
+    const item = next[index];
+    next[index] = next[index + 1];
+    next[index + 1] = item;
+    onChange(next);
+  };
+
   const handleDragStart = (e: React.DragEvent, index: number) => {
+    if (index >= params.length) return;
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", index.toString());
   };
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
-    if (draggedIndex === null || draggedIndex === index) return;
+    if (draggedIndex === null || draggedIndex === index || index >= params.length) return;
     e.preventDefault();
     e.stopPropagation();
     e.dataTransfer.dropEffect = "move";
@@ -69,7 +97,7 @@ export default function ParamsEditor({ params, onChange }: Readonly<ParamsEditor
     e.preventDefault();
     e.stopPropagation();
 
-    if (draggedIndex === null || draggedIndex === targetIndex) {
+    if (draggedIndex === null || draggedIndex === targetIndex || targetIndex >= params.length) {
       setDraggedIndex(null);
       setDropTarget(null);
       return;
@@ -97,171 +125,138 @@ export default function ParamsEditor({ params, onChange }: Readonly<ParamsEditor
   };
 
   return (
-    <Box
-      ref={containerRef}
-      style={{ border: "1px solid var(--border-color)", borderRadius: 4, overflow: "visible" }}
-    >
-      <div
-        style={{
-          padding: "8px 12px",
-          borderBottom: "1px solid var(--border-color)",
-          backgroundColor: "var(--bg-app)",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <Text
-          size="xs"
-          fw={600}
-          c="dimmed"
-          style={{ textTransform: "uppercase", letterSpacing: 0.5 }}
-        >
-          Query Parameters
-        </Text>
+    <Box ref={containerRef} className={classes.container}>
+      <div className={classes.headerBar}>
+        <div className={classes.headerTitleGroup}>
+          <Text className={classes.headerTitle}>Query Parameters</Text>
+          {activeCount > 0 && <span className={classes.countBadge}>{activeCount} active</span>}
+        </div>
       </div>
 
       <ScrollArea type="hover" offsetScrollbars={false}>
-        <Table
-          withRowBorders
-          withColumnBorders={false}
-          style={{ tableLayout: "fixed", width: "100%", minWidth: showDescription ? 450 : "100%" }}
-        >
-          <Table.Thead>
-            <Table.Tr style={{ backgroundColor: "var(--bg-tab-inactive)" }}>
-              <Table.Th style={{ width: 26, textAlign: "center", padding: 0 }}></Table.Th>
-              <Table.Th style={{ width: 36, textAlign: "center", padding: 0 }}></Table.Th>
-              <Table.Th
-                style={{
-                  width: showDescription ? "35%" : undefined,
-                  fontSize: 11,
-                  textTransform: "uppercase",
-                  color: "var(--text-muted)",
-                  padding: "6px 8px",
-                }}
-              >
-                Key
-              </Table.Th>
-              <Table.Th
-                style={{
-                  width: showDescription ? "35%" : undefined,
-                  fontSize: 11,
-                  textTransform: "uppercase",
-                  color: "var(--text-muted)",
-                  padding: "6px 8px",
-                }}
-              >
-                Value
-              </Table.Th>
-              {showDescription && (
-                <Table.Th
-                  style={{
-                    fontSize: 11,
-                    textTransform: "uppercase",
-                    color: "var(--text-muted)",
-                    padding: "6px 8px",
-                  }}
-                >
-                  Description
-                </Table.Th>
-              )}
-              <Table.Th style={{ width: 36, padding: 0 }}></Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody onDragLeave={() => setDropTarget(null)}>
+        <table className={classes.table}>
+          <thead>
+            <tr>
+              <th style={{ width: 30, textAlign: "center", padding: 0 }}></th>
+              <th style={{ width: 36, textAlign: "center", padding: 0 }}></th>
+              <th style={{ width: showDescription ? "35%" : undefined }}>Key</th>
+              <th style={{ width: showDescription ? "35%" : undefined }}>Value</th>
+              {showDescription && <th>Description</th>}
+              <th style={{ width: 72, textAlign: "center", padding: 0 }}></th>
+            </tr>
+          </thead>
+          <tbody onDragLeave={() => setDropTarget(null)}>
             {rows.map((p, idx) => {
               const isLastRow = idx === rows.length - 1 && !p.key && !p.value && !p.description;
               const isDragged = draggedIndex === idx;
               const isTarget = dropTarget?.index === idx;
+              const isFirst = idx === 0;
+              const isLastParam = idx === params.length - 1;
 
               return (
-                <Table.Tr
+                <tr
                   key={idx}
                   draggable={!isLastRow}
                   onDragStart={(e) => handleDragStart(e, idx)}
                   onDragEnd={handleDragEnd}
                   onDragOver={(e) => handleDragOver(e, idx)}
                   onDrop={(e) => handleDrop(e, idx)}
-                  style={{
-                    opacity: isDragged ? 0.35 : 1,
-                    boxShadow: isTarget
-                      ? dropTarget.position === "above"
-                        ? "inset 0 2px 0 0 var(--mantine-color-blue-5)"
-                        : "inset 0 -2px 0 0 var(--mantine-color-blue-5)"
-                      : undefined,
-                    transition: "box-shadow 0.1s ease, opacity 0.15s ease",
-                  }}
+                  className={clsx(
+                    classes.row,
+                    isDragged && classes.draggingRow,
+                    isTarget && dropTarget.position === "above" && classes.dropAbove,
+                    isTarget && dropTarget.position === "below" && classes.dropBelow,
+                  )}
                 >
-                  <Table.Td style={{ textAlign: "center", padding: 0, height: 32, width: 26 }}>
+                  <td className={classes.dragCell}>
                     {!isLastRow ? (
-                      <div
-                        style={{
-                          cursor: "grab",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: "var(--text-muted)",
-                          height: "100%",
-                        }}
-                        title="Drag to reorder"
-                      >
-                        <IconGripVertical size={13} />
+                      <div className={classes.dragHandle} title="Drag to reorder">
+                        <IconGripVertical size={14} />
                       </div>
                     ) : null}
-                  </Table.Td>
-                  <Table.Td style={{ textAlign: "center", padding: 0, height: 32, width: 36 }}>
+                  </td>
+                  <td className={classes.checkCell}>
                     <Checkbox
                       checked={p.enabled}
                       onChange={(e) => handleItemChange(idx, { enabled: e.target.checked })}
                       styles={{ root: { display: "inline-flex", verticalAlign: "middle" } }}
                     />
-                  </Table.Td>
-                  <Table.Td style={{ padding: 0, height: 32 }}>
+                  </td>
+                  <td className={classes.inputCell}>
                     <UndoableTextInput
                       value={p.key}
                       onChange={(e) => handleItemChange(idx, { key: e.target.value })}
                       placeholder="Key"
                       variant="unstyled"
-                      styles={{ input: { height: 32, fontSize: 13, padding: "0 8px" } }}
+                      className={clsx(classes.tableInput, classes.monoInput)}
                     />
-                  </Table.Td>
-                  <Table.Td style={{ padding: 0, height: 32 }}>
+                  </td>
+                  <td className={classes.inputCell}>
                     <UndoableTextInput
                       value={p.value}
                       onChange={(e) => handleItemChange(idx, { value: e.target.value })}
                       placeholder="Value"
                       variant="unstyled"
-                      styles={{ input: { height: 32, fontSize: 13, padding: "0 8px" } }}
+                      className={clsx(classes.tableInput, classes.monoInput)}
                     />
-                  </Table.Td>
+                  </td>
                   {showDescription && (
-                    <Table.Td style={{ padding: 0, height: 32 }}>
+                    <td className={classes.inputCell}>
                       <UndoableTextInput
                         value={p.description || ""}
                         onChange={(e) => handleItemChange(idx, { description: e.target.value })}
                         placeholder="Description"
                         variant="unstyled"
-                        styles={{ input: { height: 32, fontSize: 13, padding: "0 8px" } }}
+                        className={classes.tableInput}
                       />
-                    </Table.Td>
+                    </td>
                   )}
-                  <Table.Td style={{ textAlign: "center", padding: 0, height: 32, width: 36 }}>
-                    {p.key || p.value || p.description ? (
-                      <ActionIcon
-                        variant="subtle"
-                        color="red"
-                        onClick={() => handleDelete(idx)}
-                        size="sm"
-                      >
-                        <IconTrash size={14} />
-                      </ActionIcon>
-                    ) : null}
-                  </Table.Td>
-                </Table.Tr>
+                  <td className={classes.actionCell}>
+                    {!isLastRow && (
+                      <div className={classes.rowActions}>
+                        <Tooltip label="Move up" position="top" withArrow openDelay={400}>
+                          <ActionIcon
+                            variant="subtle"
+                            size="xs"
+                            disabled={isFirst}
+                            onClick={() => handleMoveUp(idx)}
+                            className={classes.moveBtn}
+                          >
+                            <IconChevronUp size={12} />
+                          </ActionIcon>
+                        </Tooltip>
+                        <Tooltip label="Move down" position="top" withArrow openDelay={400}>
+                          <ActionIcon
+                            variant="subtle"
+                            size="xs"
+                            disabled={isLastParam}
+                            onClick={() => handleMoveDown(idx)}
+                            className={classes.moveBtn}
+                          >
+                            <IconChevronDown size={12} />
+                          </ActionIcon>
+                        </Tooltip>
+                        {(p.key || p.value || p.description) && (
+                          <Tooltip label="Delete" position="top" withArrow openDelay={400}>
+                            <ActionIcon
+                              variant="subtle"
+                              color="red"
+                              size="xs"
+                              onClick={() => handleDelete(idx)}
+                              className={classes.deleteBtn}
+                            >
+                              <IconTrash size={13} />
+                            </ActionIcon>
+                          </Tooltip>
+                        )}
+                      </div>
+                    )}
+                  </td>
+                </tr>
               );
             })}
-          </Table.Tbody>
-        </Table>
+          </tbody>
+        </table>
       </ScrollArea>
     </Box>
   );
