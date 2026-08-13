@@ -1,4 +1,4 @@
-use super::request::AuthConfig;
+use super::request::{AuthConfig, KeyValuePair};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -32,6 +32,9 @@ pub struct Folder {
 
     /// Folder-level authentication configuration. If specified, this is inherited by all requests inside this folder.
     pub auth: Option<AuthConfig>, // Folder-level auth (inherited by children)
+
+    /// Folder-level default headers. If specified, this is inherited/merged into requests inside this folder.
+    pub headers: Option<Vec<KeyValuePair>>,
 }
 
 impl Folder {
@@ -50,6 +53,7 @@ impl Folder {
             created_at: now,
             updated_at: now,
             auth: None,
+            headers: None,
         }
     }
 }

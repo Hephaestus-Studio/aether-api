@@ -10,6 +10,7 @@ import SplitPane from "./SplitPane";
 import TerminalPanel from "./TerminalPanel";
 import EnvironmentPanel from "@/components/environment/EnvironmentPanel";
 import RequestEditor from "@/components/editor/RequestEditor";
+import FolderEditor from "@/components/editor/FolderEditor";
 import ResponseViewer from "@/components/response/ResponseViewer";
 import QuickOpen from "@/components/tools/QuickOpen";
 import CommandPalette from "@/components/tools/CommandPalette";
@@ -27,6 +28,10 @@ export default function AppShell() {
   const activeBottomPanelTab = useTabStore((s) => s.activeBottomPanelTab);
   const responsePanelOpened = useTabStore((s) => s.responsePanelOpened);
   const layoutOrientation = useTabStore((s) => s.layoutOrientation);
+
+  const activeTab = tabs.find((t) => t.id === activeTabId);
+  const isFolderOrCollectionTab =
+    activeTab?.nodeType === "folder" || activeTab?.nodeType === "collection";
 
   // Lazy Mount + Keep-Alive: only mount tabs when activated once, keep mounted until closed
   const [mountedTabIds, setMountedTabIds] = useState<Set<string>>(() =>
@@ -125,7 +130,7 @@ export default function AppShell() {
               topPanel={
                 activeTabId && renderedTabs.length > 0 ? (
                   <SplitPane
-                    collapsed={!responsePanelOpened}
+                    collapsed={!responsePanelOpened || isFolderOrCollectionTab}
                     topPanel={
                       <Box style={{ width: "100%", height: "100%", position: "relative" }}>
                         {renderedTabs.map((tab) => (
@@ -137,7 +142,11 @@ export default function AppShell() {
                               height: "100%",
                             }}
                           >
-                            <RequestEditor tabId={tab.id} />
+                            {tab.nodeType === "folder" || tab.nodeType === "collection" ? (
+                              <FolderEditor tabId={tab.id} nodeType={tab.nodeType} />
+                            ) : (
+                              <RequestEditor tabId={tab.id} />
+                            )}
                           </Box>
                         ))}
                       </Box>
@@ -164,7 +173,7 @@ export default function AppShell() {
                   />
                 ) : (
                   <Box className={classes.emptyState}>
-                    Select a request from explorer or press Ctrl+P to search
+                    Select a request or folder from explorer or press Ctrl+P to search
                   </Box>
                 )
               }

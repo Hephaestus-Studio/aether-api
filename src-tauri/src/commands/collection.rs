@@ -536,3 +536,143 @@ pub async fn move_item(
         new_seq,
     })
 }
+
+/// Tauri command to read a collection configuration file (collection.yml) from disk.
+#[tauri::command]
+pub async fn read_collection(
+    path: String,
+    state: State<'_, AppState>,
+) -> Result<crate::models::collection::Collection, AppError> {
+    let ws = state.workspace.lock().await;
+    let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
+
+    let target = if Path::new(&path).is_absolute() {
+        PathBuf::from(&path)
+    } else {
+        ws_state.path.join(&path)
+    };
+
+    let col_file = if target.is_dir() {
+        let yml = target.join("collection.yml");
+        let yaml = target.join("collection.yaml");
+        if yml.exists() {
+            yml
+        } else {
+            yaml
+        }
+    } else {
+        target
+    };
+
+    if !col_file.exists() {
+        return Err(AppError::ItemNotFound(path));
+    }
+
+    let col = crate::engine::yaml_parser::read_and_validate_yaml(&col_file)?;
+    Ok(col)
+}
+
+/// Tauri command to update and write a collection configuration file (collection.yml) to disk.
+#[tauri::command]
+pub async fn update_collection(
+    path: String,
+    collection: crate::models::collection::Collection,
+    state: State<'_, AppState>,
+) -> Result<(), AppError> {
+    let ws = state.workspace.lock().await;
+    let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
+
+    let target = if Path::new(&path).is_absolute() {
+        PathBuf::from(&path)
+    } else {
+        ws_state.path.join(&path)
+    };
+
+    let col_file = if target.is_dir() {
+        let yml = target.join("collection.yml");
+        let yaml = target.join("collection.yaml");
+        if yaml.exists() {
+            yaml
+        } else {
+            yml
+        }
+    } else {
+        target
+    };
+
+    let mut col_to_save = collection;
+    col_to_save.updated_at = Utc::now();
+
+    crate::engine::yaml_parser::atomic_write_yaml(&col_file, &col_to_save)?;
+    Ok(())
+}
+
+/// Tauri command to read a folder configuration file (folder.yml) from disk.
+#[tauri::command]
+pub async fn read_folder(
+    path: String,
+    state: State<'_, AppState>,
+) -> Result<crate::models::folder::Folder, AppError> {
+    let ws = state.workspace.lock().await;
+    let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
+
+    let target = if Path::new(&path).is_absolute() {
+        PathBuf::from(&path)
+    } else {
+        ws_state.path.join(&path)
+    };
+
+    let fold_file = if target.is_dir() {
+        let yml = target.join("folder.yml");
+        let yaml = target.join("folder.yaml");
+        if yml.exists() {
+            yml
+        } else {
+            yaml
+        }
+    } else {
+        target
+    };
+
+    if !fold_file.exists() {
+        return Err(AppError::ItemNotFound(path));
+    }
+
+    let fold = crate::engine::yaml_parser::read_and_validate_yaml(&fold_file)?;
+    Ok(fold)
+}
+
+/// Tauri command to update and write a folder configuration file (folder.yml) to disk.
+#[tauri::command]
+pub async fn update_folder(
+    path: String,
+    folder: crate::models::folder::Folder,
+    state: State<'_, AppState>,
+) -> Result<(), AppError> {
+    let ws = state.workspace.lock().await;
+    let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
+
+    let target = if Path::new(&path).is_absolute() {
+        PathBuf::from(&path)
+    } else {
+        ws_state.path.join(&path)
+    };
+
+    let fold_file = if target.is_dir() {
+        let yml = target.join("folder.yml");
+        let yaml = target.join("folder.yaml");
+        if yaml.exists() {
+            yaml
+        } else {
+            yml
+        }
+    } else {
+        target
+    };
+
+    let mut fold_to_save = folder;
+    fold_to_save.updated_at = Utc::now();
+
+    crate::engine::yaml_parser::atomic_write_yaml(&fold_file, &fold_to_save)?;
+    Ok(())
+}

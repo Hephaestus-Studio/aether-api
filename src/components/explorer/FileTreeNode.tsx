@@ -36,7 +36,7 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
   const replaceTabId = useTabStore((s) => s.replaceTabId);
   const activeTabId = useTabStore((s) => s.activeTabId);
   const isFolder = node.nodeType === "collection" || node.nodeType === "folder";
-  const isActive = !isFolder && (activeTabId === node.path || activeTabId === node.id);
+  const isActive = activeTabId === node.path || activeTabId === node.id;
   const { gitStatus, workspacePath, setTreeData } = useWorkspaceStore();
 
   const getNodeGitStatus = () => {
@@ -100,6 +100,11 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
     return <IconSettings size={14} />;
   };
 
+  const handleChevronClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleNodeExpanded(node.id);
+  };
+
   const handleNodeClick = () => {
     if (node.nodeType === "request") {
       openTab({
@@ -107,9 +112,15 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
         name: node.name,
         method: node.method || "GET",
         isDirty: false,
+        nodeType: "request",
       });
-    } else {
-      toggleNodeExpanded(node.id);
+    } else if (node.nodeType === "collection" || node.nodeType === "folder") {
+      openTab({
+        id: node.path || node.id,
+        name: node.name,
+        isDirty: false,
+        nodeType: node.nodeType,
+      });
     }
   };
 
@@ -477,7 +488,9 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
             <div className={classes.nodeContent}>
               {isFolder ? (
                 <>
-                  <span className={classes.chevronWrapper}>{getChevron()}</span>
+                  <span className={classes.chevronWrapper} onClick={handleChevronClick}>
+                    {getChevron()}
+                  </span>
                   <span className={classes.folderIconWrapper}>{getFolderIcon()}</span>
                 </>
               ) : (

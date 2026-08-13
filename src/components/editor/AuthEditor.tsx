@@ -23,6 +23,7 @@ import classes from "./AuthEditor.module.css";
 interface AuthEditorProps {
   auth: AuthConfig;
   onChange: (v: AuthConfig) => void;
+  allowInherit?: boolean;
 }
 
 interface AuthTypeOption {
@@ -33,7 +34,7 @@ interface AuthTypeOption {
   comingSoon?: boolean;
 }
 
-const AUTH_TYPES: AuthTypeOption[] = [
+const ALL_AUTH_TYPES: AuthTypeOption[] = [
   { id: "none", name: "No Auth", icon: IconShieldOff },
   { id: "inherit", name: "Inherit from parent", icon: IconArrowBackUp },
   { id: "bearer", name: "Bearer Token", icon: IconKey },
@@ -52,9 +53,17 @@ function safeBtoa(str: string): string {
   }
 }
 
-export default function AuthEditor({ auth, onChange }: Readonly<AuthEditorProps>) {
+export default function AuthEditor({
+  auth,
+  onChange,
+  allowInherit = true,
+}: Readonly<AuthEditorProps>) {
   const [showSecret, setShowSecret] = useState<Record<string, boolean>>({});
   const [copied, setCopied] = useState(false);
+
+  const authTypes = allowInherit
+    ? ALL_AUTH_TYPES
+    : ALL_AUTH_TYPES.filter((t) => t.id !== "inherit");
 
   const toggleSecret = (fieldKey: string) => {
     setShowSecret((prev) => ({ ...prev, [fieldKey]: !prev[fieldKey] }));
@@ -119,7 +128,7 @@ export default function AuthEditor({ auth, onChange }: Readonly<AuthEditorProps>
         <Box className={classes.typeSection}>
           <div className={classes.sectionTitle}>Auth Method</div>
           <div className={classes.typeList}>
-            {AUTH_TYPES.map((t) => {
+            {authTypes.map((t) => {
               const Icon = t.icon;
               const isActive = auth.type === t.id;
 

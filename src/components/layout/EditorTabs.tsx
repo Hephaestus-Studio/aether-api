@@ -14,6 +14,8 @@ import {
   IconLayoutSidebarRightExpand,
   IconLayoutColumns,
   IconLayoutRows,
+  IconFolder,
+  IconFolderOpen,
 } from "@tabler/icons-react";
 import { useTabStore } from "@/stores/tabStore";
 import { getMethodColor } from "@/utils/httpMethods";
@@ -101,6 +103,9 @@ export default function EditorTabs() {
         <Group gap={0} wrap="nowrap" className={classes.tabGroup}>
           {tabs.map((tab) => {
             const isActive = tab.id === activeTabId;
+            const isCollection = tab.nodeType === "collection";
+            const isFolder = tab.nodeType === "folder";
+
             return (
               <Menu key={tab.id} position="bottom-start" withinPortal>
                 <Menu.ContextMenu>
@@ -108,14 +113,28 @@ export default function EditorTabs() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`${classes.tab} ${isActive ? classes.tabActive : ""}`}
                   >
-                    <Text
-                      size="xs"
-                      fw={700}
-                      style={{ color: getMethodColor(tab.method) }}
-                      className={classes.methodText}
-                    >
-                      {tab.method}
-                    </Text>
+                    {isCollection ? (
+                      <IconFolderOpen
+                        size={13}
+                        color="var(--mantine-color-indigo-4, #818cf8)"
+                        style={{ flexShrink: 0 }}
+                      />
+                    ) : isFolder ? (
+                      <IconFolder
+                        size={13}
+                        color="var(--text-muted, #9ca3af)"
+                        style={{ flexShrink: 0 }}
+                      />
+                    ) : (
+                      <Text
+                        size="xs"
+                        fw={700}
+                        style={{ color: getMethodColor(tab.method) }}
+                        className={classes.methodText}
+                      >
+                        {tab.method || "GET"}
+                      </Text>
+                    )}
                     <Text size="xs" className={classes.nameText} truncate>
                       {tab.name}
                     </Text>

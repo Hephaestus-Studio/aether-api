@@ -170,15 +170,16 @@ pub async fn execute_request(
     let ws = state.workspace.lock().await;
     let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
 
+    let abs_file_path = if Path::new(&request_path).is_absolute() {
+        PathBuf::from(&request_path)
+    } else {
+        ws_state.path.join(&request_path)
+    };
+
     let request: Request = if let Some(details) = request_details {
         details
     } else {
-        let file_path = if Path::new(&request_path).is_absolute() {
-            PathBuf::from(&request_path)
-        } else {
-            ws_state.path.join(&request_path)
-        };
-        crate::engine::yaml_parser::read_and_validate_yaml(&file_path)?
+        crate::engine::yaml_parser::read_and_validate_yaml(&abs_file_path)?
     };
 
     let variables = get_all_variables(&ws_state.path, active_environment_name.as_deref()).await?;
@@ -199,8 +200,21 @@ pub async fn execute_request(
         });
     }
 
+    // Collect inherited headers from collection/ancestor folders
+    let mut merged_headers = collect_inherited_headers(&abs_file_path, &ws_state.path);
+    for req_h in request.headers {
+        if let Some(pos) = merged_headers
+            .iter()
+            .position(|existing| existing.key.eq_ignore_ascii_case(&req_h.key))
+        {
+            merged_headers[pos] = req_h;
+        } else {
+            merged_headers.push(req_h);
+        }
+    }
+
     let mut resolved_headers = Vec::new();
-    for h in &request.headers {
+    for h in &merged_headers {
         let rk = VariableResolver::resolve_string(&h.key, &vars_ref)?;
         let rv = VariableResolver::resolve_string(&h.value, &vars_ref)?;
         resolved_headers.push(crate::models::request::KeyValuePair {
@@ -211,7 +225,14 @@ pub async fn execute_request(
         });
     }
 
-    let resolved_auth = match &request.auth {
+    // Resolve Auth (with inheritance if AuthConfig::Inherit)
+    let raw_auth = if matches!(request.auth, crate::models::request::AuthConfig::Inherit) {
+        resolve_inherited_auth(&abs_file_path, &ws_state.path)
+    } else {
+        request.auth.clone()
+    };
+
+    let resolved_auth = match &raw_auth {
         crate::models::request::AuthConfig::Bearer { bearer } => {
             let r_token = VariableResolver::resolve_string(&bearer.token, &vars_ref)?;
             let r_prefix = match &bearer.prefix {
@@ -537,4 +558,243 @@ pub async fn save_response_to_file(
 
     tracing::info!("Successfully saved response to {}", file_path);
     Ok(())
+}
+
+/// Helper function to resolve inherited authentication configuration by walking up the directory tree
+/// from the request's parent directory up to the workspace root.
+pub fn resolve_inherited_auth(
+    abs_request_path: &Path,
+    workspace_root: &Path,
+) -> crate::models::request::AuthConfig {
+    let mut cur = if abs_request_path.is_file() {
+        abs_request_path.parent()
+    } else {
+        Some(abs_request_path)
+    };
+
+    while let Some(dir) = cur {
+        if !dir.starts_with(workspace_root) || dir == workspace_root {
+            break;
+        }
+
+        // 1. Check folder.yml / folder.yaml
+        let fold_yml = dir.join("folder.yml");
+        let fold_yaml = dir.join("folder.yaml");
+        let fold_file = if fold_yml.exists() {
+            Some(fold_yml)
+        } else if fold_yaml.exists() {
+            Some(fold_yaml)
+        } else {
+            None
+        };
+
+        if let Some(f) = fold_file {
+            if let Ok(fold) = crate::engine::yaml_parser::read_and_validate_yaml::<
+                crate::models::folder::Folder,
+            >(&f)
+            {
+                if let Some(auth) = fold.auth {
+                    if !matches!(auth, crate::models::request::AuthConfig::Inherit) {
+                        return auth;
+                    }
+                }
+            }
+        }
+
+        // 2. Check collection.yml / collection.yaml
+        let col_yml = dir.join("collection.yml");
+        let col_yaml = dir.join("collection.yaml");
+        let col_file = if col_yml.exists() {
+            Some(col_yml)
+        } else if col_yaml.exists() {
+            Some(col_yaml)
+        } else {
+            None
+        };
+
+        if let Some(c) = col_file {
+            if let Ok(col) = crate::engine::yaml_parser::read_and_validate_yaml::<
+                crate::models::collection::Collection,
+            >(&c)
+            {
+                if let Some(auth) = col.auth {
+                    if !matches!(auth, crate::models::request::AuthConfig::Inherit) {
+                        return auth;
+                    }
+                }
+            }
+            break; // Stop at collection root
+        }
+
+        cur = dir.parent();
+    }
+
+    crate::models::request::AuthConfig::None
+}
+
+/// Helper function to collect inherited headers from collection root down through intermediate folders.
+pub fn collect_inherited_headers(
+    abs_request_path: &Path,
+    workspace_root: &Path,
+) -> Vec<crate::models::request::KeyValuePair> {
+    let mut inherited_headers: Vec<crate::models::request::KeyValuePair> = Vec::new();
+    let mut dirs = Vec::new();
+    let mut cur = if abs_request_path.is_file() {
+        abs_request_path.parent()
+    } else {
+        Some(abs_request_path)
+    };
+
+    while let Some(d) = cur {
+        if !d.starts_with(workspace_root) || d == workspace_root {
+            break;
+        }
+        dirs.push(d.to_path_buf());
+        let col_yml = d.join("collection.yml");
+        let col_yaml = d.join("collection.yaml");
+        if col_yml.exists() || col_yaml.exists() {
+            break; // Stop at collection root
+        }
+        cur = d.parent();
+    }
+
+    // Reverse so collection root is processed first, followed by subfolders down to direct parent
+    dirs.reverse();
+
+    for d in dirs {
+        let col_yml = d.join("collection.yml");
+        let col_yaml = d.join("collection.yaml");
+        let fold_yml = d.join("folder.yml");
+        let fold_yaml = d.join("folder.yaml");
+
+        let headers_opt = if col_yml.exists() || col_yaml.exists() {
+            let f = if col_yml.exists() { col_yml } else { col_yaml };
+            crate::engine::yaml_parser::read_and_validate_yaml::<
+                crate::models::collection::Collection,
+            >(&f)
+            .ok()
+            .and_then(|c| c.headers)
+        } else if fold_yml.exists() || fold_yaml.exists() {
+            let f = if fold_yml.exists() { fold_yml } else { fold_yaml };
+            crate::engine::yaml_parser::read_and_validate_yaml::<crate::models::folder::Folder>(&f)
+                .ok()
+                .and_then(|fld| fld.headers)
+        } else {
+            None
+        };
+
+        if let Some(hdrs) = headers_opt {
+            for h in hdrs {
+                if let Some(pos) = inherited_headers
+                    .iter()
+                    .position(|existing| existing.key.eq_ignore_ascii_case(&h.key))
+                {
+                    inherited_headers[pos] = h;
+                } else {
+                    inherited_headers.push(h);
+                }
+            }
+        }
+    }
+
+    inherited_headers
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::collection::Collection;
+    use crate::models::folder::Folder;
+    use crate::models::request::{AuthConfig, BearerAuth, KeyValuePair};
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_resolve_inherited_auth_hierarchy() {
+        let dir = tempdir().unwrap();
+        let ws_root = dir.path();
+
+        // 1. Create collection with Bearer auth
+        let col_dir = ws_root.join("collections").join("my_col");
+        std::fs::create_dir_all(&col_dir).unwrap();
+
+        let mut col = Collection::new("My Collection");
+        col.auth = Some(AuthConfig::Bearer {
+            bearer: BearerAuth {
+                token: "collection-secret-token".to_string(),
+                prefix: Some("Bearer".to_string()),
+            },
+        });
+        crate::engine::yaml_parser::atomic_write_yaml(&col_dir.join("collection.yml"), &col)
+            .unwrap();
+
+        // 2. Create subfolder with inherit auth
+        let fold_dir = col_dir.join("subfolder");
+        std::fs::create_dir_all(&fold_dir).unwrap();
+
+        let mut fold = Folder::new("Sub Folder");
+        fold.auth = Some(AuthConfig::Inherit);
+        crate::engine::yaml_parser::atomic_write_yaml(&fold_dir.join("folder.yml"), &fold).unwrap();
+
+        // 3. Create request path inside subfolder
+        let req_file = fold_dir.join("req.yml");
+
+        // Resolve auth for request -> should walk up to collection and find bearer
+        let resolved = resolve_inherited_auth(&req_file, ws_root);
+        match resolved {
+            AuthConfig::Bearer { bearer } => {
+                assert_eq!(bearer.token, "collection-secret-token");
+            }
+            other => panic!("Expected Bearer auth, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_collect_inherited_headers_hierarchy() {
+        let dir = tempdir().unwrap();
+        let ws_root = dir.path();
+
+        // Collection headers
+        let col_dir = ws_root.join("collections").join("col_1");
+        std::fs::create_dir_all(&col_dir).unwrap();
+
+        let mut col = Collection::new("Col 1");
+        col.headers = Some(vec![
+            KeyValuePair {
+                key: "X-Collection-Header".to_string(),
+                value: "ColVal".to_string(),
+                enabled: true,
+                description: None,
+            },
+            KeyValuePair {
+                key: "X-Shared".to_string(),
+                value: "ColShared".to_string(),
+                enabled: true,
+                description: None,
+            },
+        ]);
+        crate::engine::yaml_parser::atomic_write_yaml(&col_dir.join("collection.yml"), &col)
+            .unwrap();
+
+        // Folder headers (overrides X-Shared)
+        let fold_dir = col_dir.join("fold_1");
+        std::fs::create_dir_all(&fold_dir).unwrap();
+
+        let mut fold = Folder::new("Fold 1");
+        fold.headers = Some(vec![KeyValuePair {
+            key: "X-Shared".to_string(),
+            value: "FoldOverride".to_string(),
+            enabled: true,
+            description: None,
+        }]);
+        crate::engine::yaml_parser::atomic_write_yaml(&fold_dir.join("folder.yml"), &fold).unwrap();
+
+        let req_file = fold_dir.join("test_req.yml");
+
+        let collected = collect_inherited_headers(&req_file, ws_root);
+        assert_eq!(collected.len(), 2);
+        assert_eq!(collected[0].key, "X-Collection-Header");
+        assert_eq!(collected[0].value, "ColVal");
+        assert_eq!(collected[1].key, "X-Shared");
+        assert_eq!(collected[1].value, "FoldOverride");
+    }
 }

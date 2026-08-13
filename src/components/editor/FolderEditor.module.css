@@ -1,0 +1,207 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background-color: var(--bg-app);
+  overflow: hidden;
+}
+
+.headerBar {
+  padding: 12px 16px;
+  background-color: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  user-select: none;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.iconWrapper {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--aether-radius-md, 6px);
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.titleArea {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nameInput :global(.mantine-Input-input) {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: var(--text-primary) !important;
+  height: 28px !important;
+  padding: 0 4px !important;
+  background-color: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--aether-radius-sm, 4px) !important;
+}
+
+.nameInput :global(.mantine-Input-input:focus) {
+  border-color: var(--aether-color-primary-base, #3b82f6) !important;
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+.typeBadge {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.badgeCollection {
+  background-color: rgba(99, 102, 241, 0.15);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.badgeFolder {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+}
+
+.pathBreadcrumb {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: 4px;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.saveBtn {
+  background-color: var(--aether-color-primary-base, #3b82f6) !important;
+  color: #ffffff !important;
+  height: 28px !important;
+  padding: 0 12px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  border-radius: var(--aether-radius-sm, 4px) !important;
+}
+
+.saveBtn:hover {
+  background-color: var(--aether-color-primary-hover, #2563eb) !important;
+}
+
+.subTabsNav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 16px;
+  background-color: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border-color);
+  height: 36px;
+  min-height: 36px;
+  user-select: none;
+}
+
+.subTabBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  height: 100%;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.subTabBtn:hover {
+  color: var(--text-primary);
+}
+
+.subTabBtnActive {
+  color: var(--aether-color-primary-base, #38bdf8) !important;
+  border-bottom-color: var(--aether-color-primary-base, #38bdf8) !important;
+  font-weight: 600;
+}
+
+.tabBadge {
+  font-size: 9.5px;
+  padding: 1px 5px;
+  border-radius: 10px;
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+}
+
+.tabContent {
+  flex: 1;
+  padding: 16px;
+  overflow: auto;
+  background-color: var(--bg-app);
+}
+
+.docsWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+}
+
+.docsTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.docsTextarea {
+  flex: 1;
+  min-height: 240px;
+  width: 100%;
+  padding: 12px;
+  background-color: var(--aether-color-bg-surface, #1e1e1e);
+  border: 1px solid var(--border-color);
+  border-radius: var(--aether-radius-md, 6px);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 12.5px;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.docsTextarea:focus {
+  border-color: var(--aether-color-primary-base, #3b82f6);
+}

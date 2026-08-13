@@ -34,3 +34,28 @@ export interface FsChangeEventPayload {
   isDirectory: boolean;
   oldPath?: string;
 }
+
+export interface CollectionDetails {
+  schema_version?: string;
+  type?: string;
+  name: string;
+  description?: string;
+  seq?: string;
+  created_at?: string;
+  updated_at?: string;
+  auth?: import("./request").AuthConfig;
+  settings?: import("./request").RequestSettings;
+  headers?: import("./request").KeyValuePair[];
+}
+
+export interface FolderDetails {
+  schema_version?: string;
+  type?: string;
+  name: string;
+  description?: string;
+  seq?: string;
+  created_at?: string;
+  updated_at?: string;
+  auth?: import("./request").AuthConfig;
+  headers?: import("./request").KeyValuePair[];
+}

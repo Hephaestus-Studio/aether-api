@@ -52,6 +52,7 @@ export interface HttpRequestDetails {
 export interface TabItem {
   id: string;
   name: string;
-  method: string;
+  method?: string;
   isDirty: boolean;
+  nodeType?: "request" | "folder" | "collection";
 }
