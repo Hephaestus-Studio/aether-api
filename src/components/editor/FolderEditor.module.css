@@ -192,36 +192,7 @@
   background-color: var(--bg-app);
 }
 
-.docsWrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  height: 100%;
-}
-
-.docsTitle {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.docsTextarea {
-  flex: 1;
-  min-height: 240px;
-  width: 100%;
-  padding: 12px;
-  background-color: var(--aether-color-bg-surface, #1e1e1e);
-  border: 1px solid var(--border-color);
-  border-radius: var(--aether-radius-md, 6px);
-  color: var(--text-primary);
-  font-family: inherit;
-  font-size: 12.5px;
-  line-height: 1.5;
-  resize: none;
-  outline: none;
-  transition: border-color 0.15s ease;
-}
-
-.docsTextarea:focus {
-  border-color: var(--aether-color-primary-base, #3b82f6);
+.tabContentDocs {
+  padding: 0 !important;
+  overflow: hidden !important;
 }

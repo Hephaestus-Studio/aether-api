@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Box, Button, LoadingOverlay, Text } from "@mantine/core";
+import { Box, Button, LoadingOverlay } from "@mantine/core";
 import {
   IconFolder,
   IconFolderOpen,
@@ -13,6 +13,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useTabStore } from "@/stores/tabStore";
 import AuthEditor from "./AuthEditor";
 import HeadersEditor from "./HeadersEditor";
+import DocsEditor from "./DocsEditor";
 import UndoableTextInput from "@/components/common/UndoableTextInput";
 import type { CollectionDetails, FolderDetails } from "@/types/workspace";
 import type { AuthConfig, KeyValuePair } from "@/types/request";
@@ -223,7 +224,12 @@ export default function FolderEditor({ tabId, nodeType }: Readonly<FolderEditorP
       </Box>
 
       {/* Active Tab Content Area */}
-      <Box className={classes.tabContent}>
+      <Box
+        className={clsx(
+          classes.tabContent,
+          activeSubTab === "docs" && classes.tabContentDocs,
+        )}
+      >
         {activeSubTab === "auth" && (
           <AuthEditor
             auth={authConfig}
@@ -240,15 +246,11 @@ export default function FolderEditor({ tabId, nodeType }: Readonly<FolderEditorP
         )}
 
         {activeSubTab === "docs" && (
-          <Box className={classes.docsWrapper}>
-            <Text className={classes.docsTitle}>Description / Documentation</Text>
-            <textarea
-              value={details.description || ""}
-              onChange={(e) => handleFieldChange("description", e.target.value)}
-              placeholder="Add documentation, notes, or usage instructions for this folder/collection..."
-              className={classes.docsTextarea}
-            />
-          </Box>
+          <DocsEditor
+            value={details.description || ""}
+            onChange={(newDocs) => handleFieldChange("description", newDocs)}
+            placeholder={`Write documentation for this ${isCollection ? "collection" : "folder"}...`}
+          />
         )}
       </Box>
     </Box>
