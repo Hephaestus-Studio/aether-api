@@ -75,6 +75,58 @@ export default function ParamsEditor({ params, onChange }: Readonly<ParamsEditor
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", index.toString());
+
+    // Create compact custom drag preview matching actual row size
+    const rowEl = e.currentTarget as HTMLElement;
+    const rect = rowEl.getBoundingClientRect();
+
+    const dragPreview = document.createElement("div");
+    dragPreview.style.position = "absolute";
+    dragPreview.style.top = "-9999px";
+    dragPreview.style.left = "-9999px";
+    dragPreview.style.width = `${Math.min(rect.width || 320, 360)}px`;
+    dragPreview.style.height = `${rect.height || 34}px`;
+    dragPreview.style.display = "flex";
+    dragPreview.style.alignItems = "center";
+    dragPreview.style.gap = "8px";
+    dragPreview.style.padding = "0 12px";
+    dragPreview.style.backgroundColor = "var(--aether-color-bg-surface, #1e1e1e)";
+    dragPreview.style.border = "1px solid var(--aether-color-primary-base, #3b82f6)";
+    dragPreview.style.borderRadius = "4px";
+    dragPreview.style.boxShadow = "0 8px 24px rgba(0, 0, 0, 0.6)";
+    dragPreview.style.color = "#ffffff";
+    dragPreview.style.fontSize = "12px";
+    dragPreview.style.zIndex = "99999";
+    dragPreview.style.pointerEvents = "none";
+
+    const item = params[index];
+    const keyText = (item.key || "param").trim();
+    const valueText = item.value ? ` = ${item.value}` : "";
+
+    const keySpan = document.createElement("span");
+    keySpan.style.fontFamily = "var(--aether-font-mono, monospace)";
+    keySpan.style.color = "#60a5fa";
+    keySpan.style.fontWeight = "600";
+    keySpan.textContent = keyText;
+
+    const valSpan = document.createElement("span");
+    valSpan.style.color = "#9ca3af";
+    valSpan.style.whiteSpace = "nowrap";
+    valSpan.style.overflow = "hidden";
+    valSpan.style.textOverflow = "ellipsis";
+    valSpan.textContent = valueText;
+
+    dragPreview.appendChild(keySpan);
+    dragPreview.appendChild(valSpan);
+
+    document.body.appendChild(dragPreview);
+    e.dataTransfer.setDragImage(dragPreview, 20, (rect.height || 34) / 2);
+
+    setTimeout(() => {
+      if (document.body.contains(dragPreview)) {
+        document.body.removeChild(dragPreview);
+      }
+    }, 0);
   };
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
