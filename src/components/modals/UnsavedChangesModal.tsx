@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Modal, Button } from "@mantine/core";
-import { IconAlertTriangle } from "@tabler/icons-react";
+import { IconAlertTriangle, IconDeviceFloppy } from "@tabler/icons-react";
 import { invoke } from "@tauri-apps/api/core";
 import { notifications } from "@mantine/notifications";
 import { useTabStore } from "@/stores/tabStore";
-import { getMethodColor } from "@/utils/httpMethods";
+import { getMethodColor, getMethodBgColor } from "@/utils/httpMethods";
 import type { TabItem } from "@/types/request";
 import classes from "./UnsavedChangesModal.module.css";
 
@@ -91,58 +91,75 @@ export default function UnsavedChangesModal({
     }
   };
 
-  const title = isSingle
-    ? `Do you want to save the changes to "${singleTab.name}"?`
-    : `Do you want to save changes to ${dirtyTabs.length} requests?`;
-
-  const description = isSingle
-    ? `Your changes will be lost if you don't save them.`
-    : `The following requests have unsaved changes. Your changes will be lost if you don't save them.`;
-
   return (
     <Modal
       opened={pendingAction !== null}
       onClose={onClose}
-      withCloseButton={false}
+      withCloseButton
       centered
-      size={isSingle ? 420 : 480}
+      title={
+        <div className={classes.modalTitle}>
+          <IconAlertTriangle size={17} color="#f59e0b" stroke={2} />
+          <span>Save changes?</span>
+        </div>
+      }
+      size={isSingle ? 440 : 480}
       overlayProps={{
-        backgroundOpacity: 0.65,
+        backgroundOpacity: 0.7,
         blur: 3,
       }}
       classNames={{
         content: classes.modalContent,
         header: classes.modalHeader,
+        title: classes.modalTitle,
         body: classes.modalBody,
       }}
     >
-      <div className={classes.headerRow}>
-        <div className={classes.warningIconWrapper}>
-          <IconAlertTriangle size={18} stroke={2} />
-        </div>
-        <div className={classes.textColumn}>
-          <div className={classes.modalTitle}>{title}</div>
-          <div className={classes.modalDescription}>{description}</div>
-        </div>
+      <div className={classes.promptText}>
+        {isSingle
+          ? `Do you want to save the changes you made to "${singleTab.name}"?`
+          : `Do you want to save changes to ${dirtyTabs.length} requests?`}
       </div>
 
-      {!isSingle && (
+      {isSingle ? (
+        <div className={classes.requestCard}>
+          <span
+            className={classes.methodBadge}
+            style={{
+              color: getMethodColor(singleTab.method),
+              backgroundColor: getMethodBgColor(singleTab.method),
+            }}
+          >
+            {singleTab.method}
+          </span>
+          <span className={classes.requestName}>{singleTab.name}</span>
+          <span className={classes.dirtyBadge}>Unsaved</span>
+        </div>
+      ) : (
         <div className={classes.requestsList}>
           {dirtyTabs.map((tab) => (
-            <div key={tab.id} className={classes.requestItem}>
+            <div key={tab.id} className={classes.requestCard} style={{ padding: "6px 10px" }}>
               <span
                 className={classes.methodBadge}
-                style={{ color: getMethodColor(tab.method) }}
+                style={{
+                  color: getMethodColor(tab.method),
+                  backgroundColor: getMethodBgColor(tab.method),
+                }}
               >
                 {tab.method}
               </span>
               <span className={classes.requestName}>{tab.name}</span>
+              <span className={classes.dirtyBadge}>Unsaved</span>
             </div>
           ))}
         </div>
       )}
 
-      <div className={classes.buttonGroup}>
+      <div className={classes.warningNote}>
+        Your changes will be lost if you close without saving them.
+      </div>
+
+      <div className={classes.modalFooter}>
         <Button
           variant="default"
           size="xs"
@@ -153,7 +170,7 @@ export default function UnsavedChangesModal({
           Cancel
         </Button>
         <Button
-          variant="light"
+          variant="subtle"
           color="red"
           size="xs"
           onClick={handleDontSave}
@@ -169,6 +186,7 @@ export default function UnsavedChangesModal({
           onClick={handleSave}
           loading={isSaving}
           className={classes.saveBtn}
+          leftSection={<IconDeviceFloppy size={14} />}
         >
           {isSingle ? "Save" : "Save All"}
         </Button>
