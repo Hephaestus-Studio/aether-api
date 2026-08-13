@@ -428,29 +428,26 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
               }}
               onMount={(editor, monaco) => {
                 try {
-                  editor.addAction({
-                    id: "format-raw-body-document",
-                    label: "Format Document",
-                    keybindings: [monaco.KeyMod.Shift | monaco.KeyMod.Alt | monaco.KeyCode.KeyF],
-                    contextMenuGroupId: "1_modification",
-                    contextMenuOrder: 1.5,
-                    run: (ed: any) => {
-                      const val = ed.getValue();
+                  // Bind Shift+Alt+F as an alternative shortcut for Format Document without duplicating context menu item
+                  editor.addCommand(
+                    monaco.KeyMod.Shift | monaco.KeyMod.Alt | monaco.KeyCode.KeyF,
+                    () => {
+                      const val = editor.getValue();
                       if (!val) return;
                       try {
                         const parsed = JSON.parse(val);
                         const formatted = JSON.stringify(parsed, null, 2);
-                        ed.setValue(formatted);
+                        editor.setValue(formatted);
                         handleContentChange(formatted);
                       } catch {
                         try {
-                          ed.getAction("editor.action.formatDocument")?.run();
+                          editor.getAction("editor.action.formatDocument")?.run();
                         } catch {}
                       }
                     },
-                  });
+                  );
                 } catch (err) {
-                  console.warn("Failed to add format action:", err);
+                  console.warn("Failed to register format shortcut:", err);
                 }
               }}
             />
