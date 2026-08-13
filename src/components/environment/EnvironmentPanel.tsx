@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import {
   Box,
-  TextInput,
   Checkbox,
   Tooltip,
   Modal,
@@ -9,6 +8,7 @@ import {
   Group,
   Menu,
   ActionIcon,
+  TextInput,
 } from "@mantine/core";
 import {
   IconWorld,
@@ -20,12 +20,17 @@ import {
   IconX,
   IconDotsVertical,
   IconPencil,
+  IconGripVertical,
+  IconChevronUp,
+  IconChevronDown,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { invoke } from "@tauri-apps/api/core";
 import { useEnvStore } from "@/stores/envStore";
 import { useTabStore } from "@/stores/tabStore";
+import UndoableTextInput from "@/components/common/UndoableTextInput";
 import type { EnvVariableItem, EnvironmentDetails, EnvironmentSummary } from "@/types/environment";
+import clsx from "clsx";
 import classes from "./EnvironmentPanel.module.css";
 
 export default function EnvironmentPanel() {
@@ -59,6 +64,13 @@ export default function EnvironmentPanel() {
   // Track revealed secrets locally per row index
   const [revealedSecrets, setRevealedSecrets] = useState<Record<number, boolean>>({});
 
+  // Drag & drop state
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dropTarget, setDropTarget] = useState<{
+    index: number;
+    position: "above" | "below";
+  } | null>(null);
+
   // Fetch variables when active environment changes only if not yet in cache
   useEffect(() => {
     const envKey = (activeEnvironmentName || "global").toLowerCase();
@@ -84,10 +96,25 @@ export default function EnvironmentPanel() {
     setRevealedSecrets({});
   };
 
+  // Virtual blank row at the bottom for quick entry without false dirty state
+  const rows =
+    activeVariables.length === 0 ||
+    activeVariables[activeVariables.length - 1].key !== "" ||
+    activeVariables[activeVariables.length - 1].value !== ""
+      ? [...activeVariables, { key: "", value: "", type: "text" as const, enabled: true }]
+      : activeVariables;
+
   const handleItemChange = (index: number, fields: Partial<EnvVariableItem>) => {
-    const next = [...activeVariables];
-    next[index] = { ...next[index], ...fields };
-    setActiveVariables(next);
+    if (index >= activeVariables.length) {
+      setActiveVariables([
+        ...activeVariables,
+        { key: "", value: "", type: "text", enabled: true, ...fields },
+      ]);
+    } else {
+      const next = [...activeVariables];
+      next[index] = { ...next[index], ...fields };
+      setActiveVariables(next);
+    }
     setEnvDirty(activeEnvironmentName || "global", true);
   };
 
@@ -97,8 +124,152 @@ export default function EnvironmentPanel() {
   };
 
   const handleDeleteVariable = (index: number) => {
+    if (index >= activeVariables.length) return;
     setActiveVariables(activeVariables.filter((_, i) => i !== index));
     setEnvDirty(activeEnvironmentName || "global", true);
+  };
+
+  const handleMoveUp = (index: number) => {
+    if (index <= 0 || index >= activeVariables.length) return;
+    const next = [...activeVariables];
+    const item = next[index];
+    next[index] = next[index - 1];
+    next[index - 1] = item;
+    setActiveVariables(next);
+    setEnvDirty(activeEnvironmentName || "global", true);
+  };
+
+  const handleMoveDown = (index: number) => {
+    if (index >= activeVariables.length - 1) return;
+    const next = [...activeVariables];
+    const item = next[index];
+    next[index] = next[index + 1];
+    next[index + 1] = item;
+    setActiveVariables(next);
+    setEnvDirty(activeEnvironmentName || "global", true);
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    if (index >= activeVariables.length) return;
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", index.toString());
+
+    // Create micro compact drag preview capsule
+    const dragPreview = document.createElement("div");
+    dragPreview.style.position = "absolute";
+    dragPreview.style.top = "-9999px";
+    dragPreview.style.left = "-9999px";
+    dragPreview.style.display = "inline-flex";
+    dragPreview.style.alignItems = "center";
+    dragPreview.style.gap = "4px";
+    dragPreview.style.padding = "0 6px";
+    dragPreview.style.height = "19px";
+    dragPreview.style.boxSizing = "border-box";
+    dragPreview.style.backgroundColor = "var(--bg-secondary, #18181a)";
+    dragPreview.style.border = "1px solid var(--aether-color-primary-base, #3b82f6)";
+    dragPreview.style.borderRadius = "3px";
+    dragPreview.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.5)";
+    dragPreview.style.color = "#ffffff";
+    dragPreview.style.fontSize = "10.5px";
+    dragPreview.style.lineHeight = "1";
+    dragPreview.style.whiteSpace = "nowrap";
+    dragPreview.style.zIndex = "99999";
+    dragPreview.style.pointerEvents = "none";
+    dragPreview.style.width = "auto";
+    dragPreview.style.maxWidth = "180px";
+
+    const item = activeVariables[index];
+    const keyText = (item.key || "variable").trim();
+
+    const gripIcon = document.createElement("span");
+    gripIcon.style.color = "var(--text-muted, #8e8e93)";
+    gripIcon.style.fontSize = "8px";
+    gripIcon.style.lineHeight = "1";
+    gripIcon.textContent = "⋮⋮";
+
+    const checkIcon = document.createElement("span");
+    checkIcon.style.color = item.enabled
+      ? "var(--aether-color-primary-base, #3b82f6)"
+      : "var(--text-muted, #8e8e93)";
+    checkIcon.style.fontSize = "9.5px";
+    checkIcon.style.lineHeight = "1";
+    checkIcon.textContent = item.enabled ? "☑" : "☐";
+
+    const keySpan = document.createElement("span");
+    keySpan.style.fontFamily = "var(--aether-font-mono, monospace)";
+    keySpan.style.color = "var(--text-primary, #ffffff)";
+    keySpan.style.fontSize = "10.5px";
+    keySpan.style.fontWeight = "500";
+    keySpan.style.overflow = "hidden";
+    keySpan.style.textOverflow = "ellipsis";
+    keySpan.style.maxWidth = "130px";
+    keySpan.textContent = keyText;
+
+    dragPreview.appendChild(gripIcon);
+    dragPreview.appendChild(checkIcon);
+    dragPreview.appendChild(keySpan);
+
+    document.body.appendChild(dragPreview);
+    e.dataTransfer.setDragImage(dragPreview, 8, 9);
+
+    setTimeout(() => {
+      if (document.body.contains(dragPreview)) {
+        document.body.removeChild(dragPreview);
+      }
+    }, 0);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    if (draggedIndex === null || draggedIndex === index || index >= activeVariables.length) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = "move";
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const position = y < rect.height / 2 ? "above" : "below";
+
+    setDropTarget((prev) => {
+      if (prev?.index === index && prev.position === position) return prev;
+      return { index, position };
+    });
+  };
+
+  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (
+      draggedIndex === null ||
+      draggedIndex === targetIndex ||
+      targetIndex >= activeVariables.length
+    ) {
+      setDraggedIndex(null);
+      setDropTarget(null);
+      return;
+    }
+
+    let targetPos = dropTarget?.position === "below" ? targetIndex + 1 : targetIndex;
+    if (draggedIndex < targetPos) {
+      targetPos -= 1;
+    }
+
+    if (draggedIndex !== targetPos && targetPos >= 0 && targetPos < activeVariables.length) {
+      const next = [...activeVariables];
+      const [moved] = next.splice(draggedIndex, 1);
+      next.splice(targetPos, 0, moved);
+      setActiveVariables(next);
+      setEnvDirty(activeEnvironmentName || "global", true);
+    }
+
+    setDraggedIndex(null);
+    setDropTarget(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDropTarget(null);
   };
 
   const handleToggleRevealSecret = (index: number) => {
@@ -345,8 +516,8 @@ export default function EnvironmentPanel() {
       </Box>
 
       {/* Main Variable Table Grid */}
-      <Box className={classes.body}>
-        {activeVariables.length === 0 ? (
+      <Box className={classes.body} onDragLeave={() => setDropTarget(null)}>
+        {activeVariables.length === 0 && rows.length === 1 && !rows[0].key && !rows[0].value ? (
           <Box className={classes.emptyState}>
             <span>No variables configured for this environment.</span>
             <Button
@@ -362,49 +533,78 @@ export default function EnvironmentPanel() {
           <Box className={classes.tableWrapper}>
             {/* Table Column Headers */}
             <Box className={classes.tableHeader}>
+              <Box className={classes.colDrag}></Box>
               <Box className={classes.colCheck}></Box>
-              <Box className={classes.colKey}>Variable Key</Box>
-              <Box className={classes.colVal}>Value</Box>
-              <Box className={classes.colType}>Type</Box>
+              <Box className={classes.colKey}>KEY</Box>
+              <Box className={classes.colVal}>VALUE</Box>
+              <Box className={classes.colType}>TYPE</Box>
               <Box className={classes.colActions}></Box>
             </Box>
 
             {/* Rows List */}
-            {activeVariables.map((v, idx) => {
+            {rows.map((v, idx) => {
+              const isLastRow = idx === rows.length - 1 && !v.key && !v.value;
+              const isDragged = draggedIndex === idx;
+              const isTarget = dropTarget?.index === idx;
+              const isFirst = idx === 0;
+              const isLastVar = idx === activeVariables.length - 1;
               const isSecret = v.type === "secret";
               const isRevealed = !!revealedSecrets[idx];
 
               return (
-                <Box key={idx} className={classes.row}>
+                <Box
+                  key={idx}
+                  draggable={!isLastRow}
+                  onDragStart={(e) => handleDragStart(e, idx)}
+                  onDragEnd={handleDragEnd}
+                  onDragOver={(e) => handleDragOver(e, idx)}
+                  onDrop={(e) => handleDrop(e, idx)}
+                  className={clsx(
+                    classes.row,
+                    isDragged && classes.draggingRow,
+                    isTarget && dropTarget.position === "above" && classes.dropAbove,
+                    isTarget && dropTarget.position === "below" && classes.dropBelow,
+                  )}
+                >
+                  {/* Drag Handle */}
+                  <Box className={classes.colDrag}>
+                    {!isLastRow && (
+                      <div className={classes.dragHandle} title="Drag to reorder">
+                        <IconGripVertical size={14} />
+                      </div>
+                    )}
+                  </Box>
+
                   {/* Enabled Checkbox */}
                   <Box className={classes.colCheck}>
                     <Checkbox
                       checked={v.enabled}
                       onChange={(e) => handleItemChange(idx, { enabled: e.currentTarget.checked })}
                       size="xs"
+                      styles={{ root: { display: "inline-flex", verticalAlign: "middle" } }}
                     />
                   </Box>
 
                   {/* Key */}
                   <Box className={classes.colKey}>
-                    <TextInput
+                    <UndoableTextInput
                       variant="unstyled"
                       value={v.key}
                       onChange={(e) => handleItemChange(idx, { key: e.target.value })}
                       placeholder="KEY_NAME"
-                      className={classes.keyInput}
+                      className={classes.tableInput}
                     />
                   </Box>
 
                   {/* Value */}
                   <Box className={classes.colVal}>
-                    <TextInput
+                    <UndoableTextInput
                       variant="unstyled"
                       type={isSecret && !isRevealed ? "password" : "text"}
                       value={v.value}
                       onChange={(e) => handleItemChange(idx, { value: e.target.value })}
                       placeholder="value"
-                      className={classes.valInput}
+                      className={classes.tableInput}
                       rightSection={
                         isSecret ? (
                           <Tooltip
@@ -440,23 +640,10 @@ export default function EnvironmentPanel() {
                         onClick={() =>
                           handleItemChange(idx, { type: isSecret ? "text" : "secret" })
                         }
-                        style={{
-                          background: isSecret
-                            ? "rgba(255, 159, 28, 0.15)"
-                            : "rgba(255, 255, 255, 0.05)",
-                          border: isSecret
-                            ? "1px solid rgba(255, 159, 28, 0.3)"
-                            : "1px solid var(--border-color)",
-                          color: isSecret ? "#ff9f1c" : "var(--text-muted)",
-                          borderRadius: 4,
-                          padding: "2px 6px",
-                          fontSize: 10,
-                          fontWeight: 600,
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 3,
-                        }}
+                        className={clsx(
+                          classes.typeBadge,
+                          isSecret ? classes.typeBadgeSecret : classes.typeBadgeText,
+                        )}
                       >
                         {isSecret ? <IconLock size={11} /> : null}
                         <span>{isSecret ? "SECRET" : "TEXT"}</span>
@@ -464,17 +651,47 @@ export default function EnvironmentPanel() {
                     </Tooltip>
                   </Box>
 
-                  {/* Delete Action */}
+                  {/* Row Actions */}
                   <Box className={classes.colActions}>
-                    <ActionIcon
-                      variant="subtle"
-                      color="red"
-                      size="xs"
-                      onClick={() => handleDeleteVariable(idx)}
-                      title="Delete variable"
-                    >
-                      <IconTrash size={13} />
-                    </ActionIcon>
+                    {!isLastRow && (
+                      <div className={classes.rowActions}>
+                        <Tooltip label="Move up" position="top" withArrow openDelay={400}>
+                          <ActionIcon
+                            variant="subtle"
+                            size="xs"
+                            disabled={isFirst}
+                            onClick={() => handleMoveUp(idx)}
+                            className={classes.moveBtn}
+                          >
+                            <IconChevronUp size={12} />
+                          </ActionIcon>
+                        </Tooltip>
+                        <Tooltip label="Move down" position="top" withArrow openDelay={400}>
+                          <ActionIcon
+                            variant="subtle"
+                            size="xs"
+                            disabled={isLastVar}
+                            onClick={() => handleMoveDown(idx)}
+                            className={classes.moveBtn}
+                          >
+                            <IconChevronDown size={12} />
+                          </ActionIcon>
+                        </Tooltip>
+                        {(v.key || v.value) && (
+                          <Tooltip label="Delete" position="top" withArrow openDelay={400}>
+                            <ActionIcon
+                              variant="subtle"
+                              color="red"
+                              size="xs"
+                              onClick={() => handleDeleteVariable(idx)}
+                              className={classes.deleteBtn}
+                            >
+                              <IconTrash size={13} />
+                            </ActionIcon>
+                          </Tooltip>
+                        )}
+                      </div>
+                    )}
                   </Box>
                 </Box>
               );

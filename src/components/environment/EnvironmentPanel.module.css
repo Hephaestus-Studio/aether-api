@@ -157,33 +157,67 @@
   position: sticky;
   top: 0;
   z-index: 2;
-  background-color: var(--bg-sidebar);
+  background-color: var(--bg-tab-inactive, #1c1c1f);
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
-  padding: 6px 12px;
-  font-size: 10.5px;
+  padding: 7px 12px;
+  font-size: 11px;
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--text-muted, #9ca3af);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
   user-select: none;
 }
 
 .row {
   display: flex;
   align-items: center;
-  padding: 3px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  transition: background-color 0.1s ease;
+  padding: 0 12px;
+  height: 34px;
+  border-bottom: 1px solid var(--border-color, #2d2d2d);
+  transition: background-color 0.12s ease, opacity 0.15s ease;
+  position: relative;
+}
+
+.row:last-child {
+  border-bottom: none;
 }
 
 .row:hover {
-  background-color: rgba(255, 255, 255, 0.02);
+  background-color: rgba(255, 255, 255, 0.025);
+}
+
+.colDrag {
+  width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.dragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  color: var(--text-muted, #6b7280);
+  transition: color 0.15s ease;
+}
+
+.dragHandle:hover {
+  color: var(--text-primary, #ffffff);
+}
+
+.dragHandle:active {
+  cursor: grabbing;
 }
 
 .colCheck {
-  width: 32px;
+  width: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -193,50 +227,163 @@
 .colKey {
   flex: 1;
   min-width: 180px;
-  padding-right: 8px;
+  padding: 0 4px;
 }
 
 .colVal {
   flex: 2;
   min-width: 260px;
-  padding-right: 8px;
+  padding: 0 4px;
 }
 
 .colType {
-  width: 75px;
+  width: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+.typeBadge {
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  letter-spacing: 0.3px;
+  transition: all 0.15s ease;
+}
+
+.typeBadgeText {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color, #2d2d2d);
+  color: var(--text-muted, #9ca3af);
+}
+
+.typeBadgeText:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--text-primary, #ffffff);
+}
+
+.typeBadgeSecret {
+  background: rgba(255, 159, 28, 0.12);
+  border: 1px solid rgba(255, 159, 28, 0.3);
+  color: #ff9f1c;
+}
+
+.typeBadgeSecret:hover {
+  background: rgba(255, 159, 28, 0.2);
 }
 
 .colActions {
-  width: 36px;
+  width: 72px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   flex-shrink: 0;
 }
 
-.keyInput :global(.mantine-Input-input),
-.valInput :global(.mantine-Input-input) {
-  font-family: var(--aether-font-mono);
-  font-size: 11.5px;
-  height: 28px;
-  background-color: transparent;
-  border-color: transparent;
-  padding: 0 6px;
+.rowActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
 
-.keyInput :global(.mantine-Input-input):focus,
-.valInput :global(.mantine-Input-input):focus {
-  background-color: var(--bg-sidebar);
-  border-color: var(--border-color-active);
+.row:hover .rowActions {
+  opacity: 1;
 }
 
-.keyInput :global(.mantine-Input-input):hover,
-.valInput :global(.mantine-Input-input):hover {
-  background-color: rgba(255, 255, 255, 0.03);
+.moveBtn {
+  color: var(--text-muted, #9ca3af) !important;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  border-radius: 3px !important;
+}
+
+.moveBtn:hover:not(:disabled) {
+  color: var(--text-primary, #ffffff) !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.deleteBtn {
+  color: var(--text-muted, #9ca3af) !important;
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  border-radius: 4px !important;
+}
+
+.deleteBtn:hover {
+  color: #f87171 !important;
+  background-color: rgba(239, 68, 68, 0.12) !important;
+}
+
+.tableInput :global(.mantine-Input-input) {
+  font-family: var(--aether-font-mono, monospace) !important;
+  font-size: 12.5px !important;
+  height: 30px !important;
+  padding: 0 8px !important;
+  color: var(--text-primary, #e2e8f0);
+  background-color: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--aether-radius-sm, 4px) !important;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.tableInput :global(.mantine-Input-input:focus) {
+  border-color: var(--aether-color-primary-base, #3b82f6) !important;
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+.draggingRow {
+  opacity: 0.35 !important;
+  background-color: rgba(0, 132, 255, 0.05) !important;
+}
+
+/* Vibrant insertion line indicator across the row boundary */
+.dropAbove {
+  border-top: 2px solid #38bdf8 !important;
+  box-shadow: inset 0 2px 6px -1px rgba(56, 189, 248, 0.3) !important;
+}
+
+.dropAbove .colDrag::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: -4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #38bdf8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.9);
+  z-index: 20;
+  pointer-events: none;
+}
+
+.dropBelow {
+  border-bottom: 2px solid #38bdf8 !important;
+  box-shadow: inset 0 -2px 6px -1px rgba(56, 189, 248, 0.3) !important;
+}
+
+.dropBelow .colDrag::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  bottom: -4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #38bdf8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.9);
+  z-index: 20;
+  pointer-events: none;
 }
 
 .emptyState {
