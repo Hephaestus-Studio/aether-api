@@ -29,7 +29,8 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
   const [modalType, setModalType] = useState<"newFolder" | "rename" | "delete" | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [error, setError] = useState("");
-  const [isDragging, setIsDragging] = useState(false);
+  const isDragging = useWorkspaceStore((s) => s.activeDraggedId === node.id);
+  const setActiveDraggedId = useWorkspaceStore((s) => s.setActiveDraggedId);
   const [dropPosition, setDropPosition] = useState<"above" | "below" | "inside" | null>(null);
   const openTab = useTabStore((s) => s.openTab);
   const replaceTabId = useTabStore((s) => s.replaceTabId);
@@ -280,7 +281,7 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
 
   const handleDragStart = (e: React.DragEvent) => {
     activeDraggedNode = { node, parentNode };
-    setIsDragging(true);
+    setActiveDraggedId(node.id);
     e.dataTransfer.setData("text/plain", node.id);
     e.dataTransfer.effectAllowed = "move";
 
@@ -323,7 +324,7 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
 
   const handleDragEnd = () => {
     activeDraggedNode = null;
-    setIsDragging(false);
+    setActiveDraggedId(null);
     setDropPosition(null);
   };
 
@@ -447,7 +448,7 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
       console.error("Failed to move/reorder item:", err);
     } finally {
       activeDraggedNode = null;
-      setIsDragging(false);
+      setActiveDraggedId(null);
     }
   };
 

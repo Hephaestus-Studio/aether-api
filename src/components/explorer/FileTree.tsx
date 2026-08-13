@@ -1,9 +1,26 @@
+import { useEffect } from "react";
 import { Box } from "@mantine/core";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import FileTreeNode from "./FileTreeNode";
 
 export default function FileTree() {
   const treeData = useWorkspaceStore((s) => s.treeData);
+  const setActiveDraggedId = useWorkspaceStore((s) => s.setActiveDraggedId);
+
+  // Global safety cleanup: ensure no node stays stuck in dragging state
+  useEffect(() => {
+    const handleGlobalDragEnd = () => {
+      setActiveDraggedId(null);
+    };
+
+    window.addEventListener("dragend", handleGlobalDragEnd);
+    window.addEventListener("drop", handleGlobalDragEnd);
+
+    return () => {
+      window.removeEventListener("dragend", handleGlobalDragEnd);
+      window.removeEventListener("drop", handleGlobalDragEnd);
+    };
+  }, [setActiveDraggedId]);
 
   // Find the "collections" folder node
   const collectionsNode = treeData?.find((node) => node.name.toLowerCase() === "collections");

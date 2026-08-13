@@ -67,25 +67,28 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
   const [copiedPath, setCopiedPath] = useState(false);
 
   // Sync types on load/update
+  const bodyTypeProp = body.type;
+  const binaryFilePath = body.type === "binary" ? body.filePath : undefined;
+
   useEffect(() => {
     if (
-      body.type === "json" ||
-      body.type === "xml" ||
-      body.type === "text" ||
-      body.type === "yaml"
+      bodyTypeProp === "json" ||
+      bodyTypeProp === "xml" ||
+      bodyTypeProp === "text" ||
+      bodyTypeProp === "yaml"
     ) {
       setBodyType("raw");
-      if (body.type === "json") setRawLang("json");
-      else if (body.type === "xml") setRawLang("xml");
-      else if (body.type === "yaml") setRawLang("yaml");
+      if (bodyTypeProp === "json") setRawLang("json");
+      else if (bodyTypeProp === "xml") setRawLang("xml");
+      else if (bodyTypeProp === "yaml") setRawLang("yaml");
       else setRawLang("text");
     } else {
-      setBodyType(body.type);
+      setBodyType(bodyTypeProp);
     }
-    if (body.type === "binary") {
-      setBinaryPath(body.filePath || "");
+    if (bodyTypeProp === "binary") {
+      setBinaryPath(binaryFilePath || "");
     }
-  }, [body]);
+  }, [bodyTypeProp, binaryFilePath]);
 
   const handleTypeChange = (type: string) => {
     setBodyType(type);
@@ -143,82 +146,50 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
   // Form URL Encoded handlers
   const handleUrlencodedChange = (index: number, fields: Partial<KeyValuePair>) => {
     if (body.type !== "formUrlencoded") return;
-    const next = [...body.content];
-    next[index] = { ...next[index], ...fields };
-    onChange({ type: "formUrlencoded", content: next });
+    if (index >= body.content.length) {
+      onChange({
+        type: "formUrlencoded",
+        content: [...body.content, { key: "", value: "", enabled: true, description: "", ...fields }],
+      });
+    } else {
+      const next = [...body.content];
+      next[index] = { ...next[index], ...fields };
+      onChange({ type: "formUrlencoded", content: next });
+    }
   };
 
   const handleUrlencodedDelete = (index: number) => {
     if (body.type !== "formUrlencoded") return;
-    if (body.content.length <= 1) {
-      onChange({
-        type: "formUrlencoded",
-        content: [{ key: "", value: "", enabled: true, description: "" }],
-      });
-      return;
-    }
+    if (index >= body.content.length) return;
     onChange({
       type: "formUrlencoded",
       content: body.content.filter((_, i) => i !== index),
     });
   };
 
-  // Ensure Form URL Encoded has a blank row
-  useEffect(() => {
-    if (body.type === "formUrlencoded") {
-      const items = body.content;
-      if (
-        items.length === 0 ||
-        items[items.length - 1].key !== "" ||
-        items[items.length - 1].value !== ""
-      ) {
-        onChange({
-          type: "formUrlencoded",
-          content: [...items, { key: "", value: "", enabled: true, description: "" }],
-        });
-      }
-    }
-  }, [body, onChange]);
-
   // Form Data (Multipart) Handlers
   const handleMultipartChange = (index: number, fields: Partial<MultipartField>) => {
     if (body.type !== "multipartForm") return;
-    const next = [...body.content];
-    next[index] = { ...next[index], ...fields };
-    onChange({ type: "multipartForm", content: next });
+    if (index >= body.content.length) {
+      onChange({
+        type: "multipartForm",
+        content: [...body.content, { key: "", value: "", fieldType: "text", enabled: true, ...fields }],
+      });
+    } else {
+      const next = [...body.content];
+      next[index] = { ...next[index], ...fields };
+      onChange({ type: "multipartForm", content: next });
+    }
   };
 
   const handleMultipartDelete = (index: number) => {
     if (body.type !== "multipartForm") return;
-    if (body.content.length <= 1) {
-      onChange({
-        type: "multipartForm",
-        content: [{ key: "", value: "", fieldType: "text", enabled: true }],
-      });
-      return;
-    }
+    if (index >= body.content.length) return;
     onChange({
       type: "multipartForm",
       content: body.content.filter((_, i) => i !== index),
     });
   };
-
-  // Ensure Multipart Form has a blank row
-  useEffect(() => {
-    if (body.type === "multipartForm") {
-      const items = body.content;
-      if (
-        items.length === 0 ||
-        items[items.length - 1].key !== "" ||
-        items[items.length - 1].value !== ""
-      ) {
-        onChange({
-          type: "multipartForm",
-          content: [...items, { key: "", value: "", fieldType: "text", enabled: true }],
-        });
-      }
-    }
-  }, [body, onChange]);
 
   const handleSelectFile = async (index: number) => {
     try {
@@ -500,7 +471,12 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
               </tr>
             </thead>
             <tbody>
-              {body.content.map((item, idx) => (
+              {(body.content.length === 0 ||
+              body.content[body.content.length - 1].key !== "" ||
+              body.content[body.content.length - 1].value !== ""
+                ? [...body.content, { key: "", value: "", enabled: true, description: "" }]
+                : body.content
+              ).map((item, idx) => (
                 <tr key={idx}>
                   <td style={{ textAlign: "center" }}>
                     <Checkbox
@@ -568,7 +544,12 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
               </tr>
             </thead>
             <tbody>
-              {body.content.map((item, idx) => (
+              {(body.content.length === 0 ||
+              body.content[body.content.length - 1].key !== "" ||
+              body.content[body.content.length - 1].value !== ""
+                ? [...body.content, { key: "", value: "", fieldType: "text" as const, enabled: true }]
+                : body.content
+              ).map((item, idx) => (
                 <tr key={idx}>
                   <td style={{ textAlign: "center" }}>
                     <Checkbox

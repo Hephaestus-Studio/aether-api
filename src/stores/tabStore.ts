@@ -158,12 +158,16 @@ export const useTabStore = create<TabState>((set, get) => ({
   },
 
   markDirty: (tabId) => {
+    const tab = get().tabs.find((t) => t.id === tabId);
+    if (tab?.isDirty) return;
     set({
       tabs: get().tabs.map((t) => (t.id === tabId ? { ...t, isDirty: true } : t)),
     });
   },
 
   markClean: (tabId) => {
+    const tab = get().tabs.find((t) => t.id === tabId);
+    if (tab && !tab.isDirty) return;
     set({
       tabs: get().tabs.map((t) => (t.id === tabId ? { ...t, isDirty: false } : t)),
     });

@@ -36,7 +36,6 @@ export default function MonacoEditor({
   const [isReady, setIsReady] = useState(false);
 
   const valueRef = useRef(value);
-  valueRef.current = value;
 
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
@@ -176,19 +175,21 @@ export default function MonacoEditor({
       const model = editor.getModel();
       if (!model || model.isDisposed?.()) return;
 
-      if (value !== undefined && value !== model.getValue()) {
+      if (value !== undefined && value !== valueRef.current) {
         valueRef.current = value;
-        if (options?.readOnly) {
-          model.setValue(value);
-        } else {
-          editor.executeEdits("external-sync", [
-            {
-              range: model.getFullModelRange(),
-              text: value,
-              forceMoveMarkers: true,
-            },
-          ]);
-          editor.pushUndoStop();
+        if (value !== model.getValue()) {
+          if (options?.readOnly) {
+            model.setValue(value);
+          } else {
+            editor.executeEdits("external-sync", [
+              {
+                range: model.getFullModelRange(),
+                text: value,
+                forceMoveMarkers: true,
+              },
+            ]);
+            editor.pushUndoStop();
+          }
         }
       }
     } catch (err) {

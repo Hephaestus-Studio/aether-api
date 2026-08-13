@@ -61,6 +61,8 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
   const setSnippetModalOpen = useSnippetStore((s) => s.setSnippetModalOpen);
   const setDraft = useTabStore((s) => s.setDraft);
   const removeDraft = useTabStore((s) => s.removeDraft);
+  const activeTabId = useTabStore((s) => s.activeTabId);
+  const isActive = activeTabId === tabId;
 
   const activeProtocol = useTabStore((s) => s.protocols[tabId]) || "http";
   const setProtocol = useTabStore((s) => s.setProtocol);
@@ -110,6 +112,7 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
           } else {
             setRequest(res);
           }
+          markClean(tabId);
         }
       })
       .catch((err) => {
@@ -561,8 +564,8 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
         </Tabs.Panel>
       </Tabs>
 
-      {/* Code Snippet Generator Modal */}
-      <CodeSnippetModal request={request} />
+      {/* Code Snippet Generator Modal - only render for active tab to prevent multi-modal overlap */}
+      {isActive && <CodeSnippetModal request={request} />}
     </Box>
   );
 }

@@ -34,6 +34,10 @@ export default function CodeSnippetModal({ request }: Readonly<CodeSnippetModalP
 
   // Resolve headers and URL with environment variables
   const { resolvedUrl, resolvedHeaders } = useMemo(() => {
+    if (!isSnippetModalOpen) {
+      return { resolvedUrl: "", resolvedHeaders: {} };
+    }
+
     const varMap = new Map(
       (activeVariables || [])
         .filter((v: EnvVariableItem) => v.enabled)
@@ -82,28 +86,32 @@ export default function CodeSnippetModal({ request }: Readonly<CodeSnippetModalP
     }
 
     return { resolvedUrl: rUrl, resolvedHeaders: rHeaders };
-  }, [request, activeVariables]);
+  }, [isSnippetModalOpen, request, activeVariables]);
 
   const generatedCode = useMemo(() => {
+    if (!isSnippetModalOpen) return "";
     return generateSnippet(selectedLanguage, {
       request,
       resolvedUrl,
       resolvedHeaders,
       options,
     });
-  }, [selectedLanguage, request, resolvedUrl, resolvedHeaders, options]);
+  }, [isSnippetModalOpen, selectedLanguage, request, resolvedUrl, resolvedHeaders, options]);
 
   const lineCount = useMemo(() => {
+    if (!generatedCode) return 0;
     return generatedCode.split("\n").length;
   }, [generatedCode]);
 
   const lineNumbers = useMemo(() => {
+    if (lineCount === 0) return "";
     return Array.from({ length: lineCount }, (_, i) => i + 1).join("\n");
   }, [lineCount]);
 
   const highlightedCode = useMemo(() => {
+    if (!isSnippetModalOpen || !generatedCode) return "";
     return highlightSnippet(generatedCode, selectedLanguage);
-  }, [generatedCode, selectedLanguage]);
+  }, [isSnippetModalOpen, generatedCode, selectedLanguage]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(generatedCode);

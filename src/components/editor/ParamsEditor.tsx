@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Box, Table, Checkbox, ActionIcon, Text, ScrollArea } from "@mantine/core";
 import { useElementSize } from "@mantine/hooks";
 import { IconTrash, IconGripVertical } from "@tabler/icons-react";
@@ -20,28 +20,26 @@ export default function ParamsEditor({ params, onChange }: Readonly<ParamsEditor
     position: "above" | "below";
   } | null>(null);
 
-  // Automatically ensure there is always one blank row at the bottom of the table
-  useEffect(() => {
-    if (
-      params.length === 0 ||
-      params[params.length - 1].key !== "" ||
-      params[params.length - 1].value !== ""
-    ) {
-      onChange([...params, { key: "", value: "", enabled: true, description: "" }]);
-    }
-  }, [params, onChange]);
+  // Virtual blank row at the bottom if needed without mutating parent state on mount
+  const rows =
+    params.length === 0 ||
+    params[params.length - 1].key !== "" ||
+    params[params.length - 1].value !== ""
+      ? [...params, { key: "", value: "", enabled: true, description: "" }]
+      : params;
 
   const handleItemChange = (index: number, fields: Partial<KeyValuePair>) => {
-    const next = [...params];
-    next[index] = { ...next[index], ...fields };
-    onChange(next);
+    if (index >= params.length) {
+      onChange([...params, { key: "", value: "", enabled: true, description: "", ...fields }]);
+    } else {
+      const next = [...params];
+      next[index] = { ...next[index], ...fields };
+      onChange(next);
+    }
   };
 
   const handleDelete = (index: number) => {
-    if (params.length <= 1) {
-      onChange([{ key: "", value: "", enabled: true, description: "" }]);
-      return;
-    }
+    if (index >= params.length) return;
     onChange(params.filter((_, i) => i !== index));
   };
 
@@ -171,8 +169,8 @@ export default function ParamsEditor({ params, onChange }: Readonly<ParamsEditor
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody onDragLeave={() => setDropTarget(null)}>
-            {params.map((p, idx) => {
-              const isLastRow = idx === params.length - 1 && !p.key && !p.value && !p.description;
+            {rows.map((p, idx) => {
+              const isLastRow = idx === rows.length - 1 && !p.key && !p.value && !p.description;
               const isDragged = draggedIndex === idx;
               const isTarget = dropTarget?.index === idx;
 

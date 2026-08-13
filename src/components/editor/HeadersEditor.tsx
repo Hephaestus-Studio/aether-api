@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Box, Table, Checkbox, ActionIcon, Text, ScrollArea } from "@mantine/core";
 import { useElementSize } from "@mantine/hooks";
 import {
@@ -49,28 +49,26 @@ export default function HeadersEditor({ headers, onChange }: Readonly<HeadersEdi
     position: "above" | "below";
   } | null>(null);
 
-  // Automatically ensure there is always one blank row at the bottom of the custom headers list
-  useEffect(() => {
-    if (
-      headers.length === 0 ||
-      headers[headers.length - 1].key !== "" ||
-      headers[headers.length - 1].value !== ""
-    ) {
-      onChange([...headers, { key: "", value: "", enabled: true, description: "" }]);
-    }
-  }, [headers, onChange]);
+  // Virtual blank row at the bottom if needed without mutating parent state on mount
+  const rows =
+    headers.length === 0 ||
+    headers[headers.length - 1].key !== "" ||
+    headers[headers.length - 1].value !== ""
+      ? [...headers, { key: "", value: "", enabled: true, description: "" }]
+      : headers;
 
   const handleItemChange = (index: number, fields: Partial<KeyValuePair>) => {
-    const next = [...headers];
-    next[index] = { ...next[index], ...fields };
-    onChange(next);
+    if (index >= headers.length) {
+      onChange([...headers, { key: "", value: "", enabled: true, description: "", ...fields }]);
+    } else {
+      const next = [...headers];
+      next[index] = { ...next[index], ...fields };
+      onChange(next);
+    }
   };
 
   const handleDelete = (index: number) => {
-    if (headers.length <= 1) {
-      onChange([{ key: "", value: "", enabled: true, description: "" }]);
-      return;
-    }
+    if (index >= headers.length) return;
     onChange(headers.filter((_, i) => i !== index));
   };
 
@@ -287,8 +285,8 @@ export default function HeadersEditor({ headers, onChange }: Readonly<HeadersEdi
               ))}
 
             {/* 2. User editable headers */}
-            {headers.map((h, idx) => {
-              const isLastRow = idx === headers.length - 1 && !h.key && !h.value && !h.description;
+            {rows.map((h, idx) => {
+              const isLastRow = idx === rows.length - 1 && !h.key && !h.value && !h.description;
               const isDragged = draggedIndex === idx;
               const isTarget = dropTarget?.index === idx;
 

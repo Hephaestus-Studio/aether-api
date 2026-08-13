@@ -1,3 +1,4 @@
+import { useState, useEffect, useCallback } from "react";
 import {
   Box,
   ScrollArea,
@@ -16,14 +17,83 @@ import {
 } from "@tabler/icons-react";
 import { useTabStore } from "@/stores/tabStore";
 import { getMethodColor } from "@/utils/httpMethods";
+import UnsavedChangesModal, { type PendingCloseAction } from "@/components/modals/UnsavedChangesModal";
 import classes from "./EditorTabs.module.css";
 
 export default function EditorTabs() {
-  const { tabs, activeTabId, setActiveTab, closeTab, closeOtherTabs, closeAllTabs } = useTabStore();
+  const tabs = useTabStore((s) => s.tabs);
+  const activeTabId = useTabStore((s) => s.activeTabId);
+  const setActiveTab = useTabStore((s) => s.setActiveTab);
+  const closeTab = useTabStore((s) => s.closeTab);
+  const closeOtherTabs = useTabStore((s) => s.closeOtherTabs);
+  const closeAllTabs = useTabStore((s) => s.closeAllTabs);
   const responsePanelOpened = useTabStore((s) => s.responsePanelOpened);
   const toggleResponsePanel = useTabStore((s) => s.toggleResponsePanel);
-  const layoutOrientation = useTabStore((s) => s.layoutOrientation);
   const toggleLayoutOrientation = useTabStore((s) => s.toggleLayoutOrientation);
+  const layoutOrientation = useTabStore((s) => s.layoutOrientation);
+
+  const [pendingCloseAction, setPendingCloseAction] = useState<PendingCloseAction | null>(null);
+
+  const handleRequestCloseTab = useCallback(
+    (tabId: string) => {
+      const tab = tabs.find((t) => t.id === tabId);
+      if (!tab) return;
+      if (tab.isDirty) {
+        setPendingCloseAction({
+          type: "single",
+          tabId,
+          dirtyTabs: [tab],
+        });
+      } else {
+        closeTab(tabId);
+      }
+    },
+    [tabs, closeTab],
+  );
+
+  const handleRequestCloseOtherTabs = useCallback(
+    (tabId: string) => {
+      const dirtyTabs = tabs.filter((t) => t.id !== tabId && t.isDirty);
+      if (dirtyTabs.length > 0) {
+        setPendingCloseAction({
+          type: "others",
+          tabId,
+          dirtyTabs,
+        });
+      } else {
+        closeOtherTabs(tabId);
+      }
+    },
+    [tabs, closeOtherTabs],
+  );
+
+  const handleRequestCloseAllTabs = useCallback(() => {
+    const dirtyTabs = tabs.filter((t) => t.isDirty);
+    if (dirtyTabs.length > 0) {
+      setPendingCloseAction({
+        type: "all",
+        dirtyTabs,
+      });
+    } else {
+      closeAllTabs();
+    }
+  }, [tabs, closeAllTabs]);
+
+  // Keyboard shortcut: Ctrl+W or Cmd+W to close active tab with dirty check
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "w") {
+        e.preventDefault();
+        e.stopPropagation();
+        if (activeTabId) {
+          handleRequestCloseTab(activeTabId);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => window.removeEventListener("keydown", handleKeyDown, true);
+  }, [activeTabId, handleRequestCloseTab]);
 
   return (
     <Box className={classes.tabBar}>
@@ -54,16 +124,16 @@ export default function EditorTabs() {
                       size="xs"
                       onClick={(e) => {
                         e.stopPropagation();
-                        closeTab(tab.id);
+                        handleRequestCloseTab(tab.id);
                       }}
                       className={classes.closeBtn}
                     />
                   </Box>
                 </Menu.ContextMenu>
                 <Menu.Dropdown>
-                  <Menu.Item onClick={() => closeTab(tab.id)}>Close Tab</Menu.Item>
-                  <Menu.Item onClick={() => closeOtherTabs(tab.id)}>Close Others</Menu.Item>
-                  <Menu.Item onClick={() => closeAllTabs()}>Close All</Menu.Item>
+                  <Menu.Item onClick={() => handleRequestCloseTab(tab.id)}>Close Tab</Menu.Item>
+                  <Menu.Item onClick={() => handleRequestCloseOtherTabs(tab.id)}>Close Others</Menu.Item>
+                  <Menu.Item onClick={() => handleRequestCloseAllTabs()}>Close All</Menu.Item>
                 </Menu.Dropdown>
               </Menu>
             );
@@ -119,6 +189,12 @@ export default function EditorTabs() {
           </Tooltip>
         </Group>
       )}
+
+      {/* Unsaved Changes Confirmation Modal */}
+      <UnsavedChangesModal
+        pendingAction={pendingCloseAction}
+        onClose={() => setPendingCloseAction(null)}
+      />
     </Box>
   );
 }

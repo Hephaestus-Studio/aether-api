@@ -14,6 +14,7 @@ interface WorkspaceState {
   isLoading: boolean;
   activeView: "explorer" | "environment";
   expandedNodeIds: Record<string, boolean>;
+  activeDraggedId: string | null;
 
   setWorkspacePath: (path: string | null) => void;
   setTreeData: (tree: WorkspaceTreeNode[] | null) => void;
@@ -21,6 +22,7 @@ interface WorkspaceState {
   setGitStatus: (status: GitStatus | null) => void;
   setLoading: (loading: boolean) => void;
   setActiveView: (view: "explorer" | "environment") => void;
+  setActiveDraggedId: (id: string | null) => void;
   toggleNodeExpanded: (nodeId: string) => void;
   setNodeExpanded: (nodeId: string, expanded: boolean) => void;
   expandAllCollections: () => void;
@@ -55,12 +57,14 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
   isLoading: false,
   activeView: "explorer",
   expandedNodeIds: {},
+  activeDraggedId: null,
   setWorkspacePath: (path) => set({ workspacePath: path }),
   setTreeData: (tree) => set({ treeData: tree }),
   setWorkspaceInfo: (info) => set({ workspaceInfo: info }),
   setGitStatus: (status) => set({ gitStatus: status }),
   setLoading: (loading) => set({ isLoading: loading }),
   setActiveView: (view) => set({ activeView: view }),
+  setActiveDraggedId: (id) => set({ activeDraggedId: id }),
   toggleNodeExpanded: (nodeId) =>
     set((state) => ({
       expandedNodeIds: {
@@ -88,5 +92,6 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
       gitStatus: null,
       activeView: "explorer",
       expandedNodeIds: {},
+      activeDraggedId: null,
     }),
 }));
