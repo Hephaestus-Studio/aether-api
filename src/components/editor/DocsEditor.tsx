@@ -312,6 +312,18 @@ export default function DocsEditor({
               onChange={(val) => onChange(val || "")}
               language="markdown"
               theme="aether-dark"
+              beforeMount={(monaco) => {
+                try {
+                  monaco.editor.defineTheme("aether-dark", {
+                    base: "vs-dark",
+                    inherit: true,
+                    rules: [],
+                    colors: {
+                      "editor.background": "#1e1e1e",
+                    },
+                  });
+                } catch {}
+              }}
               onMount={handleEditorMount}
               options={{
                 minimap: { enabled: false },

@@ -59,6 +59,19 @@ export default function MonacoEditor({
         monacoRef.current = monaco;
 
         try {
+          monaco.editor.defineTheme("aether-dark", {
+            base: "vs-dark",
+            inherit: true,
+            rules: [],
+            colors: {
+              "editor.background": "#1e1e1e",
+            },
+          });
+        } catch {
+          // ignore if already defined
+        }
+
+        try {
           beforeMountRef.current?.(monaco);
         } catch (err) {
           console.warn("Monaco beforeMount error:", err);
