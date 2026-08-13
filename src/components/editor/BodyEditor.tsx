@@ -75,6 +75,10 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
       body.type === "yaml"
     ) {
       setBodyType("raw");
+      if (body.type === "json") setRawLang("json");
+      else if (body.type === "xml") setRawLang("xml");
+      else if (body.type === "yaml") setRawLang("yaml");
+      else setRawLang("text");
     } else {
       setBodyType(body.type);
     }

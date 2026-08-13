@@ -59,6 +59,8 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
   const setTabLoading = useTabStore((s) => s.setLoading);
   const setResponsePanelOpened = useTabStore((s) => s.setResponsePanelOpened);
   const setSnippetModalOpen = useSnippetStore((s) => s.setSnippetModalOpen);
+  const setDraft = useTabStore((s) => s.setDraft);
+  const removeDraft = useTabStore((s) => s.removeDraft);
 
   const activeProtocol = useTabStore((s) => s.protocols[tabId]) || "http";
   const setProtocol = useTabStore((s) => s.setProtocol);
@@ -92,9 +94,16 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
   };
 
   useEffect(() => {
+    let isCancelled = false;
+    const currentDraft = useTabStore.getState().drafts[tabId];
+    if (currentDraft) {
+      setRequest(currentDraft);
+      return;
+    }
+
     invoke<any>("read_request", { path: tabId })
       .then((res) => {
-        if (res) {
+        if (!isCancelled && res) {
           if (res.params && res.params.length > 0 && res.url) {
             const syncedUrl = buildUrlWithParams(res.url, res.params);
             setRequest({ ...res, url: syncedUrl });
@@ -103,7 +112,13 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
           }
         }
       })
-      .catch((err) => console.error("Error reading request details:", err));
+      .catch((err) => {
+        if (!isCancelled) console.error("Error reading request details:", err);
+      });
+
+    return () => {
+      isCancelled = true;
+    };
   }, [tabId]);
 
   const handleSend = async () => {
@@ -116,6 +131,7 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
       if (isDirty) {
         await invoke("update_request", { path: tabId, requestDetails: request });
         markClean(tabId);
+        removeDraft(tabId);
       }
 
       const response = await invoke<any>("execute_request", {
@@ -167,6 +183,7 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
     try {
       await invoke("update_request", { path: tabId, requestDetails: request });
       markClean(tabId);
+      removeDraft(tabId);
       notifications.show({
         title: "Request Saved",
         message: `Saved changes to "${request.name || "Request"}"`,
@@ -210,7 +227,9 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
       updatedFields.params = parseParamsFromUrl(fields.url, request.params);
     }
 
-    setRequest({ ...request, ...updatedFields });
+    const nextRequest = { ...request, ...updatedFields };
+    setRequest(nextRequest);
+    setDraft(tabId, nextRequest);
     if (updatedFields.method) {
       updateTab(tabId, { method: updatedFields.method });
     }

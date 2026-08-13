@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { TabItem } from "@/types/request";
+import type { TabItem, HttpRequestDetails } from "@/types/request";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { saveWorkspaceSession } from "@/utils/workspaceSession";
 
@@ -10,6 +10,7 @@ interface TabState {
   responses: Record<string, any>;
   loadingStates: Record<string, boolean>;
   protocols: Record<string, string>;
+  drafts: Record<string, HttpRequestDetails>;
 
   openTab: (tab: TabItem) => void;
   closeTab: (tabId: string) => void;
@@ -31,6 +32,8 @@ interface TabState {
   setResponse: (tabId: string, response: any) => void;
   setLoading: (tabId: string, loading: boolean) => void;
   setProtocol: (tabId: string, protocol: string) => void;
+  setDraft: (tabId: string, draft: HttpRequestDetails) => void;
+  removeDraft: (tabId: string) => void;
   terminalOpened: boolean;
   toggleTerminal: () => void;
   setTerminalOpened: (opened: boolean) => void;
@@ -56,6 +59,7 @@ export const useTabStore = create<TabState>((set, get) => ({
   responses: {},
   loadingStates: {},
   protocols: {},
+  drafts: {},
 
   openTab: (tab) => {
     const { tabs, responses } = get();
@@ -75,7 +79,7 @@ export const useTabStore = create<TabState>((set, get) => ({
   },
 
   closeTab: (tabId) => {
-    const { tabs, activeTabId, closedTabsHistory, responses, loadingStates, protocols } = get();
+    const { tabs, activeTabId, closedTabsHistory, responses, loadingStates, protocols, drafts } = get();
     const tabToClose = tabs.find((t) => t.id === tabId);
     if (!tabToClose) return;
 
@@ -95,6 +99,9 @@ export const useTabStore = create<TabState>((set, get) => ({
     const newProtocols = { ...protocols };
     delete newProtocols[tabId];
 
+    const newDrafts = { ...drafts };
+    delete newDrafts[tabId];
+
     set({
       tabs: newTabs,
       activeTabId: newActiveId,
@@ -102,6 +109,7 @@ export const useTabStore = create<TabState>((set, get) => ({
       responses: newResponses,
       loadingStates: newLoadingStates,
       protocols: newProtocols,
+      drafts: newDrafts,
     });
   },
 
@@ -168,7 +176,7 @@ export const useTabStore = create<TabState>((set, get) => ({
   },
 
   replaceTabId: (oldId, newId) => {
-    const { tabs, activeTabId, responses, loadingStates, protocols } = get();
+    const { tabs, activeTabId, responses, loadingStates, protocols, drafts } = get();
     const newTabs = tabs.map((t) => (t.id === oldId ? { ...t, id: newId } : t));
 
     const newResponses = { ...responses };
@@ -189,12 +197,19 @@ export const useTabStore = create<TabState>((set, get) => ({
       delete newProtocols[oldId];
     }
 
+    const newDrafts = { ...drafts };
+    if (oldId in newDrafts) {
+      newDrafts[newId] = newDrafts[oldId];
+      delete newDrafts[oldId];
+    }
+
     set({
       tabs: newTabs,
       activeTabId: activeTabId === oldId ? newId : activeTabId,
       responses: newResponses,
       loadingStates: newLoadingStates,
       protocols: newProtocols,
+      drafts: newDrafts,
     });
   },
 
@@ -207,19 +222,21 @@ export const useTabStore = create<TabState>((set, get) => ({
   },
 
   closeAllTabs: () =>
-    set({ tabs: [], activeTabId: null, responses: {}, loadingStates: {}, protocols: {} }),
+    set({ tabs: [], activeTabId: null, responses: {}, loadingStates: {}, protocols: {}, drafts: {} }),
 
   closeOtherTabs: (tabId) => {
-    const { tabs, responses, loadingStates, protocols } = get();
+    const { tabs, responses, loadingStates, protocols, drafts } = get();
     const newResponses = { [tabId]: responses[tabId] };
     const newLoadingStates = { [tabId]: loadingStates[tabId] };
     const newProtocols = { [tabId]: protocols[tabId] };
+    const newDrafts = drafts[tabId] ? { [tabId]: drafts[tabId] } : {};
     set({
       tabs: tabs.filter((t) => t.id === tabId),
       activeTabId: tabId,
       responses: newResponses,
       loadingStates: newLoadingStates,
       protocols: newProtocols,
+      drafts: newDrafts,
     });
   },
 
@@ -248,6 +265,21 @@ export const useTabStore = create<TabState>((set, get) => ({
         [tabId]: protocol,
       },
     });
+  },
+
+  setDraft: (tabId, draft) => {
+    set({
+      drafts: {
+        ...get().drafts,
+        [tabId]: draft,
+      },
+    });
+  },
+
+  removeDraft: (tabId) => {
+    const drafts = { ...get().drafts };
+    delete drafts[tabId];
+    set({ drafts });
   },
 
   bottomPanelOpened: false,

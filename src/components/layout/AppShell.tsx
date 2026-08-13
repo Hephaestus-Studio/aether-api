@@ -21,11 +21,35 @@ export default function AppShell() {
   const [quickOpenOpened, setQuickOpenOpened] = useState(false);
   const [commandPaletteOpened, setCommandPaletteOpened] = useState(false);
 
+  const tabs = useTabStore((s) => s.tabs);
   const activeTabId = useTabStore((s) => s.activeTabId);
   const bottomPanelOpened = useTabStore((s) => s.bottomPanelOpened);
   const activeBottomPanelTab = useTabStore((s) => s.activeBottomPanelTab);
   const responsePanelOpened = useTabStore((s) => s.responsePanelOpened);
   const layoutOrientation = useTabStore((s) => s.layoutOrientation);
+
+  // Lazy Mount + Keep-Alive: only mount tabs when activated once, keep mounted until closed
+  const [mountedTabIds, setMountedTabIds] = useState<Set<string>>(() =>
+    new Set(activeTabId ? [activeTabId] : [])
+  );
+
+  useEffect(() => {
+    setMountedTabIds((prev) => {
+      const next = new Set<string>();
+      const openIds = new Set(tabs.map((t) => t.id));
+      for (const id of prev) {
+        if (openIds.has(id)) {
+          next.add(id);
+        }
+      }
+      if (activeTabId && openIds.has(activeTabId)) {
+        next.add(activeTabId);
+      }
+      return next;
+    });
+  }, [activeTabId, tabs]);
+
+  const renderedTabs = tabs.filter((t) => mountedTabIds.has(t.id));
 
   const MIN_SIDEBAR_WIDTH = 280;
   const MAX_SIDEBAR_WIDTH = 600;
@@ -46,32 +70,33 @@ export default function AppShell() {
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       const deltaX = moveEvent.clientX - startX;
-      const newWidth = startWidth + deltaX;
-
-      const clampedWidth = Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, newWidth));
-      setSidebarWidth(clampedWidth);
+      const newWidth = Math.min(
+        MAX_SIDEBAR_WIDTH,
+        Math.max(MIN_SIDEBAR_WIDTH, startWidth + deltaX)
+      );
+      setSidebarWidth(newWidth);
     };
 
     const handleMouseUp = () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+      
       if (workspaceInfo) {
         setWorkspaceInfo({
           ...workspaceInfo,
           settings: {
             ...workspaceInfo.settings,
-            sidebarWidth: Math.max(MIN_SIDEBAR_WIDTH, sidebarWidthRef.current),
+            sidebarWidth: sidebarWidthRef.current,
           },
         });
       }
     };
 
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
   };
 
-  const navWidth = sidebarOpened ? Math.max(MIN_SIDEBAR_WIDTH, sidebarWidth) : 24;
+  const navWidth = sidebarOpened ? sidebarWidth : 24;
 
   return (
     <Box className={classes.shellRoot}>
@@ -98,11 +123,41 @@ export default function AppShell() {
             <SplitPane
               collapsed={!bottomPanelOpened}
               topPanel={
-                activeTabId ? (
+                activeTabId && renderedTabs.length > 0 ? (
                   <SplitPane
                     collapsed={!responsePanelOpened}
-                    topPanel={<RequestEditor tabId={activeTabId} />}
-                    bottomPanel={<ResponseViewer tabId={activeTabId} />}
+                    topPanel={
+                      <Box style={{ width: "100%", height: "100%", position: "relative" }}>
+                        {renderedTabs.map((tab) => (
+                          <Box
+                            key={tab.id}
+                            style={{
+                              display: tab.id === activeTabId ? "block" : "none",
+                              width: "100%",
+                              height: "100%",
+                            }}
+                          >
+                            <RequestEditor tabId={tab.id} />
+                          </Box>
+                        ))}
+                      </Box>
+                    }
+                    bottomPanel={
+                      <Box style={{ width: "100%", height: "100%", position: "relative" }}>
+                        {renderedTabs.map((tab) => (
+                          <Box
+                            key={tab.id}
+                            style={{
+                              display: tab.id === activeTabId ? "block" : "none",
+                              width: "100%",
+                              height: "100%",
+                            }}
+                          >
+                            <ResponseViewer tabId={tab.id} />
+                          </Box>
+                        ))}
+                      </Box>
+                    }
                     orientation={layoutOrientation}
                     minTopSize={layoutOrientation === "horizontal" ? 320 : 180}
                     minBottomSize={layoutOrientation === "horizontal" ? 280 : 160}
