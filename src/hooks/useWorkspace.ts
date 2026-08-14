@@ -43,6 +43,18 @@ export function useWorkspace() {
             console.error("Failed to load initial git status:", gitErr);
           }
 
+          // Check Master Key status and prompt if workspace contains encrypted secrets
+          try {
+            const status = await invoke<any>("get_master_key_status");
+            const { useEnvStore } = await import("@/stores/envStore");
+            useEnvStore.getState().setMasterKeyStatus(status);
+            if (status.hasEncryptedSecrets && !status.hasMasterKey) {
+              useEnvStore.getState().setMasterKeyModalOpen(true);
+            }
+          } catch (keyErr) {
+            console.error("Failed to check master key status:", keyErr);
+          }
+
           try {
             const restored = await restoreWorkspaceSession(path);
             if (restored) {
@@ -74,6 +86,8 @@ export function useWorkspace() {
       await invoke("close_workspace");
       store.reset();
       tabStore.closeAllTabs();
+      const { useEnvStore } = await import("@/stores/envStore");
+      useEnvStore.getState().reset();
 
       const currentWindow = getCurrentWindow();
       if (currentWindow.label === "main") {

@@ -6,8 +6,10 @@ import { useTabStore } from "@/stores/tabStore";
 import classes from "./StatusBar.module.css";
 
 export default function StatusBar() {
-  const { environments, activeEnvironmentName, setActiveEnvironment } = useEnvStore();
-  const { workspacePath } = useWorkspaceStore();
+  const environments = useEnvStore((s) => s.environments);
+  const activeEnvironmentName = useEnvStore((s) => s.activeEnvironmentName);
+  const setActiveEnvironment = useEnvStore((s) => s.setActiveEnvironment);
+  const workspacePath = useWorkspaceStore((s) => s.workspacePath);
   const activeTabId = useTabStore((s) => s.activeTabId);
   const bottomPanelOpened = useTabStore((s) => s.bottomPanelOpened);
   const activeBottomPanelTab = useTabStore((s) => s.activeBottomPanelTab);

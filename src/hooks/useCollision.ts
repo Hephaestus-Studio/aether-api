@@ -51,7 +51,6 @@ export function useCollision<
     return () => {
       observer.disconnect();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkCollision, ...dependencies]);
 
   return {

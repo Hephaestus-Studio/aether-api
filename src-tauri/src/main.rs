@@ -73,6 +73,11 @@ fn main() {
             commands::environment::update_environment,
             commands::environment::rename_environment,
             commands::environment::delete_environment,
+            commands::environment::get_master_key_status,
+            commands::environment::set_master_key,
+            commands::environment::generate_master_key,
+            commands::environment::remove_master_key,
+            commands::environment::cleanup_legacy_dotenv_files,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {

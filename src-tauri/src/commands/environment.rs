@@ -1,7 +1,11 @@
 use crate::commands::workspace::{sanitize_name, AppState};
+use crate::engine::crypto;
+use crate::engine::key_manager;
 use crate::errors::AppError;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
 use tauri::State;
 
 /// Describes a single environment variable entry.
@@ -9,13 +13,16 @@ use tauri::State;
 pub struct EnvVariableItem {
     /// The variable key/name.
     pub key: String,
-    /// The variable value.
+    /// The variable value (decrypted plaintext or locked placeholder).
     pub value: String,
-    /// The format type of the variable: "text" or "secret".
+    /// The format type of the variable: "default" | "text" or "secret".
     #[serde(rename = "type")]
     pub var_type: String,
     /// Whether the variable is active.
     pub enabled: bool,
+    /// True if the variable is encrypted and locked (no Master Key provided to decrypt).
+    #[serde(default, rename = "isLocked")]
+    pub is_locked: bool,
 }
 
 /// Detailed description payload of an environment.
@@ -39,10 +46,332 @@ pub struct EnvironmentSummary {
     pub is_secret_masked: bool,
 }
 
+/// Master Key status payload for the active workspace.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MasterKeyStatus {
+    /// True if a Master Key is currently configured / unlocked in this session or local disk.
+    pub has_master_key: bool,
+    /// True if any environment in the workspace contains encrypted secrets.
+    pub has_encrypted_secrets: bool,
+    /// True if legacy `.env` or `.env.*` files exist in workspace root.
+    pub has_legacy_dotenv: bool,
+}
+
+/// Helper to locate the environment YAML file trying sanitized name first, then raw name.
+pub fn find_environment_file(workspace_path: &Path, name: &str) -> Option<PathBuf> {
+    let env_dir = workspace_path.join("environments");
+    let sanitized = sanitize_name(name);
+
+    let path = env_dir.join(format!("{}.yml", sanitized));
+    if path.exists() {
+        return Some(path);
+    }
+    let path = env_dir.join(format!("{}.yaml", sanitized));
+    if path.exists() {
+        return Some(path);
+    }
+    let path = env_dir.join(format!("{}.yml", name));
+    if path.exists() {
+        return Some(path);
+    }
+    let path = env_dir.join(format!("{}.yaml", name));
+    if path.exists() {
+        return Some(path);
+    }
+
+    None
+}
+
+/// Checks if any legacy `.env` or `.env.*` files exist at workspace root.
+pub fn check_legacy_dotenv_files(workspace_path: &Path) -> bool {
+    let global_env = workspace_path.join(".env");
+    if global_env.exists() {
+        return true;
+    }
+
+    if let Ok(entries) = std::fs::read_dir(workspace_path) {
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().to_string();
+            if name.starts_with(".env.") {
+                return true;
+            }
+        }
+    }
+
+    false
+}
+
+/// Reads key-value pairs from legacy global `.env` merged with specific `.env.<env_name>`.
+pub fn read_legacy_dot_env(workspace_path: &Path, env_name: &str) -> HashMap<String, String> {
+    let mut map = HashMap::new();
+
+    // Read global .env first
+    let global_env = workspace_path.join(".env");
+    if global_env.exists() {
+        if let Ok(content) = std::fs::read_to_string(&global_env) {
+            parse_env_content(&content, &mut map);
+        }
+    }
+
+    // Read environment specific .env.<env_name>
+    let sanitized = sanitize_name(env_name);
+    let env_path = workspace_path.join(format!(".env.{}", sanitized));
+    if env_path.exists() && env_path != global_env {
+        if let Ok(content) = std::fs::read_to_string(&env_path) {
+            parse_env_content(&content, &mut map);
+        }
+    }
+
+    map
+}
+
+fn parse_env_content(content: &str, map: &mut HashMap<String, String>) {
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;
+        }
+        if let Some((k, v)) = trimmed.split_once('=') {
+            let key = k.trim().to_string();
+            let val = v.trim().trim_matches('"').trim_matches('\'').to_string();
+            map.insert(key, val);
+        }
+    }
+}
+
+/// Tauri command to get the Master Key status of the active workspace.
+#[tauri::command]
+pub async fn get_master_key_status(
+    state: State<'_, AppState>,
+) -> Result<MasterKeyStatus, AppError> {
+    let ws = state.workspace.lock().await;
+    let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
+
+    let has_key = key_manager::get_master_key(&ws_state.path).is_some();
+    let has_legacy = check_legacy_dotenv_files(&ws_state.path);
+
+    let mut has_encrypted = false;
+    let env_dir = ws_state.path.join("environments");
+    if env_dir.exists() {
+        if let Ok(entries) = std::fs::read_dir(&env_dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_file() {
+                    let filename = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+                    if filename.ends_with(".yml") || filename.ends_with(".yaml") {
+                        if let Ok(env) = crate::engine::yaml_parser::read_and_validate_yaml::<
+                            crate::models::environment::Environment,
+                        >(&path)
+                        {
+                            if env.variables.iter().any(|v| crypto::is_encrypted(&v.value)) {
+                                has_encrypted = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(MasterKeyStatus {
+        has_master_key: has_key,
+        has_encrypted_secrets: has_encrypted,
+        has_legacy_dotenv: has_legacy,
+    })
+}
+
+/// Tauri command to set, unlock, or rotate the Master Key in RAM for the active workspace.
+#[tauri::command]
+pub async fn set_master_key(
+    key: String,
+    current_key: Option<String>,
+    _persist: Option<bool>,
+    state: State<'_, AppState>,
+) -> Result<(), AppError> {
+    let ws = state.workspace.lock().await;
+    let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
+
+    let new_key = key.trim().to_string();
+    if new_key.is_empty() {
+        return Err(AppError::CryptoError("Master Key cannot be empty".into()));
+    }
+
+    let salt = ws_state.path.to_string_lossy().as_bytes().to_vec();
+
+    if let Some(existing_key) = key_manager::get_master_key(&ws_state.path) {
+        // Workspace already has an active master key in RAM -> changing/rotating key requires validating current_key
+        let provided = current_key.unwrap_or_default().trim().to_string();
+        if provided.is_empty() {
+            return Err(AppError::InvalidMasterKey(
+                "Current Master Key is required to change key.".into(),
+            ));
+        }
+        if existing_key.trim() != provided {
+            return Err(AppError::InvalidMasterKey(
+                "Current Master Key is incorrect.".into(),
+            ));
+        }
+
+        // Re-encrypt existing secret variables across all environment files with the new key
+        let env_dir = ws_state.path.join("environments");
+        if env_dir.exists() {
+            if let Ok(entries) = std::fs::read_dir(&env_dir) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.is_file() {
+                        let is_yaml = path
+                            .extension()
+                            .and_then(|e| e.to_str())
+                            .map(|ext| {
+                                ext.eq_ignore_ascii_case("yml") || ext.eq_ignore_ascii_case("yaml")
+                            })
+                            .unwrap_or(false);
+                        if is_yaml {
+                            if let Ok(mut env) = crate::engine::yaml_parser::read_and_validate_yaml::<
+                                crate::models::environment::Environment,
+                            >(&path)
+                            {
+                                let mut modified = false;
+                                for v in &mut env.variables {
+                                    if matches!(
+                                        v.var_type,
+                                        crate::models::environment::VariableType::Secret
+                                    ) {
+                                        if let Ok(decrypted) =
+                                            crypto::decrypt_secret(&v.value, &existing_key, &salt)
+                                        {
+                                            if let Ok(re_encrypted) =
+                                                crypto::encrypt_secret(&decrypted, &new_key, &salt)
+                                            {
+                                                v.value = re_encrypted;
+                                                modified = true;
+                                            }
+                                        }
+                                    }
+                                }
+                                if modified {
+                                    let _ =
+                                        crate::engine::yaml_parser::atomic_write_yaml(&path, &env);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        // No active master key in RAM yet -> user is unlocking or setting for the first time.
+        // If workspace already has encrypted secrets, verify that the key can decrypt them!
+        let env_dir = ws_state.path.join("environments");
+        if env_dir.exists() {
+            if let Ok(entries) = std::fs::read_dir(&env_dir) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.is_file() {
+                        if let Ok(env) = crate::engine::yaml_parser::read_and_validate_yaml::<
+                            crate::models::environment::Environment,
+                        >(&path)
+                        {
+                            for v in &env.variables {
+                                if matches!(
+                                    v.var_type,
+                                    crate::models::environment::VariableType::Secret
+                                ) && crypto::is_encrypted(&v.value)
+                                {
+                                    if crypto::decrypt_secret(&v.value, &new_key, &salt).is_err() {
+                                        return Err(AppError::InvalidMasterKey(
+                                            "The provided Master Key cannot decrypt this workspace's secret variables.".into(),
+                                        ));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    key_manager::set_master_key(&ws_state.path, &new_key);
+    tracing::info!(
+        "Master Key updated in RAM for workspace: {:?}",
+        ws_state.path
+    );
+    Ok(())
+}
+
+/// Tauri command to generate a new cryptographically secure random Master Key.
+#[tauri::command]
+pub async fn generate_master_key() -> Result<String, AppError> {
+    Ok(crypto::generate_random_key())
+}
+
+/// Tauri command to remove Master Key from RAM for the active workspace.
+#[tauri::command]
+pub async fn remove_master_key(
+    current_key: Option<String>,
+    state: State<'_, AppState>,
+) -> Result<(), AppError> {
+    let ws = state.workspace.lock().await;
+    let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
+
+    if let Some(existing_key) = key_manager::get_master_key(&ws_state.path) {
+        let provided = current_key.unwrap_or_default().trim().to_string();
+        if provided.is_empty() {
+            return Err(AppError::InvalidMasterKey(
+                "Current Master Key is required to clear key from RAM.".into(),
+            ));
+        }
+        if existing_key.trim() != provided {
+            return Err(AppError::InvalidMasterKey(
+                "Current Master Key is incorrect.".into(),
+            ));
+        }
+    }
+
+    key_manager::delete_master_key(&ws_state.path);
+    tracing::info!(
+        "Master Key removed from RAM for workspace: {:?}",
+        ws_state.path
+    );
+    Ok(())
+}
+
+/// Tauri command to clean up legacy `.env` and `.env.*` files from workspace root.
+#[tauri::command]
+pub async fn cleanup_legacy_dotenv_files(
+    state: State<'_, AppState>,
+) -> Result<Vec<String>, AppError> {
+    let ws = state.workspace.lock().await;
+    let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
+
+    let mut deleted_files = Vec::new();
+    let global_env = ws_state.path.join(".env");
+    if global_env.exists() {
+        if std::fs::remove_file(&global_env).is_ok() {
+            deleted_files.push(".env".to_string());
+        }
+    }
+
+    if let Ok(entries) = std::fs::read_dir(&ws_state.path) {
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().to_string();
+            if name.starts_with(".env.") {
+                let p = entry.path();
+                if std::fs::remove_file(&p).is_ok() {
+                    deleted_files.push(name);
+                }
+            }
+        }
+    }
+
+    tracing::info!("Cleaned up legacy .env files: {:?}", deleted_files);
+    Ok(deleted_files)
+}
+
 /// Tauri command to list all environment summary items in the workspace.
-///
-/// # Errors
-/// Returns [`AppError::WorkspaceNotOpened`] if no workspace is opened.
 #[tauri::command]
 pub async fn list_environments(
     state: State<'_, AppState>,
@@ -83,202 +412,14 @@ pub async fn list_environments(
 }
 
 /// Tauri command to read and validate a specific environment config by name.
-///
-/// # Errors
-/// Returns [`AppError::WorkspaceNotOpened`] if no workspace is opened,
-/// or [`AppError::ItemNotFound`] if the environment file does not exist.
-use std::collections::{HashMap, HashSet};
-use std::path::{Path, PathBuf};
-
-/// Helper to locate the environment YAML file trying sanitized name first, then raw name.
-pub fn find_environment_file(workspace_path: &Path, name: &str) -> Option<PathBuf> {
-    let env_dir = workspace_path.join("environments");
-    let sanitized = sanitize_name(name);
-
-    let path = env_dir.join(format!("{}.yml", sanitized));
-    if path.exists() {
-        return Some(path);
-    }
-    let path = env_dir.join(format!("{}.yaml", sanitized));
-    if path.exists() {
-        return Some(path);
-    }
-    let path = env_dir.join(format!("{}.yml", name));
-    if path.exists() {
-        return Some(path);
-    }
-    let path = env_dir.join(format!("{}.yaml", name));
-    if path.exists() {
-        return Some(path);
-    }
-
-    None
-}
-
-/// Returns the path to the .env file for a specific environment name.
-pub fn get_dot_env_path(workspace_path: &Path, env_name: &str) -> PathBuf {
-    let sanitized = sanitize_name(env_name);
-    if sanitized.is_empty() || sanitized == "default" || sanitized == "global" {
-        workspace_path.join(".env")
-    } else {
-        workspace_path.join(format!(".env.{}", sanitized))
-    }
-}
-
-/// Ensures that `.gitignore` and `.env.<name>` files exist at the workspace root directory.
-/// Appends `.env`, `.env.*`, `*.local` to `.gitignore` if not present.
-pub fn ensure_gitignore_and_dotenv(workspace_path: &Path, env_name: &str) -> Result<(), AppError> {
-    let dot_env_path = get_dot_env_path(workspace_path, env_name);
-    if !dot_env_path.exists() {
-        let header = format!(
-            "# Local secret environment variables for '{}' (DO NOT COMMIT TO GIT)\n",
-            env_name
-        );
-        std::fs::write(&dot_env_path, header)?;
-    }
-
-    let gitignore_path = workspace_path.join(".gitignore");
-    if !gitignore_path.exists() {
-        let content = "# Local environment variables\n.env\n.env.*\n*.local\n";
-        std::fs::write(&gitignore_path, content)?;
-    } else if let Ok(content) = std::fs::read_to_string(&gitignore_path) {
-        let has_dotenv = content
-            .lines()
-            .any(|line| line.trim() == ".env" || line.trim() == ".env*");
-        if !has_dotenv {
-            let mut new_content = content;
-            if !new_content.ends_with('\n') {
-                new_content.push('\n');
-            }
-            new_content.push_str("\n# Local environment variables\n.env\n.env.*\n*.local\n");
-            std::fs::write(&gitignore_path, new_content)?;
-        }
-    }
-
-    // Clean up redundant .env.global if present
-    let redundant_global = workspace_path.join(".env.global");
-    if redundant_global.exists() {
-        let _ = std::fs::remove_file(&redundant_global);
-    }
-
-    Ok(())
-}
-
-/// Reads key-value pairs from global `.env` merged with specific `.env.<env_name>`.
-pub fn read_dot_env(workspace_path: &Path, env_name: &str) -> HashMap<String, String> {
-    let mut map = HashMap::new();
-
-    // Read global .env first
-    let global_env = workspace_path.join(".env");
-    if global_env.exists() {
-        if let Ok(content) = std::fs::read_to_string(&global_env) {
-            parse_env_content(&content, &mut map);
-        }
-    }
-
-    // Read environment specific .env.<env_name>
-    let env_path = get_dot_env_path(workspace_path, env_name);
-    if env_path.exists() && env_path != global_env {
-        if let Ok(content) = std::fs::read_to_string(&env_path) {
-            parse_env_content(&content, &mut map);
-        }
-    }
-
-    map
-}
-
-fn parse_env_content(content: &str, map: &mut HashMap<String, String>) {
-    for line in content.lines() {
-        let trimmed = line.trim();
-        if trimmed.is_empty() || trimmed.starts_with('#') {
-            continue;
-        }
-        if let Some((k, v)) = trimmed.split_once('=') {
-            let key = k.trim().to_string();
-            let val = v.trim().trim_matches('"').trim_matches('\'').to_string();
-            map.insert(key, val);
-        }
-    }
-}
-
-/// Updates / merges key-value pairs into the specific `.env.<env_name>` file while preserving comments.
-pub fn update_dot_env(
-    workspace_path: &Path,
-    env_name: &str,
-    updates: &HashMap<String, String>,
-) -> Result<(), AppError> {
-    let dot_env_path = get_dot_env_path(workspace_path, env_name);
-    let mut lines: Vec<String> = Vec::new();
-    let mut updated_keys = HashSet::new();
-
-    if dot_env_path.exists() {
-        if let Ok(content) = std::fs::read_to_string(&dot_env_path) {
-            for line in content.lines() {
-                let trimmed = line.trim();
-                if trimmed.is_empty() || trimmed.starts_with('#') {
-                    lines.push(line.to_string());
-                    continue;
-                }
-                if let Some((k, _)) = trimmed.split_once('=') {
-                    let key = k.trim();
-                    if let Some(new_val) = updates.get(key) {
-                        lines.push(format!("{}={}", key, new_val));
-                        updated_keys.insert(key.to_string());
-                        continue;
-                    }
-                }
-                lines.push(line.to_string());
-            }
-        }
-    }
-
-    for (key, val) in updates {
-        if !key.trim().is_empty() && !updated_keys.contains(key) {
-            lines.push(format!("{}={}", key, val));
-        }
-    }
-
-    let mut new_content = lines.join("\n");
-    if !new_content.ends_with('\n') {
-        new_content.push('\n');
-    }
-
-    std::fs::write(&dot_env_path, new_content)?;
-    Ok(())
-}
-
-/// Tauri command to read and validate a specific environment config by name.
-///
-/// # Errors
-/// Returns [`AppError::WorkspaceNotOpened`] if no workspace is opened,
-/// or [`AppError::ItemNotFound`] if the environment file does not exist.
 #[tauri::command]
 pub async fn read_environment(
     name: String,
     state: State<'_, AppState>,
 ) -> Result<EnvironmentDetails, AppError> {
+    tracing::info!("Reading environment: '{}'", name);
     let ws = state.workspace.lock().await;
     let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
-
-    let _ = ensure_gitignore_and_dotenv(&ws_state.path, &name);
-
-    if name == "global" || name == "Global" {
-        let dot_env_map = read_dot_env(&ws_state.path, "global");
-        let variables = dot_env_map
-            .into_iter()
-            .map(|(k, v)| EnvVariableItem {
-                key: k,
-                value: v,
-                var_type: "text".to_string(),
-                enabled: true,
-            })
-            .collect();
-
-        return Ok(EnvironmentDetails {
-            name: "global".to_string(),
-            variables,
-        });
-    }
 
     let env_file = find_environment_file(&ws_state.path, &name)
         .ok_or_else(|| AppError::ItemNotFound(name.clone()))?;
@@ -286,31 +427,67 @@ pub async fn read_environment(
     let env: crate::models::environment::Environment =
         crate::engine::yaml_parser::read_and_validate_yaml(&env_file)?;
 
-    let dot_env_map = read_dot_env(&ws_state.path, &name);
+    let master_key = key_manager::get_master_key(&ws_state.path);
+    let salt = ws_state.path.to_string_lossy().as_bytes().to_vec();
 
-    let variables = env
-        .variables
-        .into_iter()
-        .map(|v| {
-            let real_val = if let Some(dot_val) = dot_env_map.get(&v.name) {
-                dot_val.clone()
-            } else if v.value == format!("{{{{{}}}}}", v.name) {
-                String::new()
+    // Read legacy .env variables in case this workspace is being migrated
+    let legacy_map = read_legacy_dot_env(&ws_state.path, &name);
+
+    let mut variables = Vec::new();
+    for var in env.variables {
+        let is_secret = matches!(
+            var.var_type,
+            crate::models::environment::VariableType::Secret
+        );
+        let mut final_val = var.value.clone();
+        let mut is_locked = false;
+
+        // Check if value is encrypted
+        if is_secret && crypto::is_encrypted(&var.value) {
+            if let Some(ref key) = master_key {
+                match crypto::decrypt_secret(&var.value, key, &salt) {
+                    Ok(decrypted) => {
+                        final_val = decrypted;
+                        is_locked = false;
+                    }
+                    Err(e) => {
+                        tracing::warn!("Failed to decrypt secret '{}': {}", var.name, e);
+                        final_val = String::new();
+                        is_locked = true;
+                    }
+                }
             } else {
-                v.value
-            };
-
-            EnvVariableItem {
-                key: v.name,
-                value: real_val,
-                var_type: match v.var_type {
-                    crate::models::environment::VariableType::Secret => "secret".to_string(),
-                    crate::models::environment::VariableType::Default => "text".to_string(),
-                },
-                enabled: v.enabled,
+                final_val = String::new();
+                is_locked = true;
             }
-        })
-        .collect();
+        } else if is_secret
+            && (var.value == format!("{{{{{}}}}}", var.name) || var.value.is_empty())
+        {
+            // Check if legacy .env has the value for migration
+            if let Some(legacy_val) = legacy_map.get(&var.name) {
+                final_val = legacy_val.clone();
+            }
+        } else if !is_secret
+            && (var.value == format!("{{{{{}}}}}", var.name) || var.value.is_empty())
+        {
+            // Check if legacy .env has the value for non-secret migration
+            if let Some(legacy_val) = legacy_map.get(&var.name) {
+                final_val = legacy_val.clone();
+            }
+        }
+
+        variables.push(EnvVariableItem {
+            key: var.name,
+            value: final_val,
+            var_type: if is_secret {
+                "secret".to_string()
+            } else {
+                "default".to_string()
+            },
+            enabled: var.enabled,
+            is_locked,
+        });
+    }
 
     Ok(EnvironmentDetails {
         name: env.name,
@@ -318,11 +495,7 @@ pub async fn read_environment(
     })
 }
 
-/// Tauri command to create a new environment configuration file inside the environments directory.
-///
-/// # Errors
-/// Returns [`AppError::WorkspaceNotOpened`] if no workspace is opened,
-/// or [`AppError::DuplicateItem`] if the environment already exists.
+/// Tauri command to create a new environment.
 #[tauri::command]
 pub async fn create_environment(
     name: String,
@@ -333,21 +506,15 @@ pub async fn create_environment(
     let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
 
     let env_dir = ws_state.path.join("environments");
-    let env_file = env_dir.join(format!("{}.yml", sanitize_name(&name)));
-
-    if env_file.exists() {
-        tracing::warn!(
-            "Environment '{}' already exists at {}",
-            name,
-            env_file.display()
-        );
-        return Err(AppError::DuplicateItem(format!(
-            "Environment '{}' already exists",
-            name
-        )));
+    if !env_dir.exists() {
+        std::fs::create_dir_all(&env_dir)?;
     }
 
-    let _ = ensure_gitignore_and_dotenv(&ws_state.path, &name);
+    let sanitized = sanitize_name(&name);
+    let env_file = env_dir.join(format!("{}.yml", sanitized));
+    if env_file.exists() {
+        return Err(AppError::DuplicateItem(name));
+    }
 
     let env = crate::models::environment::Environment::new(&name);
     crate::engine::yaml_parser::atomic_write_yaml(&env_file, &env)?;
@@ -360,11 +527,8 @@ pub async fn create_environment(
     })
 }
 
-/// Tauri command to write environment variable updates to disk.
-///
-/// # Errors
-/// Returns [`AppError::WorkspaceNotOpened`] if no workspace is opened,
-/// or [`AppError::ItemNotFound`] if the target environment file does not exist.
+/// Tauri command to write environment variable updates directly to the YAML file,
+/// encrypting any secret variables with the Master Key.
 #[tauri::command]
 pub async fn update_environment(
     name: String,
@@ -379,105 +543,109 @@ pub async fn update_environment(
     let ws = state.workspace.lock().await;
     let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
 
-    let _ = ensure_gitignore_and_dotenv(&ws_state.path, &name);
-
-    if name == "global" || name == "Global" {
-        let mut dot_env_updates = HashMap::new();
-        for v in &variables {
-            if !v.key.trim().is_empty() {
-                dot_env_updates.insert(v.key.trim().to_string(), v.value.clone());
-            }
-        }
-        update_dot_env(&ws_state.path, "global", &dot_env_updates)?;
-        tracing::info!("Global root .env updated successfully");
-        return Ok(());
+    let env_dir = ws_state.path.join("environments");
+    if !env_dir.exists() {
+        std::fs::create_dir_all(&env_dir)?;
     }
 
-    let env_file = find_environment_file(&ws_state.path, &name)
-        .ok_or_else(|| AppError::ItemNotFound(name.clone()))?;
+    let env_file = find_environment_file(&ws_state.path, &name).unwrap_or_else(|| {
+        let sanitized = sanitize_name(&name);
+        env_dir.join(format!("{}.yml", sanitized))
+    });
 
-    let mut env: crate::models::environment::Environment =
-        crate::engine::yaml_parser::read_and_validate_yaml(&env_file)?;
+    let existing_env: Option<crate::models::environment::Environment> = if env_file.exists() {
+        crate::engine::yaml_parser::read_and_validate_yaml(&env_file).ok()
+    } else {
+        None
+    };
 
-    // Store actual secret/concrete values into workspace root .env.<name> file
-    let mut dot_env_updates = HashMap::new();
-    for v in &variables {
-        if !v.key.trim().is_empty() {
-            dot_env_updates.insert(v.key.trim().to_string(), v.value.clone());
+    // Existing map of encrypted values to preserve locked values if not edited
+    let mut existing_val_map = HashMap::new();
+    if let Some(ref prev) = existing_env {
+        for v in &prev.variables {
+            existing_val_map.insert(v.name.clone(), v.value.clone());
         }
     }
-    update_dot_env(&ws_state.path, &name, &dot_env_updates)?;
 
-    // Write safe placeholder schema "{{key}}" into the environment YAML file
-    env.variables = variables
-        .into_iter()
-        .filter(|v| !v.key.trim().is_empty())
-        .map(|v| {
-            let key = v.key.trim().to_string();
-            crate::models::environment::Variable {
-                name: key.clone(),
-                value: format!("{{{{{}}}}}", key),
-                var_type: if v.var_type == "secret" {
-                    crate::models::environment::VariableType::Secret
-                } else {
-                    crate::models::environment::VariableType::Default
-                },
-                enabled: v.enabled,
-                description: None,
+    let master_key = key_manager::get_master_key(&ws_state.path);
+    let salt = ws_state.path.to_string_lossy().as_bytes().to_vec();
+
+    let mut updated_variables = Vec::new();
+    for v in variables {
+        let key = v.key.trim().to_string();
+        if key.is_empty() {
+            continue;
+        }
+
+        let is_secret = v.var_type.eq_ignore_ascii_case("secret");
+        let final_value = if is_secret {
+            if v.is_locked {
+                // If it was locked and user did not unlock/edit it, preserve the previous encrypted ciphertext
+                existing_val_map
+                    .get(&key)
+                    .cloned()
+                    .unwrap_or_else(|| v.value.clone())
+            } else if v.value.trim().is_empty() {
+                // Empty secret
+                String::new()
+            } else {
+                // User provided / edited secret plaintext -> must encrypt with Master Key!
+                let key_str = master_key.as_ref().ok_or(AppError::MasterKeyRequired)?;
+                crypto::encrypt_secret(&v.value, key_str, &salt)?
             }
-        })
-        .collect();
+        } else {
+            v.value
+        };
 
+        updated_variables.push(crate::models::environment::Variable {
+            name: key,
+            value: final_value,
+            var_type: if is_secret {
+                crate::models::environment::VariableType::Secret
+            } else {
+                crate::models::environment::VariableType::Default
+            },
+            enabled: v.enabled,
+            description: None,
+        });
+    }
+
+    let mut env =
+        existing_env.unwrap_or_else(|| crate::models::environment::Environment::new(&name));
+    env.name = name.clone();
+    env.variables = updated_variables;
     env.updated_at = Utc::now();
+
     crate::engine::yaml_parser::atomic_write_yaml(&env_file, &env)?;
 
-    tracing::info!(
-        "Environment '{}' updated successfully (values saved to .env.{}, schema placeholders saved to YAML)",
-        name,
-        sanitize_name(&name)
-    );
+    tracing::info!("Environment '{}' updated successfully into YAML", name);
 
     Ok(())
 }
 
 /// Tauri command to delete an environment configuration file.
-///
-/// # Errors
-/// Returns [`AppError::WorkspaceNotOpened`] if no workspace is opened,
-/// or [`AppError::ItemNotFound`] if target environment does not exist.
 #[tauri::command]
 pub async fn delete_environment(name: String, state: State<'_, AppState>) -> Result<(), AppError> {
     if name.eq_ignore_ascii_case("global") {
-        return Err(AppError::SchemaValidationError(
-            "Cannot delete global environment".to_string(),
+        return Err(AppError::PermissionDenied(
+            "Global environment cannot be deleted".to_string(),
         ));
     }
 
-    tracing::warn!("Deleting environment: '{}'", name);
+    tracing::info!("Deleting environment: '{}'", name);
     let ws = state.workspace.lock().await;
     let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
 
     let env_file = find_environment_file(&ws_state.path, &name)
         .ok_or_else(|| AppError::ItemNotFound(name.clone()))?;
 
-    std::fs::remove_file(&env_file)?;
-
-    // Delete corresponding .env.<name> file if exists
-    let dot_env_file = get_dot_env_path(&ws_state.path, &name);
-    if dot_env_file.exists() && dot_env_file != ws_state.path.join(".env") {
-        let _ = std::fs::remove_file(&dot_env_file);
-    }
-
+    std::fs::remove_file(env_file)?;
     tracing::info!("Environment '{}' deleted successfully", name);
+
     Ok(())
 }
 
-/// Tauri command to rename an existing environment configuration file.
-///
-/// # Errors
-/// Returns [`AppError::WorkspaceNotOpened`] if no workspace is opened,
-/// [`AppError::ItemNotFound`] if old environment does not exist,
-/// or [`AppError::DuplicateItem`] if new environment name already exists.
+/// Tauri command to rename an environment.
 #[tauri::command]
 pub async fn rename_environment(
     old_name: String,
@@ -485,20 +653,19 @@ pub async fn rename_environment(
     state: State<'_, AppState>,
 ) -> Result<(), AppError> {
     if old_name.eq_ignore_ascii_case("global") {
-        return Err(AppError::SchemaValidationError(
-            "Cannot rename global environment".to_string(),
+        return Err(AppError::PermissionDenied(
+            "Global environment cannot be renamed".to_string(),
         ));
     }
 
-    let trimmed_new = new_name.trim();
-    tracing::info!("Renaming environment: '{}' -> '{}'", old_name, trimmed_new);
-
-    if trimmed_new.is_empty() {
+    let sanitized_new = sanitize_name(&new_name);
+    if sanitized_new.is_empty() {
         return Err(AppError::SchemaValidationError(
-            "New name cannot be empty".to_string(),
+            "Environment name cannot be empty".to_string(),
         ));
     }
 
+    tracing::info!("Renaming environment from '{}' to '{}'", old_name, new_name);
     let ws = state.workspace.lock().await;
     let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
 
@@ -506,39 +673,24 @@ pub async fn rename_environment(
         .ok_or_else(|| AppError::ItemNotFound(old_name.clone()))?;
 
     let env_dir = ws_state.path.join("environments");
-    let s_new = sanitize_name(trimmed_new);
-    let new_file = env_dir.join(format!("{}.yml", s_new));
+    let new_file = env_dir.join(format!("{}.yml", sanitized_new));
 
-    if new_file.exists() && old_file != new_file {
-        return Err(AppError::DuplicateItem(format!(
-            "Environment '{}' already exists",
-            trimmed_new
-        )));
+    if new_file.exists() && new_file != old_file {
+        return Err(AppError::DuplicateItem(new_name));
     }
 
     let mut env: crate::models::environment::Environment =
         crate::engine::yaml_parser::read_and_validate_yaml(&old_file)?;
-
-    env.name = trimmed_new.to_string();
+    env.name = new_name.clone();
     env.updated_at = Utc::now();
 
     crate::engine::yaml_parser::atomic_write_yaml(&new_file, &env)?;
 
-    if old_file != new_file {
+    if new_file != old_file {
         let _ = std::fs::remove_file(&old_file);
     }
 
-    // Also rename corresponding .env.<old_name> -> .env.<new_name>
-    let old_dot_env = get_dot_env_path(&ws_state.path, &old_name);
-    let new_dot_env = get_dot_env_path(&ws_state.path, trimmed_new);
-    if old_dot_env.exists() && old_dot_env != new_dot_env {
-        let _ = std::fs::rename(old_dot_env, new_dot_env);
-    }
+    tracing::info!("Environment renamed successfully to '{}'", new_name);
 
-    tracing::info!(
-        "Environment renamed from '{}' to '{}'",
-        old_name,
-        trimmed_new
-    );
     Ok(())
 }

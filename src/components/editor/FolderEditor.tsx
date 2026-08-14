@@ -63,7 +63,7 @@ export default function FolderEditor({ tabId, nodeType }: Readonly<FolderEditorP
           setDetails(res);
         }
         markClean(tabId);
-      } catch (fallbackErr) {
+      } catch {
         notifications.show({
           title: "Error Reading Item",
           message: err?.message || String(err),

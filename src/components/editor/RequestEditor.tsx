@@ -129,6 +129,7 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
     setResponsePanelOpened(true);
     setLoading(true);
     setTabLoading(tabId, true);
+    setResponse(tabId, null);
     try {
       // Auto-save request details to disk only if there are unsaved changes
       if (isDirty) {
@@ -146,19 +147,24 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
       setResponse(tabId, response);
     } catch (err: any) {
       console.error("HTTP Request execution error:", err);
-      const errorMsg = String(err?.message || err);
-      if (errorMsg.toLowerCase().includes("cancelled") || errorMsg.includes("RequestCancelled")) {
+      const rawMsg = String(err?.message || err);
+      if (rawMsg.toLowerCase().includes("cancelled") || rawMsg.includes("RequestCancelled")) {
         return;
       }
-      let displayMsg = errorMsg;
-      if (displayMsg.includes("Tauri error")) {
-        displayMsg = "Check URL format or backend server availability.";
+
+      let displayMsg = rawMsg;
+      let errorCode = "NETWORK_ERROR";
+      try {
+        const parsed = JSON.parse(rawMsg);
+        if (parsed.message) displayMsg = parsed.message;
+        if (parsed.code) errorCode = parsed.code;
+      } catch {
+        if (displayMsg.includes("Tauri error")) {
+          displayMsg = "Check URL format or backend server availability.";
+        }
       }
-      notifications.show({
-        title: "Request Failed",
-        message: displayMsg,
-        color: "red",
-      });
+
+      setResponse(tabId, { error: displayMsg, code: errorCode });
     } finally {
       setLoading(false);
       setTabLoading(tabId, false);

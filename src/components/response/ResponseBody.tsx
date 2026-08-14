@@ -184,7 +184,7 @@ export default function ResponseBody({ response, isActive = true }: Readonly<Res
         a.download = getSuggestedFilename();
         a.click();
         URL.revokeObjectURL(url);
-      } catch (fallbackErr) {
+      } catch {
         notifications.show({
           title: "Download Failed",
           message: String(err?.message || err),

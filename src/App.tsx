@@ -28,8 +28,13 @@ const theme = createTheme({
 });
 
 export default function App() {
-  const { workspacePath, setTreeData, setGitStatus, reset } = useWorkspaceStore();
-  const { setEnvironments, setActiveVariables, setEnvVariables } = useEnvStore();
+  const workspacePath = useWorkspaceStore((s) => s.workspacePath);
+  const setTreeData = useWorkspaceStore((s) => s.setTreeData);
+  const setGitStatus = useWorkspaceStore((s) => s.setGitStatus);
+  const reset = useWorkspaceStore((s) => s.reset);
+  const setEnvironments = useEnvStore((s) => s.setEnvironments);
+  const setActiveVariables = useEnvStore((s) => s.setActiveVariables);
+  const setEnvVariables = useEnvStore((s) => s.setEnvVariables);
 
   // Sync environment variables globally when workspacePath changes
   useEffect(() => {
@@ -43,19 +48,22 @@ export default function App() {
       .then(async (envs) => {
         if (envs) {
           setEnvironments(envs);
-          for (const env of envs) {
-            try {
-              const res = await invoke<any>("read_environment", { name: env.name });
-              if (res && res.variables) {
-                setEnvVariables(env.name, res.variables);
-              }
-            } catch {}
-          }
+          await Promise.all(
+            envs.map(async (env: any) => {
+              try {
+                const res = await invoke<any>("read_environment", { name: env.name });
+                if (res && res.variables) {
+                  setEnvVariables(env.name, res.variables);
+                }
+              } catch {}
+            }),
+          );
         }
       })
       .catch(() => {});
   }, [workspacePath, setEnvironments, setEnvVariables, setActiveVariables]);
-  const { config, loadConfig } = useConfigStore();
+  const config = useConfigStore((s) => s.config);
+  const loadConfig = useConfigStore((s) => s.loadConfig);
   const windowLabel = getCurrentWindow().label;
 
   // Load global configuration on startup
@@ -104,6 +112,17 @@ export default function App() {
             if (session && isMounted) {
               useTabStore.getState().restoreSession(session);
             }
+
+            // Check Master Key status and prompt if workspace contains encrypted secrets
+            try {
+              const status = await invoke<any>("get_master_key_status");
+              useEnvStore.getState().setMasterKeyStatus(status);
+              if (status.hasEncryptedSecrets && !status.hasMasterKey) {
+                useEnvStore.getState().setMasterKeyModalOpen(true);
+              }
+            } catch (keyErr) {
+              console.error("Failed to check master key status:", keyErr);
+            }
           } catch (err) {
             console.error("Failed to restore workspace session:", err);
           }
@@ -137,6 +156,17 @@ export default function App() {
 
           const git = await invoke<any>("get_git_status");
           setGitStatus(git);
+
+          // Check Master Key status and prompt if workspace contains encrypted secrets
+          try {
+            const status = await invoke<any>("get_master_key_status");
+            useEnvStore.getState().setMasterKeyStatus(status);
+            if (status.hasEncryptedSecrets && !status.hasMasterKey) {
+              useEnvStore.getState().setMasterKeyModalOpen(true);
+            }
+          } catch (keyErr) {
+            console.error("Failed to check master key status:", keyErr);
+          }
 
           const session = await restoreWorkspaceSession(path);
           if (session) {
@@ -174,21 +204,11 @@ export default function App() {
   useEffect(() => {
     if (windowLabel !== "main" || !workspacePath) return;
 
-    invoke("get_workspace_info")
-      .then(() => {
-        invoke("list_environments")
-          .then((envs: any) => setEnvironments(envs))
-          .catch(console.error);
-
-        invoke("get_git_status")
-          .then((git: any) => setGitStatus(git))
-          .catch(console.error);
-      })
-      .catch((err) => {
-        console.warn("Backend workspace desync detected, resetting frontend state:", err);
-        reset();
-      });
-  }, [windowLabel, workspacePath, reset, setEnvironments, setGitStatus]);
+    invoke("get_workspace_info").catch((err) => {
+      console.warn("Backend workspace desync detected, resetting frontend state:", err);
+      reset();
+    });
+  }, [windowLabel, workspacePath, reset]);
 
   // File watcher for hot reloading workspace changes
   useFsWatcher(async (payload) => {

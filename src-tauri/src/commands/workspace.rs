@@ -81,27 +81,6 @@ pub async fn open_workspace(
     if !workspace_yml.exists() {
         tracing::info!("Scaffolding new workspace.yml at {}", path.display());
         create_workspace_scaffold(&path)?;
-    } else {
-        // Automatically ensure .env and .gitignore exist for existing environments
-        let env_dir = path.join("environments");
-        if let Ok(entries) = std::fs::read_dir(&env_dir) {
-            for entry in entries.flatten() {
-                let file_path = entry.path();
-                if file_path.is_file() {
-                    if let Some(ext) = file_path.extension() {
-                        if ext == "yml" || ext == "yaml" {
-                            if let Some(stem) = file_path.file_stem().and_then(|s| s.to_str()) {
-                                let _ = crate::commands::environment::ensure_gitignore_and_dotenv(
-                                    &path, stem,
-                                );
-                            }
-                        }
-                    }
-                }
-            }
-        } else {
-            let _ = crate::commands::environment::ensure_gitignore_and_dotenv(&path, "dev");
-        }
     }
 
     let tree = FsScanner::scan(&path)?;
@@ -130,9 +109,9 @@ pub async fn open_workspace(
 pub async fn close_workspace(state: State<'_, AppState>) -> Result<(), AppError> {
     tracing::info!("Closing active workspace");
     let mut ws = state.workspace.lock().await;
-    if ws.is_some() {
+    if let Some(ws_state) = ws.take() {
         state.request_tracker.cancel_all().await;
-        *ws = None;
+        crate::engine::key_manager::clear_session_key(&ws_state.path);
     }
     Ok(())
 }
@@ -348,15 +327,7 @@ pub fn create_workspace_scaffold(path: &Path) -> Result<(), AppError> {
     let ws_file = path.join("workspace.yml");
     crate::engine::yaml_parser::atomic_write_yaml(&ws_file, &workspace)?;
 
-    // Ensure .gitignore and .env.dev exist at workspace root
-    let _ = crate::commands::environment::ensure_gitignore_and_dotenv(path, "dev");
-
-    // Initial default .env.dev variable value
-    let mut default_dotenv = std::collections::HashMap::new();
-    default_dotenv.insert("base_url".to_string(), "http://localhost:8080".to_string());
-    let _ = crate::commands::environment::update_dot_env(path, "dev", &default_dotenv);
-
-    // Scaffold dev.yml environment with placeholder
+    // Scaffold dev.yml environment
     let env_dir = path.join("environments");
     std::fs::create_dir_all(&env_dir)?;
     let mut dev_env = crate::models::environment::Environment::new("dev");
@@ -364,13 +335,15 @@ pub fn create_workspace_scaffold(path: &Path) -> Result<(), AppError> {
         .variables
         .push(crate::models::environment::Variable {
             name: "base_url".to_string(),
-            value: "{{base_url}}".to_string(),
+            value: "http://localhost:8080".to_string(),
             var_type: crate::models::environment::VariableType::Default,
             enabled: true,
-            description: None,
+            description: Some("Base API server URL".to_string()),
         });
-    crate::engine::yaml_parser::atomic_write_yaml(&env_dir.join("dev.yml"), &dev_env)?;
+    let dev_file = env_dir.join("dev.yml");
+    crate::engine::yaml_parser::atomic_write_yaml(&dev_file, &dev_env)?;
 
+    // Scaffold sample requests collection folders
     let col_dir = path.join("collections");
     std::fs::create_dir_all(&col_dir)?;
 

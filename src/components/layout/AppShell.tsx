@@ -14,13 +14,19 @@ import FolderEditor from "@/components/editor/FolderEditor";
 import ResponseViewer from "@/components/response/ResponseViewer";
 import QuickOpen from "@/components/tools/QuickOpen";
 import CommandPalette from "@/components/tools/CommandPalette";
+import MasterKeyModal from "@/components/modals/MasterKeyModal";
+import { useEnvStore } from "@/stores/envStore";
 import classes from "./AppShell.module.css";
 
 export default function AppShell() {
-  const { workspaceInfo, setWorkspaceInfo } = useWorkspaceStore();
+  const workspaceInfo = useWorkspaceStore((s) => s.workspaceInfo);
+  const setWorkspaceInfo = useWorkspaceStore((s) => s.setWorkspaceInfo);
   const [sidebarOpened, setSidebarOpened] = useState(true);
   const [quickOpenOpened, setQuickOpenOpened] = useState(false);
   const [commandPaletteOpened, setCommandPaletteOpened] = useState(false);
+
+  const isMasterKeyModalOpen = useEnvStore((s) => s.isMasterKeyModalOpen);
+  const setMasterKeyModalOpen = useEnvStore((s) => s.setMasterKeyModalOpen);
 
   const tabs = useTabStore((s) => s.tabs);
   const activeTabId = useTabStore((s) => s.activeTabId);
@@ -218,6 +224,7 @@ export default function AppShell() {
         opened={commandPaletteOpened}
         onClose={() => setCommandPaletteOpened(false)}
       />
+      <MasterKeyModal opened={isMasterKeyModalOpen} onClose={() => setMasterKeyModalOpen(false)} />
     </Box>
   );
 }

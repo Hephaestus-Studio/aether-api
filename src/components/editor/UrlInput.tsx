@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useMemo } from "react";
 import { Box, HoverCard } from "@mantine/core";
 import { useEnvStore } from "@/stores/envStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
@@ -24,6 +24,7 @@ export default function UrlInput({
 }: Readonly<UrlInputProps>) {
   const activeVariables = useEnvStore((s) => s.activeVariables);
   const activeEnvironmentName = useEnvStore((s) => s.activeEnvironmentName);
+  const setMasterKeyModalOpen = useEnvStore((s) => s.setMasterKeyModalOpen);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -31,7 +32,10 @@ export default function UrlInput({
   const { handleChange: handleUndoableChange, handleKeyDown: handleUndoableKeyDown } =
     useUndoableInput(value, onChange);
 
-  const segments = parseUrlPlaceholders(value, activeVariables);
+  const segments = useMemo(
+    () => parseUrlPlaceholders(value, activeVariables),
+    [value, activeVariables],
+  );
 
   const handleScroll = () => {
     if (inputRef.current && overlayRef.current) {
@@ -104,7 +108,16 @@ export default function UrlInput({
             charOffset += seg.text.length;
 
             if (seg.isPlaceholder) {
+              const isLocked = seg.isLocked;
               const isResolved = seg.isResolved;
+
+              let targetClassName = classes.varUnresolved;
+              if (isLocked) {
+                targetClassName = classes.varLocked;
+              } else if (isResolved) {
+                targetClassName = classes.varResolved;
+              }
+
               return (
                 <HoverCard
                   key={idx}
@@ -116,7 +129,7 @@ export default function UrlInput({
                 >
                   <HoverCard.Target>
                     <span
-                      className={isResolved ? classes.varResolved : classes.varUnresolved}
+                      className={targetClassName}
                       onMouseDown={(e) => handlePlaceholderMouseDown(e, start)}
                       onClick={() => inputRef.current?.focus()}
                     >
@@ -125,7 +138,36 @@ export default function UrlInput({
                   </HoverCard.Target>
 
                   <HoverCard.Dropdown className={classes.hoverCardDropdown}>
-                    {isResolved ? (
+                    {isLocked ? (
+                      <>
+                        <div className={classes.hoverValueBoxLocked}>
+                          <span>
+                            🔒 Locked Secret Variable: <strong>{seg.varName}</strong>
+                          </span>
+                        </div>
+                        <div className={classes.hoverFooter}>
+                          <div className={classes.envSection}>
+                            <span className={classes.envBadgeLocked}>🔒</span>
+                            <span className={classes.envText}>
+                              Encrypted in{" "}
+                              {activeEnvironmentName === "global"
+                                ? "Global"
+                                : activeEnvironmentName || "Global"}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            className={classes.unlockBtn}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setMasterKeyModalOpen(true);
+                            }}
+                          >
+                            Unlock Secrets →
+                          </button>
+                        </div>
+                      </>
+                    ) : isResolved ? (
                       <>
                         <div className={classes.hoverValueBox}>
                           {seg.resolvedValue || "(empty string)"}

@@ -1,0 +1,88 @@
+.modalContent {
+  padding: 8px 4px 4px;
+}
+
+.banner {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: var(--aether-radius-sm, 4px);
+  margin-bottom: 16px;
+}
+
+.bannerActive {
+  background-color: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.25);
+}
+
+.bannerIcon {
+  color: #3b82f6;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.bannerText {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.bannerText strong {
+  color: var(--text-primary);
+}
+
+.inputGroup {
+  margin-bottom: 16px;
+}
+
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.generateBtn {
+  font-size: 11.5px;
+  height: 22px;
+  padding: 0 6px;
+  color: var(--aether-color-primary-base);
+}
+
+.keyInput {
+  font-family: var(--font-mono, monospace);
+  font-size: 12.5px;
+}
+
+.checkboxRow {
+  margin-bottom: 20px;
+}
+
+.checkboxRow :global(.mantine-Checkbox-label) {
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border-color);
+  padding-top: 14px;
+  margin-top: 8px;
+}
+
+.rightButtons {
+  display: flex;
+  gap: 8px;
+}

@@ -1,51 +1,46 @@
-import { useState, useEffect } from "react";
-import {
-  Box,
-  Checkbox,
-  Tooltip,
-  Modal,
-  Button,
-  Group,
-  Menu,
-  ActionIcon,
-  TextInput,
-} from "@mantine/core";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { Box, Tooltip, Modal, Button, Group, Menu, TextInput, Text } from "@mantine/core";
 import {
   IconWorld,
   IconPlus,
   IconDeviceFloppy,
-  IconLock,
-  IconLockOpen,
-  IconTrash,
   IconX,
   IconDotsVertical,
   IconPencil,
-  IconGripVertical,
-  IconChevronUp,
-  IconChevronDown,
+  IconShieldLock,
+  IconKey,
+  IconAlertTriangle,
+  IconTrash,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { invoke } from "@tauri-apps/api/core";
 import { useEnvStore } from "@/stores/envStore";
 import { useTabStore } from "@/stores/tabStore";
-import UndoableTextInput from "@/components/common/UndoableTextInput";
-import type { EnvVariableItem, EnvironmentDetails, EnvironmentSummary } from "@/types/environment";
+import EnvVariableRow from "./EnvVariableRow";
+import type {
+  EnvVariableItem,
+  EnvironmentDetails,
+  EnvironmentSummary,
+  MasterKeyStatus,
+} from "@/types/environment";
 import clsx from "clsx";
 import classes from "./EnvironmentPanel.module.css";
 
 export default function EnvironmentPanel() {
-  const {
-    environments,
-    setEnvironments,
-    activeEnvironmentName,
-    setActiveEnvironment,
-    activeVariables,
-    setActiveVariables,
-    variablesByEnv,
-    setEnvVariables,
-    dirtyEnvs,
-    setEnvDirty,
-  } = useEnvStore();
+  const environments = useEnvStore((s) => s.environments);
+  const setEnvironments = useEnvStore((s) => s.setEnvironments);
+  const activeEnvironmentName = useEnvStore((s) => s.activeEnvironmentName);
+  const setActiveEnvironment = useEnvStore((s) => s.setActiveEnvironment);
+  const activeVariables = useEnvStore((s) => s.activeVariables);
+  const setActiveVariables = useEnvStore((s) => s.setActiveVariables);
+  const updateActiveVariable = useEnvStore((s) => s.updateActiveVariable);
+  const setEnvVariables = useEnvStore((s) => s.setEnvVariables);
+  const dirtyEnvs = useEnvStore((s) => s.dirtyEnvs);
+  const setEnvDirty = useEnvStore((s) => s.setEnvDirty);
+  const hasMasterKey = useEnvStore((s) => s.hasMasterKey);
+  const hasEncryptedSecrets = useEnvStore((s) => s.hasEncryptedSecrets);
+  const setMasterKeyStatus = useEnvStore((s) => s.setMasterKeyStatus);
+  const setMasterKeyModalOpen = useEnvStore((s) => s.setMasterKeyModalOpen);
 
   const closeBottomPanel = useTabStore((s) => s.closeBottomPanel);
 
@@ -61,6 +56,9 @@ export default function EnvironmentPanel() {
   const [renamedName, setRenamedName] = useState("");
   const [renaming, setRenaming] = useState(false);
 
+  const [legacyCleanupModalOpen, setLegacyCleanupModalOpen] = useState(false);
+  const [cleaningUp, setCleaningUp] = useState(false);
+
   // Track revealed secrets locally per row index
   const [revealedSecrets, setRevealedSecrets] = useState<Record<number, boolean>>({});
 
@@ -71,10 +69,18 @@ export default function EnvironmentPanel() {
     position: "above" | "below";
   } | null>(null);
 
+  // Fetch Master Key status on mount
+  useEffect(() => {
+    invoke<MasterKeyStatus>("get_master_key_status")
+      .then((status) => setMasterKeyStatus(status))
+      .catch((err) => console.error("Error fetching master key status:", err));
+  }, [setMasterKeyStatus]);
+
   // Fetch variables when active environment changes only if not yet in cache
   useEffect(() => {
     const envKey = (activeEnvironmentName || "global").toLowerCase();
-    if (activeEnvironmentName && !variablesByEnv[envKey]) {
+    const currentVars = useEnvStore.getState().variablesByEnv[envKey];
+    if (activeEnvironmentName && !currentVars) {
       invoke<EnvironmentDetails>("read_environment", { name: activeEnvironmentName })
         .then((res) => {
           if (res && res.variables) {
@@ -88,69 +94,90 @@ export default function EnvironmentPanel() {
           setEnvVariables(activeEnvironmentName, []);
         });
     }
-  }, [activeEnvironmentName, variablesByEnv, setEnvVariables]);
+  }, [activeEnvironmentName, setEnvVariables]);
 
-  const handleSelectEnv = (name: string) => {
-    if (name === activeEnvironmentName) return;
-    setActiveEnvironment(name);
-    setRevealedSecrets({});
-  };
+  const handleSelectEnv = useCallback(
+    (name: string) => {
+      if (name === activeEnvironmentName) return;
+      setActiveEnvironment(name);
+      setRevealedSecrets({});
+    },
+    [activeEnvironmentName, setActiveEnvironment],
+  );
 
   // Virtual blank row at the bottom for quick entry without false dirty state
-  const rows =
-    activeVariables.length === 0 ||
-    activeVariables[activeVariables.length - 1].key !== "" ||
-    activeVariables[activeVariables.length - 1].value !== ""
+  const rows = useMemo(() => {
+    return activeVariables.length === 0 ||
+      activeVariables[activeVariables.length - 1].key !== "" ||
+      activeVariables[activeVariables.length - 1].value !== ""
       ? [...activeVariables, { key: "", value: "", type: "text" as const, enabled: true }]
       : activeVariables;
+  }, [activeVariables]);
 
-  const handleItemChange = (index: number, fields: Partial<EnvVariableItem>) => {
-    if (index >= activeVariables.length) {
-      setActiveVariables([
-        ...activeVariables,
-        { key: "", value: "", type: "text", enabled: true, ...fields },
-      ]);
-    } else {
-      const next = [...activeVariables];
-      next[index] = { ...next[index], ...fields };
+  const handleItemChange = useCallback(
+    (index: number, fields: Partial<EnvVariableItem>) => {
+      // If user toggles variable to secret and there is no master key, prompt to set one
+      if (fields.type === "secret" && !hasMasterKey) {
+        setMasterKeyModalOpen(true);
+        notifications.show({
+          title: "Master Key Required",
+          message: "Please set a Master Key to encrypt secret variables.",
+          color: "yellow",
+        });
+      }
+
+      updateActiveVariable(index, fields);
+    },
+    [hasMasterKey, setMasterKeyModalOpen, updateActiveVariable],
+  );
+
+  const handleAddVariable = useCallback(() => {
+    const current = useEnvStore.getState().activeVariables;
+    setActiveVariables([...current, { key: "", value: "", type: "text", enabled: true }]);
+    setEnvDirty(activeEnvironmentName || "global", true);
+  }, [activeEnvironmentName, setActiveVariables, setEnvDirty]);
+
+  const handleDeleteVariable = useCallback(
+    (index: number) => {
+      const current = useEnvStore.getState().activeVariables;
+      if (index >= current.length) return;
+      setActiveVariables(current.filter((_, i) => i !== index));
+      setEnvDirty(activeEnvironmentName || "global", true);
+    },
+    [activeEnvironmentName, setActiveVariables, setEnvDirty],
+  );
+
+  const handleMoveUp = useCallback(
+    (index: number) => {
+      const current = useEnvStore.getState().activeVariables;
+      if (index <= 0 || index >= current.length) return;
+      const next = [...current];
+      const item = next[index];
+      next[index] = next[index - 1];
+      next[index - 1] = item;
       setActiveVariables(next);
-    }
-    setEnvDirty(activeEnvironmentName || "global", true);
-  };
+      setEnvDirty(activeEnvironmentName || "global", true);
+    },
+    [activeEnvironmentName, setActiveVariables, setEnvDirty],
+  );
 
-  const handleAddVariable = () => {
-    setActiveVariables([...activeVariables, { key: "", value: "", type: "text", enabled: true }]);
-    setEnvDirty(activeEnvironmentName || "global", true);
-  };
+  const handleMoveDown = useCallback(
+    (index: number) => {
+      const current = useEnvStore.getState().activeVariables;
+      if (index >= current.length - 1) return;
+      const next = [...current];
+      const item = next[index];
+      next[index] = next[index + 1];
+      next[index + 1] = item;
+      setActiveVariables(next);
+      setEnvDirty(activeEnvironmentName || "global", true);
+    },
+    [activeEnvironmentName, setActiveVariables, setEnvDirty],
+  );
 
-  const handleDeleteVariable = (index: number) => {
-    if (index >= activeVariables.length) return;
-    setActiveVariables(activeVariables.filter((_, i) => i !== index));
-    setEnvDirty(activeEnvironmentName || "global", true);
-  };
-
-  const handleMoveUp = (index: number) => {
-    if (index <= 0 || index >= activeVariables.length) return;
-    const next = [...activeVariables];
-    const item = next[index];
-    next[index] = next[index - 1];
-    next[index - 1] = item;
-    setActiveVariables(next);
-    setEnvDirty(activeEnvironmentName || "global", true);
-  };
-
-  const handleMoveDown = (index: number) => {
-    if (index >= activeVariables.length - 1) return;
-    const next = [...activeVariables];
-    const item = next[index];
-    next[index] = next[index + 1];
-    next[index + 1] = item;
-    setActiveVariables(next);
-    setEnvDirty(activeEnvironmentName || "global", true);
-  };
-
-  const handleDragStart = (e: React.DragEvent, index: number) => {
-    if (index >= activeVariables.length) return;
+  const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
+    const currentVars = useEnvStore.getState().activeVariables;
+    if (index >= currentVars.length) return;
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", index.toString());
@@ -179,7 +206,7 @@ export default function EnvironmentPanel() {
     dragPreview.style.width = "auto";
     dragPreview.style.maxWidth = "180px";
 
-    const item = activeVariables[index];
+    const item = currentVars[index];
     const keyText = (item.key || "variable").trim();
 
     const gripIcon = document.createElement("span");
@@ -218,10 +245,9 @@ export default function EnvironmentPanel() {
         document.body.removeChild(dragPreview);
       }
     }, 0);
-  };
+  }, []);
 
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    if (draggedIndex === null || draggedIndex === index || index >= activeVariables.length) return;
+  const handleDragOver = useCallback((e: React.DragEvent, index: number) => {
     e.preventDefault();
     e.stopPropagation();
     e.dataTransfer.dropEffect = "move";
@@ -234,50 +260,61 @@ export default function EnvironmentPanel() {
       if (prev?.index === index && prev.position === position) return prev;
       return { index, position };
     });
-  };
+  }, []);
 
-  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleDrop = useCallback(
+    (e: React.DragEvent, targetIndex: number) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-    if (
-      draggedIndex === null ||
-      draggedIndex === targetIndex ||
-      targetIndex >= activeVariables.length
-    ) {
+      const currentVars = useEnvStore.getState().activeVariables;
+      const draggedIdx = Number(e.dataTransfer.getData("text/plain"));
+
+      if (
+        isNaN(draggedIdx) ||
+        draggedIdx === targetIndex ||
+        targetIndex >= currentVars.length ||
+        draggedIdx >= currentVars.length
+      ) {
+        setDraggedIndex(null);
+        setDropTarget(null);
+        return;
+      }
+
+      const rect = e.currentTarget.getBoundingClientRect();
+      const y = e.clientY - rect.top;
+      const isBelow = y >= rect.height / 2;
+
+      let targetPos = isBelow ? targetIndex + 1 : targetIndex;
+      if (draggedIdx < targetPos) {
+        targetPos -= 1;
+      }
+
+      if (draggedIdx !== targetPos && targetPos >= 0 && targetPos < currentVars.length) {
+        const next = [...currentVars];
+        const [moved] = next.splice(draggedIdx, 1);
+        next.splice(targetPos, 0, moved);
+        setActiveVariables(next);
+        setEnvDirty(useEnvStore.getState().activeEnvironmentName || "global", true);
+      }
+
       setDraggedIndex(null);
       setDropTarget(null);
-      return;
-    }
+    },
+    [setActiveVariables, setEnvDirty],
+  );
 
-    let targetPos = dropTarget?.position === "below" ? targetIndex + 1 : targetIndex;
-    if (draggedIndex < targetPos) {
-      targetPos -= 1;
-    }
-
-    if (draggedIndex !== targetPos && targetPos >= 0 && targetPos < activeVariables.length) {
-      const next = [...activeVariables];
-      const [moved] = next.splice(draggedIndex, 1);
-      next.splice(targetPos, 0, moved);
-      setActiveVariables(next);
-      setEnvDirty(activeEnvironmentName || "global", true);
-    }
-
+  const handleDragEnd = useCallback(() => {
     setDraggedIndex(null);
     setDropTarget(null);
-  };
+  }, []);
 
-  const handleDragEnd = () => {
-    setDraggedIndex(null);
-    setDropTarget(null);
-  };
-
-  const handleToggleRevealSecret = (index: number) => {
+  const handleToggleRevealSecret = useCallback((index: number) => {
     setRevealedSecrets((prev) => ({
       ...prev,
       [index]: !prev[index],
     }));
-  };
+  }, []);
 
   const handleSave = async () => {
     if (!activeEnvironmentName) return;
@@ -291,18 +328,58 @@ export default function EnvironmentPanel() {
       setEnvDirty(activeEnvironmentName, false);
       notifications.show({
         title: "Environment Saved",
-        message: `Saved variables for '${activeEnvironmentName}'`,
+        message: `Saved variables for '${activeEnvironmentName}' directly to YAML.`,
+        color: "green",
+      });
+
+      // Check legacy .env files and offer cleanup if present
+      const status = await invoke<MasterKeyStatus>("get_master_key_status");
+      setMasterKeyStatus(status);
+      if (status.hasLegacyDotenv) {
+        setLegacyCleanupModalOpen(true);
+      }
+    } catch (err: unknown) {
+      console.error("Error updating environment:", err);
+      const errStr = String(err);
+      if (errStr.includes("MASTER_KEY_REQUIRED")) {
+        setMasterKeyModalOpen(true);
+        notifications.show({
+          title: "Master Key Required",
+          message: "Please set a Master Key before saving secret variables.",
+          color: "red",
+        });
+      } else {
+        notifications.show({
+          title: "Save Failed",
+          message: errStr,
+          color: "red",
+        });
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCleanupLegacyFiles = async () => {
+    setCleaningUp(true);
+    try {
+      const deleted = await invoke<string[]>("cleanup_legacy_dotenv_files");
+      const status = await invoke<MasterKeyStatus>("get_master_key_status");
+      setMasterKeyStatus(status);
+      setLegacyCleanupModalOpen(false);
+      notifications.show({
+        title: "Workspace Cleaned",
+        message: `Removed legacy files: ${deleted.join(", ")}`,
         color: "green",
       });
     } catch (err) {
-      console.error("Error updating environment:", err);
       notifications.show({
-        title: "Save Failed",
+        title: "Cleanup Failed",
         message: String(err),
         color: "red",
       });
     } finally {
-      setSaving(false);
+      setCleaningUp(false);
     }
   };
 
@@ -449,6 +526,35 @@ export default function EnvironmentPanel() {
         <Box className={classes.actions}>
           <button
             type="button"
+            onClick={() => setMasterKeyModalOpen(true)}
+            className={clsx(
+              classes.actionBtn,
+              hasMasterKey ? classes.keyBtnActive : classes.keyBtnWarning,
+            )}
+            title={
+              hasMasterKey
+                ? "Master Key Active (AES-256-GCM)"
+                : hasEncryptedSecrets
+                  ? "Unlock Master Key to decrypt secrets"
+                  : "Set Master Key to encrypt/decrypt secrets"
+            }
+          >
+            {hasMasterKey ? (
+              <IconShieldLock size={13} color="#22c55e" />
+            ) : (
+              <IconKey size={13} color="#eab308" />
+            )}
+            <span>
+              {hasMasterKey
+                ? "Master Key"
+                : hasEncryptedSecrets
+                  ? "Unlock Secrets"
+                  : "Set Master Key"}
+            </span>
+          </button>
+
+          <button
+            type="button"
             onClick={handleAddVariable}
             className={classes.actionBtn}
             title="Add a new variable to this environment"
@@ -548,152 +654,31 @@ export default function EnvironmentPanel() {
               const isTarget = dropTarget?.index === idx;
               const isFirst = idx === 0;
               const isLastVar = idx === activeVariables.length - 1;
-              const isSecret = v.type === "secret";
               const isRevealed = !!revealedSecrets[idx];
 
               return (
-                <Box
+                <EnvVariableRow
                   key={idx}
-                  draggable={!isLastRow}
-                  onDragStart={(e) => handleDragStart(e, idx)}
+                  item={v}
+                  index={idx}
+                  isLastRow={isLastRow}
+                  isFirst={isFirst}
+                  isLastVar={isLastVar}
+                  isDragged={isDragged}
+                  isTarget={isTarget}
+                  dropPosition={isTarget ? dropTarget?.position : undefined}
+                  isRevealed={isRevealed}
+                  onToggleReveal={handleToggleRevealSecret}
+                  onChange={handleItemChange}
+                  onDelete={handleDeleteVariable}
+                  onMoveUp={handleMoveUp}
+                  onMoveDown={handleMoveDown}
+                  onDragStart={handleDragStart}
                   onDragEnd={handleDragEnd}
-                  onDragOver={(e) => handleDragOver(e, idx)}
-                  onDrop={(e) => handleDrop(e, idx)}
-                  className={clsx(
-                    classes.row,
-                    isDragged && classes.draggingRow,
-                    isTarget && dropTarget.position === "above" && classes.dropAbove,
-                    isTarget && dropTarget.position === "below" && classes.dropBelow,
-                  )}
-                >
-                  {/* Drag Handle */}
-                  <Box className={classes.colDrag}>
-                    {!isLastRow && (
-                      <div className={classes.dragHandle} title="Drag to reorder">
-                        <IconGripVertical size={14} />
-                      </div>
-                    )}
-                  </Box>
-
-                  {/* Enabled Checkbox */}
-                  <Box className={classes.colCheck}>
-                    <Checkbox
-                      checked={v.enabled}
-                      onChange={(e) => handleItemChange(idx, { enabled: e.currentTarget.checked })}
-                      size="xs"
-                      styles={{ root: { display: "inline-flex", verticalAlign: "middle" } }}
-                    />
-                  </Box>
-
-                  {/* Key */}
-                  <Box className={classes.colKey}>
-                    <UndoableTextInput
-                      variant="unstyled"
-                      value={v.key}
-                      onChange={(e) => handleItemChange(idx, { key: e.target.value })}
-                      placeholder="KEY_NAME"
-                      className={classes.tableInput}
-                    />
-                  </Box>
-
-                  {/* Value */}
-                  <Box className={classes.colVal}>
-                    <UndoableTextInput
-                      variant="unstyled"
-                      type={isSecret && !isRevealed ? "password" : "text"}
-                      value={v.value}
-                      onChange={(e) => handleItemChange(idx, { value: e.target.value })}
-                      placeholder="value"
-                      className={classes.tableInput}
-                      rightSection={
-                        isSecret ? (
-                          <Tooltip
-                            label={isRevealed ? "Hide Secret" : "Reveal Secret"}
-                            position="top"
-                          >
-                            <ActionIcon
-                              variant="subtle"
-                              size="xs"
-                              color="orange"
-                              onClick={() => handleToggleRevealSecret(idx)}
-                            >
-                              {isRevealed ? <IconLockOpen size={13} /> : <IconLock size={13} />}
-                            </ActionIcon>
-                          </Tooltip>
-                        ) : null
-                      }
-                    />
-                  </Box>
-
-                  {/* Type Selector (Text / Secret) */}
-                  <Box className={classes.colType}>
-                    <Tooltip
-                      label={
-                        isSecret
-                          ? "Secret: Stored in .env and gitignored"
-                          : "Text: Stored in environment yaml file"
-                      }
-                      position="top"
-                    >
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleItemChange(idx, { type: isSecret ? "text" : "secret" })
-                        }
-                        className={clsx(
-                          classes.typeBadge,
-                          isSecret ? classes.typeBadgeSecret : classes.typeBadgeText,
-                        )}
-                      >
-                        {isSecret ? <IconLock size={11} /> : null}
-                        <span>{isSecret ? "SECRET" : "TEXT"}</span>
-                      </button>
-                    </Tooltip>
-                  </Box>
-
-                  {/* Row Actions */}
-                  <Box className={classes.colActions}>
-                    {!isLastRow && (
-                      <div className={classes.rowActions}>
-                        <Tooltip label="Move up" position="top" withArrow openDelay={400}>
-                          <ActionIcon
-                            variant="subtle"
-                            size="xs"
-                            disabled={isFirst}
-                            onClick={() => handleMoveUp(idx)}
-                            className={classes.moveBtn}
-                          >
-                            <IconChevronUp size={12} />
-                          </ActionIcon>
-                        </Tooltip>
-                        <Tooltip label="Move down" position="top" withArrow openDelay={400}>
-                          <ActionIcon
-                            variant="subtle"
-                            size="xs"
-                            disabled={isLastVar}
-                            onClick={() => handleMoveDown(idx)}
-                            className={classes.moveBtn}
-                          >
-                            <IconChevronDown size={12} />
-                          </ActionIcon>
-                        </Tooltip>
-                        {(v.key || v.value) && (
-                          <Tooltip label="Delete" position="top" withArrow openDelay={400}>
-                            <ActionIcon
-                              variant="subtle"
-                              color="red"
-                              size="xs"
-                              onClick={() => handleDeleteVariable(idx)}
-                              className={classes.deleteBtn}
-                            >
-                              <IconTrash size={13} />
-                            </ActionIcon>
-                          </Tooltip>
-                        )}
-                      </div>
-                    )}
-                  </Box>
-                </Box>
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  onOpenMasterKeyModal={() => setMasterKeyModalOpen(true)}
+                />
               );
             })}
           </Box>
@@ -757,6 +742,41 @@ export default function EnvironmentPanel() {
           </Button>
           <Button size="xs" loading={renaming} onClick={handleRenameEnvironment}>
             Rename
+          </Button>
+        </Group>
+      </Modal>
+
+      {/* Modal for cleaning up legacy .env files */}
+      <Modal
+        opened={legacyCleanupModalOpen}
+        onClose={() => setLegacyCleanupModalOpen(false)}
+        title={
+          <Box style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <IconAlertTriangle size={18} color="#eab308" />
+            <Text fw={600} size="sm">
+              Clean Up Legacy .env Files?
+            </Text>
+          </Box>
+        }
+        size="sm"
+        centered
+      >
+        <Text size="xs" c="dimmed" mb="lg">
+          Your environment variables have been successfully migrated directly into the YAML files in{" "}
+          <code>environments/</code>. Would you like to delete the legacy <code>.env</code> and{" "}
+          <code>.env.*</code> files at your workspace root to keep your project clean?
+        </Text>
+        <Group justify="flex-end">
+          <Button
+            variant="default"
+            size="xs"
+            onClick={() => setLegacyCleanupModalOpen(false)}
+            disabled={cleaningUp}
+          >
+            Keep Files
+          </Button>
+          <Button color="red" size="xs" onClick={handleCleanupLegacyFiles} loading={cleaningUp}>
+            Delete Legacy .env Files
           </Button>
         </Group>
       </Modal>

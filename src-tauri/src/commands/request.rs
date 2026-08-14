@@ -421,111 +421,81 @@ pub async fn cancel_request(
     }
 }
 
-/// Helper function to retrieve all environment variables for resolution (dot-env + active environment file).
+/// Helper function to retrieve all environment variables for resolution (global + active environment file).
 async fn get_all_variables(
     workspace_path: &Path,
     env_name: Option<&str>,
 ) -> Result<HashMap<String, crate::models::environment::Variable>, AppError> {
-    let mut variables = load_dot_env(workspace_path, env_name);
+    let mut variables = HashMap::new();
 
+    // 1. Load global environment if exists
+    let global_vars = load_environment_variables(workspace_path, "global").await?;
+    for (k, v) in global_vars {
+        variables.insert(k, v);
+    }
+
+    // 2. Load active environment if provided and not global
     if let Some(name) = env_name {
-        let env_vars = load_environment_variables(workspace_path, name).await?;
-        for (k, mut v) in env_vars {
-            if v.value == format!("{{{{{}}}}}", k) || v.value == format!("{{{{ {} }}}}", k) {
-                if let Some(dot_val) = variables.get(&k) {
-                    v.value = dot_val.value.clone();
-                }
+        if !name.eq_ignore_ascii_case("global") {
+            let active_vars = load_environment_variables(workspace_path, name).await?;
+            for (k, v) in active_vars {
+                variables.insert(k, v);
             }
-            variables.insert(k, v);
         }
+    }
+
+    // 3. Fallback: also merge any legacy .env if exists for smooth migration
+    let legacy_vars = crate::commands::environment::read_legacy_dot_env(
+        workspace_path,
+        env_name.unwrap_or("global"),
+    );
+    for (k, v) in legacy_vars {
+        variables
+            .entry(k.clone())
+            .or_insert_with(|| crate::models::environment::Variable {
+                name: k,
+                value: v,
+                var_type: crate::models::environment::VariableType::Default,
+                enabled: true,
+                description: None,
+            });
     }
 
     Ok(variables)
 }
 
-/// Helper function to load key-value variables from the workspace `.env` and `.env.<name>` files.
-fn load_dot_env(
-    workspace_path: &Path,
-    env_name: Option<&str>,
-) -> HashMap<String, crate::models::environment::Variable> {
-    let mut map = HashMap::new();
-
-    // Load global .env first
-    parse_env_file_into_var_map(&workspace_path.join(".env"), &mut map);
-
-    // Load specific .env.<name> if provided
-    if let Some(name) = env_name {
-        let specific_env_path =
-            crate::commands::environment::get_dot_env_path(workspace_path, name);
-        if specific_env_path != workspace_path.join(".env") {
-            parse_env_file_into_var_map(&specific_env_path, &mut map);
-        }
-    }
-
-    map
-}
-
-fn parse_env_file_into_var_map(
-    file_path: &Path,
-    map: &mut HashMap<String, crate::models::environment::Variable>,
-) {
-    if file_path.exists() {
-        if let Ok(content) = std::fs::read_to_string(file_path) {
-            for line in content.lines() {
-                let trimmed = line.trim();
-                if trimmed.is_empty() || trimmed.starts_with('#') {
-                    continue;
-                }
-                if let Some((k, v)) = trimmed.split_once('=') {
-                    let key = k.trim().to_string();
-                    let val = v.trim().trim_matches('"').trim_matches('\'').to_string();
-                    map.insert(
-                        key.clone(),
-                        crate::models::environment::Variable {
-                            name: key,
-                            value: val,
-                            var_type: crate::models::environment::VariableType::Default,
-                            enabled: true,
-                            description: Some(format!(
-                                "From {}",
-                                file_path
-                                    .file_name()
-                                    .and_then(|n| n.to_str())
-                                    .unwrap_or(".env")
-                            )),
-                        },
-                    );
-                }
-            }
-        }
-    }
-}
-
-/// Helper function to load and parse environment variable files (`environments/{env_name}.yml`).
+/// Helper function to load and parse environment variable files (`environments/{env_name}.yml`),
+/// decrypting secret variables in memory using Master Key if available.
 async fn load_environment_variables(
     workspace_path: &Path,
     env_name: &str,
 ) -> Result<HashMap<String, crate::models::environment::Variable>, AppError> {
-    let env_file_yml = workspace_path
-        .join("environments")
-        .join(format!("{}.yml", env_name));
-    let env_file_yaml = workspace_path
-        .join("environments")
-        .join(format!("{}.yaml", env_name));
-
-    let env_file = if env_file_yml.exists() {
-        env_file_yml
-    } else if env_file_yaml.exists() {
-        env_file_yaml
-    } else {
-        return Ok(HashMap::new());
-    };
+    let env_file =
+        match crate::commands::environment::find_environment_file(workspace_path, env_name) {
+            Some(p) => p,
+            None => return Ok(HashMap::new()),
+        };
 
     let env: crate::models::environment::Environment =
         crate::engine::yaml_parser::read_and_validate_yaml(&env_file)?;
 
+    let master_key = crate::engine::key_manager::get_master_key(workspace_path);
+    let salt = workspace_path.to_string_lossy().as_bytes().to_vec();
+
     let mut map = HashMap::new();
-    for var in env.variables {
+    for mut var in env.variables {
+        if matches!(
+            var.var_type,
+            crate::models::environment::VariableType::Secret
+        ) && crate::engine::crypto::is_encrypted(&var.value)
+        {
+            if let Some(ref key) = master_key {
+                if let Ok(decrypted) = crate::engine::crypto::decrypt_secret(&var.value, key, &salt)
+                {
+                    var.value = decrypted;
+                }
+            }
+        }
         map.insert(var.name.clone(), var);
     }
     Ok(map)

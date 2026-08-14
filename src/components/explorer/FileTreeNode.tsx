@@ -37,7 +37,9 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
   const activeTabId = useTabStore((s) => s.activeTabId);
   const isFolder = node.nodeType === "collection" || node.nodeType === "folder";
   const isActive = activeTabId === node.path || activeTabId === node.id;
-  const { gitStatus, workspacePath, setTreeData } = useWorkspaceStore();
+  const gitStatus = useWorkspaceStore((s) => s.gitStatus);
+  const workspacePath = useWorkspaceStore((s) => s.workspacePath);
+  const setTreeData = useWorkspaceStore((s) => s.setTreeData);
 
   const getNodeGitStatus = () => {
     if (!gitStatus || !gitStatus.modifiedFiles) return null;

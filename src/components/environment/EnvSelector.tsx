@@ -2,7 +2,9 @@ import { Select } from "@mantine/core";
 import { useEnvStore } from "@/stores/envStore";
 
 export default function EnvSelector() {
-  const { environments, activeEnvironmentName, setActiveEnvironment } = useEnvStore();
+  const environments = useEnvStore((s) => s.environments);
+  const activeEnvironmentName = useEnvStore((s) => s.activeEnvironmentName);
+  const setActiveEnvironment = useEnvStore((s) => s.setActiveEnvironment);
 
   const data = [
     { value: "global", label: "Global" },

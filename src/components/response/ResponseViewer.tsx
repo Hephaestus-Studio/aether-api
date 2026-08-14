@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
-import { Box, Group, Text, Tabs, Loader, Menu, Button, HoverCard } from "@mantine/core";
-import { IconGlobe, IconChevronDown, IconArrowDown, IconArrowUp } from "@tabler/icons-react";
+import { Box, Text, Tabs, Loader, Menu, Button, HoverCard } from "@mantine/core";
+import {
+  IconGlobe,
+  IconChevronDown,
+  IconArrowDown,
+  IconArrowUp,
+  IconAlertCircle,
+} from "@tabler/icons-react";
 import { invoke } from "@tauri-apps/api/core";
 import { useTabStore } from "@/stores/tabStore";
 import { useCollision } from "@/hooks/useCollision";
@@ -225,16 +231,35 @@ export default function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>)
 
       {/* Error State */}
       {isError && (
-        <Box style={{ height: "100%" }}>
-          <Group gap={16} p={16} mb={12} style={{ borderBottom: "1px solid var(--border-color)" }}>
-            <Text size="sm" fw={700} color="red">
-              Error
+        <Box className={classes.errorContainer}>
+          <Box className={classes.errorHeader}>
+            <div className={classes.errorBadge}>
+              <IconAlertCircle size={14} color="#ef4444" />
+              <span className={classes.errorBadgeText}>
+                {(response as any)?.code || "NETWORK_ERROR"}
+              </span>
+            </div>
+          </Box>
+          <Box className={classes.errorBody}>
+            <Text size="sm" fw={600} style={{ color: "#f87171" }}>
+              Could not send request
             </Text>
-          </Group>
-          <Box p={16}>
-            <Text size="sm" color="red">
-              {(response as any)?.error}
-            </Text>
+            <div className={classes.errorMessageCard}>
+              {(response as any)?.error || "An unknown error occurred while sending the request."}
+            </div>
+            <div className={classes.errorHints}>
+              <Text size="xs" fw={600} style={{ color: "var(--text-secondary)", marginBottom: 6 }}>
+                Troubleshooting tips:
+              </Text>
+              <ul className={classes.errorHintList}>
+                <li>Check if the target server or local service is running and accessible.</li>
+                <li>Verify that the URL, port, and path are correct.</li>
+                <li>
+                  Make sure secret variables are unlocked if they are part of the URL/headers.
+                </li>
+                <li>Check network connection and firewall settings.</li>
+              </ul>
+            </div>
           </Box>
         </Box>
       )}

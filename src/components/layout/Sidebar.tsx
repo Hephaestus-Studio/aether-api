@@ -19,8 +19,10 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ onClose }: Readonly<SidebarProps>) {
-  const { workspacePath, setTreeData, collapseAllCollections, expandAllCollections } =
-    useWorkspaceStore();
+  const workspacePath = useWorkspaceStore((s) => s.workspacePath);
+  const setTreeData = useWorkspaceStore((s) => s.setTreeData);
+  const collapseAllCollections = useWorkspaceStore((s) => s.collapseAllCollections);
+  const expandAllCollections = useWorkspaceStore((s) => s.expandAllCollections);
   const [modalOpened, setModalOpened] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState("");
   const [error, setError] = useState("");

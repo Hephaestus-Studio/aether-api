@@ -3,6 +3,7 @@ export interface EnvVariableItem {
   value: string;
   type: "text" | "secret";
   enabled: boolean;
+  isLocked?: boolean;
 }
 
 export interface EnvironmentDetails {
@@ -14,4 +15,10 @@ export interface EnvironmentSummary {
   name: string;
   path: string;
   isSecretMasked: boolean;
+}
+
+export interface MasterKeyStatus {
+  hasMasterKey: boolean;
+  hasEncryptedSecrets: boolean;
+  hasLegacyDotenv: boolean;
 }

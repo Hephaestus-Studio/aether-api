@@ -5,6 +5,8 @@ export interface UrlSegment {
   isPlaceholder: boolean;
   varName?: string;
   isResolved?: boolean;
+  isLocked?: boolean;
+  isSecret?: boolean;
   resolvedValue?: string;
 }
 
@@ -23,10 +25,10 @@ export function parseUrlPlaceholders(
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
-  const varsMap = new Map<string, string>();
+  const varsMap = new Map<string, EnvVariableItem>();
   for (const v of activeVariables) {
     if (v.enabled !== false && v.key.trim() !== "") {
-      varsMap.set(v.key.trim(), v.value);
+      varsMap.set(v.key.trim(), v);
     }
   }
 
@@ -40,14 +42,19 @@ export function parseUrlPlaceholders(
 
     const rawMatch = match[0];
     const varName = match[1].trim();
-    const isResolved = varsMap.has(varName);
-    const resolvedValue = isResolved ? varsMap.get(varName) : undefined;
+    const matchedVar = varsMap.get(varName);
+    const isLocked = !!matchedVar?.isLocked;
+    const isSecret = matchedVar?.type === "secret";
+    const isResolved = !!matchedVar && !isLocked;
+    const resolvedValue = isResolved ? matchedVar.value : undefined;
 
     segments.push({
       text: rawMatch,
       isPlaceholder: true,
       varName,
       isResolved,
+      isLocked,
+      isSecret,
       resolvedValue,
     });
 

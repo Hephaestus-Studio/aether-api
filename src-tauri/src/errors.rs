@@ -70,6 +70,18 @@ pub enum AppError {
     /// Error triggered when a connection or operation exceeds its permitted timeout limit.
     #[error("Timeout error")]
     TimeoutError,
+
+    /// Error related to cryptographic operations (encryption/decryption).
+    #[error("Crypto error: {0}")]
+    CryptoError(String),
+
+    /// Error indicating a Master Key is required to decrypt/encrypt secrets.
+    #[error("Master Key required for this operation")]
+    MasterKeyRequired,
+
+    /// Error indicating that an incorrect master key was supplied.
+    #[error("Invalid Master Key: {0}")]
+    InvalidMasterKey(String),
 }
 
 /// Serializable IPC payload used to return errors back to the frontend/UI.
@@ -104,6 +116,9 @@ impl AppError {
             AppError::GitNotFound => "GIT_NOT_FOUND",
             AppError::NotAGitRepository => "NOT_A_GIT_REPOSITORY",
             AppError::TimeoutError => "TIMEOUT_ERROR",
+            AppError::CryptoError(_) => "CRYPTO_ERROR",
+            AppError::MasterKeyRequired => "MASTER_KEY_REQUIRED",
+            AppError::InvalidMasterKey(_) => "INVALID_MASTER_KEY",
         }
         .to_string();
 
