@@ -24,20 +24,20 @@ const AUTO_GENERATED_HEADERS = [
     key: "User-Agent",
     value: "AetherAPI/1.0.0",
     enabled: true,
-    description: "Default user agent",
+    description: "",
   },
-  { key: "Accept", value: "*/*", enabled: true, description: "Accept all media types" },
+  { key: "Accept", value: "*/*", enabled: true, description: "" },
   {
     key: "Accept-Encoding",
     value: "gzip, deflate, br",
     enabled: true,
-    description: "Supported compression encodings",
+    description: "",
   },
   {
     key: "Connection",
     value: "keep-alive",
     enabled: true,
-    description: "Keep connection open for reuse",
+    description: "",
   },
 ];
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Box, Radio, Group, Select, Checkbox, ActionIcon, Text, Menu, Button } from "@mantine/core";
+import { Box, Group, Select, Checkbox, ActionIcon, Text, Menu, Button } from "@mantine/core";
 import {
   IconTrash,
   IconChevronDown,
@@ -17,7 +17,16 @@ import MonacoErrorBoundary from "@/components/common/MonacoErrorBoundary";
 import UndoableTextInput from "@/components/common/UndoableTextInput";
 import { useCollision } from "@/hooks/useCollision";
 import type { RequestBody, KeyValuePair, MultipartField } from "@/types/request";
+import clsx from "clsx";
 import classes from "./BodyEditor.module.css";
+
+const BODY_TYPES = [
+  { label: "none", value: "none" },
+  { label: "form-data", value: "multipartForm" },
+  { label: "x-www-form-urlencoded", value: "formUrlencoded" },
+  { label: "raw", value: "raw" },
+  { label: "binary", value: "binary" },
+];
 
 interface BodyEditorProps {
   body: RequestBody;
@@ -313,6 +322,8 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
         return "JSON";
       case "xml":
         return "XML";
+      case "yaml":
+        return "YAML";
       case "javascript":
         return "JavaScript";
       case "html":
@@ -340,7 +351,7 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
                     {getBodyTypeLabel(bodyType)}
                   </Button>
                 </Menu.Target>
-                <Menu.Dropdown>
+                <Menu.Dropdown className={classes.compactLangDropdown}>
                   <Menu.Item onClick={() => handleTypeChange("none")}>none</Menu.Item>
                   <Menu.Item onClick={() => handleTypeChange("multipartForm")}>form-data</Menu.Item>
                   <Menu.Item onClick={() => handleTypeChange("formUrlencoded")}>
@@ -352,25 +363,72 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
               </Menu>
 
               {bodyType === "raw" && (
-                <Menu shadow="md" width={140} position="bottom-start">
+                <Menu shadow="md" width={130} position="bottom-start">
                   <Menu.Target>
                     <Button
-                      variant="transparent"
+                      variant="subtle"
                       size="xs"
                       className={classes.compactLangBtn}
-                      rightSection={<IconChevronDown size={14} />}
+                      rightSection={<IconChevronDown size={12} />}
                     >
                       {getRawLangLabel(rawLang)}
                     </Button>
                   </Menu.Target>
-                  <Menu.Dropdown>
-                    <Menu.Item onClick={() => handleRawLangChange("text")}>Text</Menu.Item>
-                    <Menu.Item onClick={() => handleRawLangChange("javascript")}>
+                  <Menu.Dropdown className={classes.compactLangDropdown}>
+                    <Menu.Item
+                      onClick={() => handleRawLangChange("text")}
+                      className={rawLang === "text" ? classes.compactItemActive : ""}
+                      rightSection={
+                        rawLang === "text" ? <IconCheck size={12} color="#ffffff" /> : null
+                      }
+                    >
+                      Text
+                    </Menu.Item>
+                    <Menu.Item
+                      onClick={() => handleRawLangChange("javascript")}
+                      className={rawLang === "javascript" ? classes.compactItemActive : ""}
+                      rightSection={
+                        rawLang === "javascript" ? <IconCheck size={12} color="#ffffff" /> : null
+                      }
+                    >
                       JavaScript
                     </Menu.Item>
-                    <Menu.Item onClick={() => handleRawLangChange("json")}>JSON</Menu.Item>
-                    <Menu.Item onClick={() => handleRawLangChange("html")}>HTML</Menu.Item>
-                    <Menu.Item onClick={() => handleRawLangChange("xml")}>XML</Menu.Item>
+                    <Menu.Item
+                      onClick={() => handleRawLangChange("json")}
+                      className={rawLang === "json" ? classes.compactItemActive : ""}
+                      rightSection={
+                        rawLang === "json" ? <IconCheck size={12} color="#ffffff" /> : null
+                      }
+                    >
+                      JSON
+                    </Menu.Item>
+                    <Menu.Item
+                      onClick={() => handleRawLangChange("html")}
+                      className={rawLang === "html" ? classes.compactItemActive : ""}
+                      rightSection={
+                        rawLang === "html" ? <IconCheck size={12} color="#ffffff" /> : null
+                      }
+                    >
+                      HTML
+                    </Menu.Item>
+                    <Menu.Item
+                      onClick={() => handleRawLangChange("xml")}
+                      className={rawLang === "xml" ? classes.compactItemActive : ""}
+                      rightSection={
+                        rawLang === "xml" ? <IconCheck size={12} color="#ffffff" /> : null
+                      }
+                    >
+                      XML
+                    </Menu.Item>
+                    <Menu.Item
+                      onClick={() => handleRawLangChange("yaml")}
+                      className={rawLang === "yaml" ? classes.compactItemActive : ""}
+                      rightSection={
+                        rawLang === "yaml" ? <IconCheck size={12} color="#ffffff" /> : null
+                      }
+                    >
+                      YAML
+                    </Menu.Item>
                   </Menu.Dropdown>
                 </Menu>
               )}
@@ -378,24 +436,20 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
           </Box>
         ) : (
           <Box className={classes.typeRow}>
-            <div ref={radiosRef}>
-              <Radio.Group
-                value={bodyType}
-                onChange={handleTypeChange}
-                className={classes.radioGroup}
-              >
-                <Group>
-                  <Radio value="none" label="none" className={classes.radioItem} />
-                  <Radio value="multipartForm" label="form-data" className={classes.radioItem} />
-                  <Radio
-                    value="formUrlencoded"
-                    label="x-www-form-urlencoded"
-                    className={classes.radioItem}
-                  />
-                  <Radio value="raw" label="raw" className={classes.radioItem} />
-                  <Radio value="binary" label="binary" className={classes.radioItem} />
-                </Group>
-              </Radio.Group>
+            <div ref={radiosRef} className={classes.pillGroup}>
+              {BODY_TYPES.map((opt) => {
+                const isActive = bodyType === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => handleTypeChange(opt.value)}
+                    className={clsx(classes.typePill, isActive && classes.typePillActive)}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
             </div>
 
             {bodyType === "raw" && (
@@ -412,8 +466,16 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
                     { label: "JSON", value: "json" },
                     { label: "HTML", value: "html" },
                     { label: "XML", value: "xml" },
+                    { label: "YAML", value: "yaml" },
                   ]}
-                  className={classes.langSelect}
+                  allowDeselect={false}
+                  checkIconPosition="right"
+                  classNames={{
+                    root: classes.langSelect,
+                    input: classes.langSelectInput,
+                    dropdown: classes.langSelectDropdown,
+                    option: classes.langSelectOption,
+                  }}
                 />
               </div>
             )}

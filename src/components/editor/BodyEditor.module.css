@@ -20,6 +20,48 @@
   flex-shrink: 0;
 }
 
+.pillGroup {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+
+.typePill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 26px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--aether-radius-sm, 4px);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.typePill:hover {
+  color: var(--text-primary);
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.typePillActive {
+  color: #ffffff !important;
+  font-weight: 600;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+.typePillActive:hover {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
 .compactTypeRow {
   display: flex;
   align-items: center;
@@ -32,91 +74,157 @@
 }
 
 .compactSelectBtn {
-  background-color: var(--bg-sidebar);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  font-weight: 500;
-  height: 26px;
-  padding: 0 8px;
-  border-radius: 4px;
-  font-size: 12px;
+  background-color: var(--bg-sidebar) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  font-weight: 500 !important;
+  height: 24px !important;
+  padding: 0 8px !important;
+  border-radius: var(--aether-radius-sm, 4px) !important;
+  font-size: 11.5px !important;
 }
 
 .compactSelectBtn:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
 .compactLangBtn {
-  color: #0084ff;
-  font-weight: 600;
-  font-size: 12px;
-  height: 26px;
-  padding: 0 6px;
+  background-color: var(--bg-sidebar) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  font-weight: 500 !important;
+  height: 24px !important;
+  padding: 0 8px !important;
+  border-radius: var(--aether-radius-sm, 4px) !important;
+  font-size: 11.5px !important;
 }
 
 .compactLangBtn:hover {
-  background-color: rgba(0, 132, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
-.radioGroup :global(.mantine-RadioGroup-root) {
-  display: flex;
-  align-items: center;
-  flex-wrap: nowrap !important;
+.compactLangBtn:active,
+.compactLangBtn:focus,
+.compactLangBtn[data-active],
+.compactLangBtn[data-expanded] {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
 }
 
-.radioGroup :global(.mantine-Group-root) {
-  display: flex;
-  gap: 16px;
-  flex-wrap: nowrap !important;
-  white-space: nowrap !important;
+.compactLangDropdown {
+  background-color: var(--bg-sidebar) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--aether-radius-sm, 4px) !important;
+  padding: 4px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45) !important;
+  min-width: 120px !important;
 }
 
-.radioItem {
-  white-space: nowrap !important;
-  flex-shrink: 0;
+.compactLangDropdown :global(.mantine-Menu-item) {
+  font-size: 11.5px !important;
+  color: var(--text-muted) !important;
+  border-radius: var(--aether-radius-xs, 2px) !important;
+  padding: 4px 8px !important;
+  height: 24px !important;
+  line-height: 1 !important;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease !important;
 }
 
-.radioItem :global(.mantine-Radio-label) {
-  font-size: var(--aether-font-size-sm);
-  color: var(--text-muted);
-  cursor: pointer;
+.compactLangDropdown :global(.mantine-Menu-itemLabel) {
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
 }
 
-.radioItem[data-checked] :global(.mantine-Radio-label) {
-  color: var(--text-primary);
-  font-weight: var(--aether-font-weight-medium);
+.compactLangDropdown :global(.mantine-Menu-item:hover) {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: var(--text-primary) !important;
 }
 
-.radioItem :global(.mantine-Radio-radio) {
-  background-color: transparent;
-  border-color: var(--border-color);
-  cursor: pointer;
+.compactLangDropdown :global(.mantine-Menu-item:hover .mantine-Menu-itemLabel) {
+  color: var(--text-primary) !important;
 }
 
-.radioItem :global(.mantine-Radio-radio:checked) {
-  background-color: var(--aether-color-primary-base);
-  border-color: var(--aether-color-primary-base);
+.compactItemActive {
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  font-weight: 600 !important;
+}
+
+.compactItemActive :global(.mantine-Menu-itemLabel) {
+  color: #ffffff !important;
+  font-weight: 600 !important;
 }
 
 .langSelect {
   width: 110px;
 }
 
-.langSelect :global(.mantine-Select-input) {
-  height: 24px;
-  min-height: 24px;
-  line-height: 24px;
-  font-size: var(--aether-font-size-xs);
-  background-color: transparent;
-  border: 1px solid var(--border-color);
-  color: var(--aether-color-primary-base);
-  padding: 0 8px;
-  border-radius: 4px;
+.langSelectInput {
+  height: 24px !important;
+  min-height: 24px !important;
+  line-height: 24px !important;
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
+  background-color: var(--bg-sidebar) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  padding: 0 8px !important;
+  border-radius: var(--aether-radius-sm, 4px) !important;
+  transition: all 0.15s ease !important;
 }
 
-.langSelect :global(.mantine-Select-option) {
-  font-size: var(--aether-font-size-xs);
+.langSelectInput:hover {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.langSelectInput:focus,
+.langSelectInput[data-expanded] {
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.langSelectDropdown {
+  background-color: var(--bg-sidebar) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--aether-radius-sm, 4px) !important;
+  padding: 4px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45) !important;
+  min-width: 110px !important;
+}
+
+.langSelectOption {
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
+  color: var(--text-muted) !important;
+  border-radius: var(--aether-radius-xs, 2px) !important;
+  padding: 4px 8px !important;
+  height: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease !important;
+}
+
+.langSelectOption:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: var(--text-primary) !important;
+}
+
+.langSelectOption[data-checked] {
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  font-weight: 600 !important;
+}
+
+.langSelectOption[data-checked] :global(.mantine-Select-checkIcon) {
+  color: #ffffff !important;
 }
 
 .editorContainer {

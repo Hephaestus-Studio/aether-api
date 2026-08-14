@@ -8,6 +8,7 @@ import {
   IconDownload,
   IconTextWrap,
   IconTextWrapDisabled,
+  IconCheck,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { invoke } from "@tauri-apps/api/core";
@@ -355,11 +356,49 @@ export default function ResponseBody({ response, isActive = true }: Readonly<Res
                 </Button>
               </Menu.Target>
               <Menu.Dropdown className={classes.compactTabDropdown}>
-                <Menu.Item onClick={() => setLanguage("json")}>JSON</Menu.Item>
-                <Menu.Item onClick={() => setLanguage("xml")}>XML</Menu.Item>
-                <Menu.Item onClick={() => setLanguage("html")}>HTML</Menu.Item>
-                <Menu.Item onClick={() => setLanguage("text")}>TEXT</Menu.Item>
-                <Menu.Item onClick={() => setLanguage("auto")}>Auto Detect</Menu.Item>
+                <Menu.Item
+                  onClick={() => setLanguage("json")}
+                  className={language === "json" ? classes.compactItemActive : ""}
+                  rightSection={
+                    language === "json" ? <IconCheck size={12} color="#ffffff" /> : null
+                  }
+                >
+                  JSON
+                </Menu.Item>
+                <Menu.Item
+                  onClick={() => setLanguage("xml")}
+                  className={language === "xml" ? classes.compactItemActive : ""}
+                  rightSection={language === "xml" ? <IconCheck size={12} color="#ffffff" /> : null}
+                >
+                  XML
+                </Menu.Item>
+                <Menu.Item
+                  onClick={() => setLanguage("html")}
+                  className={language === "html" ? classes.compactItemActive : ""}
+                  rightSection={
+                    language === "html" ? <IconCheck size={12} color="#ffffff" /> : null
+                  }
+                >
+                  HTML
+                </Menu.Item>
+                <Menu.Item
+                  onClick={() => setLanguage("text")}
+                  className={language === "text" ? classes.compactItemActive : ""}
+                  rightSection={
+                    language === "text" ? <IconCheck size={12} color="#ffffff" /> : null
+                  }
+                >
+                  TEXT
+                </Menu.Item>
+                <Menu.Item
+                  onClick={() => setLanguage("auto")}
+                  className={language === "auto" ? classes.compactItemActive : ""}
+                  rightSection={
+                    language === "auto" ? <IconCheck size={12} color="#ffffff" /> : null
+                  }
+                >
+                  Auto Detect
+                </Menu.Item>
               </Menu.Dropdown>
             </Menu>
           )}
