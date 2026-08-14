@@ -80,7 +80,12 @@ export default function MonacoEditor({
         if (isCancelled || !containerRef.current) return;
 
         editorInstance = monaco.editor.create(containerRef.current, {
-          value: value !== undefined ? value : (valueRef.current !== undefined ? valueRef.current : defaultValue),
+          value:
+            value !== undefined
+              ? value
+              : valueRef.current !== undefined
+                ? valueRef.current
+                : defaultValue,
           language,
           theme,
           automaticLayout: true,

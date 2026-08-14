@@ -96,16 +96,129 @@ impl HttpResponse {
     /// Detects the body type class from the provided `Content-Type` header string.
     pub fn detect_body_type(content_type: &str) -> ResponseBodyType {
         let ct = content_type.to_lowercase();
-        if ct.contains("application/json") {
+        if ct.contains("application/json") || ct.ends_with("+json") {
             ResponseBodyType::Json
-        } else if ct.contains("application/xml") || ct.contains("text/xml") {
-            ResponseBodyType::Xml
-        } else if ct.contains("text/html") {
+        } else if ct.contains("text/html") || ct.contains("application/xhtml+xml") {
             ResponseBodyType::Html
-        } else if ct.contains("text/plain") || ct.contains("application/octet-stream") {
+        } else if ct.contains("application/xml") || ct.contains("text/xml") || ct.ends_with("+xml")
+        {
+            ResponseBodyType::Xml
+        } else if ct.contains("application/octet-stream")
+            || ct.starts_with("image/")
+            || ct.starts_with("audio/")
+            || ct.starts_with("video/")
+            || ct.contains("application/pdf")
+            || ct.contains("application/zip")
+            || ct.contains("application/gzip")
+            || ct.contains("application/x-tar")
+            || ct.contains("application/x-bzip2")
+            || ct.contains("application/x-7z-compressed")
+        {
             ResponseBodyType::Binary
         } else {
             ResponseBodyType::Text
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_detect_body_type_text_plain() {
+        assert_eq!(
+            HttpResponse::detect_body_type("text/plain"),
+            ResponseBodyType::Text
+        );
+        assert_eq!(
+            HttpResponse::detect_body_type("text/plain; charset=UTF-8"),
+            ResponseBodyType::Text
+        );
+        assert_eq!(
+            HttpResponse::detect_body_type("text/csv"),
+            ResponseBodyType::Text
+        );
+        assert_eq!(
+            HttpResponse::detect_body_type("text/css"),
+            ResponseBodyType::Text
+        );
+        assert_eq!(HttpResponse::detect_body_type(""), ResponseBodyType::Text);
+    }
+
+    #[test]
+    fn test_detect_body_type_json() {
+        assert_eq!(
+            HttpResponse::detect_body_type("application/json"),
+            ResponseBodyType::Json
+        );
+        assert_eq!(
+            HttpResponse::detect_body_type("application/json; charset=utf-8"),
+            ResponseBodyType::Json
+        );
+        assert_eq!(
+            HttpResponse::detect_body_type("application/problem+json"),
+            ResponseBodyType::Json
+        );
+    }
+
+    #[test]
+    fn test_detect_body_type_xml() {
+        assert_eq!(
+            HttpResponse::detect_body_type("application/xml"),
+            ResponseBodyType::Xml
+        );
+        assert_eq!(
+            HttpResponse::detect_body_type("text/xml"),
+            ResponseBodyType::Xml
+        );
+        assert_eq!(
+            HttpResponse::detect_body_type("application/atom+xml"),
+            ResponseBodyType::Xml
+        );
+    }
+
+    #[test]
+    fn test_detect_body_type_html() {
+        assert_eq!(
+            HttpResponse::detect_body_type("text/html"),
+            ResponseBodyType::Html
+        );
+        assert_eq!(
+            HttpResponse::detect_body_type("application/xhtml+xml"),
+            ResponseBodyType::Html
+        );
+    }
+
+    #[test]
+    fn test_detect_body_type_binary() {
+        assert_eq!(
+            HttpResponse::detect_body_type("application/octet-stream"),
+            ResponseBodyType::Binary
+        );
+        assert_eq!(
+            HttpResponse::detect_body_type("image/png"),
+            ResponseBodyType::Binary
+        );
+        assert_eq!(
+            HttpResponse::detect_body_type("image/jpeg"),
+            ResponseBodyType::Binary
+        );
+        assert_eq!(
+            HttpResponse::detect_body_type("audio/mpeg"),
+            ResponseBodyType::Binary
+        );
+        assert_eq!(
+            HttpResponse::detect_body_type("video/mp4"),
+            ResponseBodyType::Binary
+        );
+        assert_eq!(
+            HttpResponse::detect_body_type("application/pdf"),
+            ResponseBodyType::Binary
+        );
+        assert_eq!(
+            HttpResponse::detect_body_type("application/zip"),
+            ResponseBodyType::Binary
+        );
     }
 }

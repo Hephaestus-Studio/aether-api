@@ -177,7 +177,9 @@
   border: 1px solid transparent !important;
   border-radius: var(--aether-radius-sm, 4px) !important;
   color: var(--text-primary);
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .tableInput :global(.mantine-Input-input:focus) {

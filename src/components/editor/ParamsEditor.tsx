@@ -1,12 +1,7 @@
 import { useState } from "react";
 import { Box, Checkbox, ActionIcon, ScrollArea, Tooltip } from "@mantine/core";
 import { useElementSize } from "@mantine/hooks";
-import {
-  IconTrash,
-  IconGripVertical,
-  IconChevronUp,
-  IconChevronDown,
-} from "@tabler/icons-react";
+import { IconTrash, IconGripVertical, IconChevronUp, IconChevronDown } from "@tabler/icons-react";
 import UndoableTextInput from "@/components/common/UndoableTextInput";
 import type { KeyValuePair } from "@/types/request";
 import clsx from "clsx";

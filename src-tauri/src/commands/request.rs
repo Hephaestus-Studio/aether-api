@@ -675,7 +675,11 @@ pub fn collect_inherited_headers(
             .ok()
             .and_then(|c| c.headers)
         } else if fold_yml.exists() || fold_yaml.exists() {
-            let f = if fold_yml.exists() { fold_yml } else { fold_yaml };
+            let f = if fold_yml.exists() {
+                fold_yml
+            } else {
+                fold_yaml
+            };
             crate::engine::yaml_parser::read_and_validate_yaml::<crate::models::folder::Folder>(&f)
                 .ok()
                 .and_then(|fld| fld.headers)

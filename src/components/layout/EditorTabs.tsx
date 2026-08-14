@@ -19,7 +19,9 @@ import {
 } from "@tabler/icons-react";
 import { useTabStore } from "@/stores/tabStore";
 import { getMethodColor } from "@/utils/httpMethods";
-import UnsavedChangesModal, { type PendingCloseAction } from "@/components/modals/UnsavedChangesModal";
+import UnsavedChangesModal, {
+  type PendingCloseAction,
+} from "@/components/modals/UnsavedChangesModal";
 import classes from "./EditorTabs.module.css";
 
 export default function EditorTabs() {
@@ -151,7 +153,9 @@ export default function EditorTabs() {
                 </Menu.ContextMenu>
                 <Menu.Dropdown>
                   <Menu.Item onClick={() => handleRequestCloseTab(tab.id)}>Close Tab</Menu.Item>
-                  <Menu.Item onClick={() => handleRequestCloseOtherTabs(tab.id)}>Close Others</Menu.Item>
+                  <Menu.Item onClick={() => handleRequestCloseOtherTabs(tab.id)}>
+                    Close Others
+                  </Menu.Item>
                   <Menu.Item onClick={() => handleRequestCloseAllTabs()}>Close All</Menu.Item>
                 </Menu.Dropdown>
               </Menu>

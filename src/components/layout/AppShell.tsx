@@ -34,8 +34,8 @@ export default function AppShell() {
     activeTab?.nodeType === "folder" || activeTab?.nodeType === "collection";
 
   // Lazy Mount + Keep-Alive: only mount tabs when activated once, keep mounted until closed
-  const [mountedTabIds, setMountedTabIds] = useState<Set<string>>(() =>
-    new Set(activeTabId ? [activeTabId] : [])
+  const [mountedTabIds, setMountedTabIds] = useState<Set<string>>(
+    () => new Set(activeTabId ? [activeTabId] : []),
   );
 
   useEffect(() => {
@@ -77,7 +77,7 @@ export default function AppShell() {
       const deltaX = moveEvent.clientX - startX;
       const newWidth = Math.min(
         MAX_SIDEBAR_WIDTH,
-        Math.max(MIN_SIDEBAR_WIDTH, startWidth + deltaX)
+        Math.max(MIN_SIDEBAR_WIDTH, startWidth + deltaX),
       );
       setSidebarWidth(newWidth);
     };
@@ -85,7 +85,7 @@ export default function AppShell() {
     const handleMouseUp = () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
-      
+
       if (workspaceInfo) {
         setWorkspaceInfo({
           ...workspaceInfo,

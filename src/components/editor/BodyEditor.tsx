@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Box, Radio, Group, Select, Checkbox, ActionIcon, Text, Menu, Button } from "@mantine/core";
 import {
   IconTrash,
@@ -48,6 +48,24 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
 
   const [binaryPath, setBinaryPath] = useState<string>("");
 
+  // Cached content memory to preserve data when switching between tabs/modes
+  const cachedRawContentRef = useRef<string>(
+    body.type === "json" || body.type === "xml" || body.type === "text" || body.type === "yaml"
+      ? body.content || ""
+      : "",
+  );
+  const cachedFormUrlencodedRef = useRef<KeyValuePair[]>(
+    body.type === "formUrlencoded"
+      ? body.content
+      : [{ key: "", value: "", enabled: true, description: "" }],
+  );
+  const cachedMultipartRef = useRef<MultipartField[]>(
+    body.type === "multipartForm"
+      ? body.content
+      : [{ key: "", value: "", fieldType: "text" as const, enabled: true }],
+  );
+  const cachedBinaryPathRef = useRef<string>(body.type === "binary" ? body.filePath || "" : "");
+
   const minExpandedWidth = bodyType === "raw" ? 580 : 500;
 
   const {
@@ -82,49 +100,70 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
       else if (bodyTypeProp === "xml") setRawLang("xml");
       else if (bodyTypeProp === "yaml") setRawLang("yaml");
       else setRawLang("text");
+      cachedRawContentRef.current = (body as any).content || "";
     } else {
       setBodyType(bodyTypeProp);
+      if (body.type === "formUrlencoded") {
+        cachedFormUrlencodedRef.current = body.content;
+      } else if (body.type === "multipartForm") {
+        cachedMultipartRef.current = body.content;
+      }
     }
     if (bodyTypeProp === "binary") {
       setBinaryPath(binaryFilePath || "");
+      cachedBinaryPathRef.current = binaryFilePath || "";
     }
-  }, [bodyTypeProp, binaryFilePath]);
+  }, [bodyTypeProp, binaryFilePath, body]);
 
   const handleTypeChange = (type: string) => {
     setBodyType(type);
     if (type === "none") {
       onChange({ type: "none" });
     } else if (type === "raw") {
-      // Set to active rawLang
-      if (rawLang === "json") onChange({ type: "json", content: "" });
-      else if (rawLang === "xml") onChange({ type: "xml", content: "" });
-      else onChange({ type: "text", content: "" });
+      const rawContent = cachedRawContentRef.current || "";
+      if (rawLang === "json") onChange({ type: "json", content: rawContent });
+      else if (rawLang === "xml") onChange({ type: "xml", content: rawContent });
+      else if (rawLang === "yaml") onChange({ type: "yaml", content: rawContent });
+      else onChange({ type: "text", content: rawContent });
     } else if (type === "formUrlencoded") {
+      const content =
+        cachedFormUrlencodedRef.current.length > 0
+          ? cachedFormUrlencodedRef.current
+          : [{ key: "", value: "", enabled: true, description: "" }];
       onChange({
         type: "formUrlencoded",
-        content: [{ key: "", value: "", enabled: true, description: "" }],
+        content,
       });
     } else if (type === "multipartForm") {
+      const content: MultipartField[] =
+        cachedMultipartRef.current.length > 0
+          ? cachedMultipartRef.current
+          : [{ key: "", value: "", fieldType: "text", enabled: true }];
       onChange({
         type: "multipartForm",
-        content: [{ key: "", value: "", fieldType: "text", enabled: true }],
+        content,
       });
     } else if (type === "binary") {
-      onChange({ type: "binary", filePath: binaryPath });
+      const filePath = cachedBinaryPathRef.current || binaryPath || "";
+      onChange({ type: "binary", filePath });
     }
   };
 
   const handleRawLangChange = (lang: string) => {
     setRawLang(lang);
     const content =
-      body.type === "json" || body.type === "xml" || body.type === "text"
+      body.type === "json" || body.type === "xml" || body.type === "text" || body.type === "yaml"
         ? (body as any).content || ""
-        : "";
+        : cachedRawContentRef.current || "";
+
+    cachedRawContentRef.current = content;
 
     if (lang === "json") {
       onChange({ type: "json", content });
     } else if (lang === "xml") {
       onChange({ type: "xml", content });
+    } else if (lang === "yaml") {
+      onChange({ type: "yaml", content });
     } else {
       onChange({ type: "text", content });
     }
@@ -132,13 +171,17 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
 
   // Raw Content Change Handler
   const handleContentChange = (content: string | undefined) => {
+    const newContent = content || "";
+    cachedRawContentRef.current = newContent;
     if (bodyType === "raw") {
       if (rawLang === "json") {
-        onChange({ type: "json", content: content || "" });
+        onChange({ type: "json", content: newContent });
       } else if (rawLang === "xml") {
-        onChange({ type: "xml", content: content || "" });
+        onChange({ type: "xml", content: newContent });
+      } else if (rawLang === "yaml") {
+        onChange({ type: "yaml", content: newContent });
       } else {
-        onChange({ type: "text", content: content || "" });
+        onChange({ type: "text", content: newContent });
       }
     }
   };
@@ -149,7 +192,10 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
     if (index >= body.content.length) {
       onChange({
         type: "formUrlencoded",
-        content: [...body.content, { key: "", value: "", enabled: true, description: "", ...fields }],
+        content: [
+          ...body.content,
+          { key: "", value: "", enabled: true, description: "", ...fields },
+        ],
       });
     } else {
       const next = [...body.content];
@@ -173,7 +219,10 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
     if (index >= body.content.length) {
       onChange({
         type: "multipartForm",
-        content: [...body.content, { key: "", value: "", fieldType: "text", enabled: true, ...fields }],
+        content: [
+          ...body.content,
+          { key: "", value: "", fieldType: "text", enabled: true, ...fields },
+        ],
       });
     } else {
       const next = [...body.content];
@@ -235,6 +284,7 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
   const monacoLang = () => {
     if (rawLang === "json") return "json";
     if (rawLang === "xml") return "xml";
+    if (rawLang === "yaml") return "yaml";
     if (rawLang === "javascript") return "javascript";
     if (rawLang === "html") return "html";
     return "plaintext";
@@ -544,7 +594,10 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
               {(body.content.length === 0 ||
               body.content[body.content.length - 1].key !== "" ||
               body.content[body.content.length - 1].value !== ""
-                ? [...body.content, { key: "", value: "", fieldType: "text" as const, enabled: true }]
+                ? [
+                    ...body.content,
+                    { key: "", value: "", fieldType: "text" as const, enabled: true },
+                  ]
                 : body.content
               ).map((item, idx) => (
                 <tr key={idx}>

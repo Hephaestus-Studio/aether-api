@@ -358,9 +358,7 @@ export default function DocsEditor({
               <div className={classes.emptyDocs}>
                 <IconFileText size={36} stroke={1.5} opacity={0.5} />
                 <div className={classes.emptyTitle}>No documentation provided</div>
-                <div className={classes.emptySubtext}>
-                  {placeholder}
-                </div>
+                <div className={classes.emptySubtext}>{placeholder}</div>
                 {mode === "preview" && (
                   <Button
                     size="xs"

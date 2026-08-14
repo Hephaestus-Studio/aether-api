@@ -79,7 +79,8 @@ export const useTabStore = create<TabState>((set, get) => ({
   },
 
   closeTab: (tabId) => {
-    const { tabs, activeTabId, closedTabsHistory, responses, loadingStates, protocols, drafts } = get();
+    const { tabs, activeTabId, closedTabsHistory, responses, loadingStates, protocols, drafts } =
+      get();
     const tabToClose = tabs.find((t) => t.id === tabId);
     if (!tabToClose) return;
 
@@ -226,7 +227,14 @@ export const useTabStore = create<TabState>((set, get) => ({
   },
 
   closeAllTabs: () =>
-    set({ tabs: [], activeTabId: null, responses: {}, loadingStates: {}, protocols: {}, drafts: {} }),
+    set({
+      tabs: [],
+      activeTabId: null,
+      responses: {},
+      loadingStates: {},
+      protocols: {},
+      drafts: {},
+    }),
 
   closeOtherTabs: (tabId) => {
     const { tabs, responses, loadingStates, protocols, drafts } = get();

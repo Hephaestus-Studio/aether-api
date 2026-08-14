@@ -91,7 +91,7 @@ export default function FolderEditor({ tabId, nodeType }: Readonly<FolderEditorP
   };
 
   const handleSave = async () => {
-    if (!details) return;
+    if (!details || !isDirty) return;
     setSaving(true);
     try {
       if (isFolder) {
@@ -123,12 +123,14 @@ export default function FolderEditor({ tabId, nodeType }: Readonly<FolderEditorP
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
         e.stopPropagation();
-        handleSave();
+        if (isDirty && details) {
+          handleSave();
+        }
       }
     };
     window.addEventListener("keydown", handleKeyDown, true);
     return () => window.removeEventListener("keydown", handleKeyDown, true);
-  }, [details, isFolder, tabId]);
+  }, [details, isDirty, isFolder, tabId]);
 
   if (loading || !details) {
     return (
@@ -181,6 +183,7 @@ export default function FolderEditor({ tabId, nodeType }: Readonly<FolderEditorP
             size="xs"
             leftSection={<IconDeviceFloppy size={14} />}
             loading={saving}
+            disabled={!isDirty}
             onClick={handleSave}
             className={classes.saveBtn}
           >
@@ -224,12 +227,7 @@ export default function FolderEditor({ tabId, nodeType }: Readonly<FolderEditorP
       </Box>
 
       {/* Active Tab Content Area */}
-      <Box
-        className={clsx(
-          classes.tabContent,
-          activeSubTab === "docs" && classes.tabContentDocs,
-        )}
-      >
+      <Box className={clsx(classes.tabContent, activeSubTab === "docs" && classes.tabContentDocs)}>
         {activeSubTab === "auth" && (
           <AuthEditor
             auth={authConfig}
