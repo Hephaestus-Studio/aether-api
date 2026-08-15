@@ -36,13 +36,6 @@ export function useWorkspace() {
           const info = await invoke<any>("get_workspace_info");
           store.setWorkspaceInfo(info);
 
-          try {
-            const git = await invoke<any>("get_git_status");
-            store.setGitStatus(git);
-          } catch (gitErr) {
-            console.error("Failed to load initial git status:", gitErr);
-          }
-
           // Check Master Key status and prompt if workspace contains encrypted secrets
           try {
             const status = await invoke<any>("get_master_key_status");

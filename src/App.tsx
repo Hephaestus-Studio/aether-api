@@ -30,7 +30,6 @@ const theme = createTheme({
 export default function App() {
   const workspacePath = useWorkspaceStore((s) => s.workspacePath);
   const setTreeData = useWorkspaceStore((s) => s.setTreeData);
-  const setGitStatus = useWorkspaceStore((s) => s.setGitStatus);
   const reset = useWorkspaceStore((s) => s.reset);
   const setEnvironments = useEnvStore((s) => s.setEnvironments);
   const setActiveVariables = useEnvStore((s) => s.setActiveVariables);
@@ -151,18 +150,19 @@ export default function App() {
           const info = await invoke<any>("get_workspace_info");
           useWorkspaceStore.getState().setWorkspaceInfo(info);
 
-          const envs = await invoke<any>("list_environments");
-          setEnvironments(envs);
-
-          const git = await invoke<any>("get_git_status");
-          setGitStatus(git);
+          try {
+            const envs = await invoke<any>("list_environments");
+            setEnvironments(envs);
+          } catch (envErr) {
+            console.error("Failed to list environments:", envErr);
+          }
 
           // Check Master Key status and prompt if workspace contains encrypted secrets
           try {
             const status = await invoke<any>("get_master_key_status");
             useEnvStore.getState().setMasterKeyStatus(status);
             if (status.hasEncryptedSecrets && !status.hasMasterKey) {
-              useEnvStore.getState().setMasterKeyModalOpen(true);
+              useEnvStore.getState().setUnlockModalOpen(true);
             }
           } catch (keyErr) {
             console.error("Failed to check master key status:", keyErr);
@@ -198,7 +198,7 @@ export default function App() {
     return () => {
       if (unlisten) unlisten();
     };
-  }, [windowLabel, reset, setEnvironments, setGitStatus]);
+  }, [windowLabel, reset, setEnvironments]);
 
   // Handle desynchronization on startup / reload (for main window only)
   useEffect(() => {
@@ -217,13 +217,6 @@ export default function App() {
     try {
       const tree: any = await invoke("open_workspace", { directoryPath: workspacePath });
       setTreeData(tree.children);
-
-      try {
-        const git: any = await invoke("get_git_status");
-        setGitStatus(git);
-      } catch (err) {
-        console.error("Failed to update git status:", err);
-      }
 
       if (payload.changeType === "delete") {
         const { tabs, closeTab } = useTabStore.getState();
