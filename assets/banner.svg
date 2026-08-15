@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 220" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B0F19"/>
+      <stop offset="50%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#090D16"/>
+    </linearGradient>
+
+    <!-- Border Gradient -->
+    <linearGradient id="bannerBorder" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00F2FE" stop-opacity="0.3"/>
+      <stop offset="50%" stop-color="#4FACFE" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#FF7A00" stop-opacity="0.3"/>
+    </linearGradient>
+
+    <!-- Ambient Glows -->
+    <radialGradient id="cyanGlow" cx="20%" cy="50%" r="40%">
+      <stop offset="0%" stop-color="#00F2FE" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#00F2FE" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orangeGlow" cx="85%" cy="50%" r="45%">
+      <stop offset="0%" stop-color="#FF5E00" stop-opacity="0.09"/>
+      <stop offset="100%" stop-color="#FF5E00" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Tech Cyan Gradient -->
+    <linearGradient id="techCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00F2FE"/>
+      <stop offset="100%" stop-color="#4FACFE"/>
+    </linearGradient>
+
+    <!-- Flame Gradient -->
+    <linearGradient id="flamePrimary" x1="0%" y1="100%" x2="50%" y2="0%">
+      <stop offset="0%" stop-color="#FF3E00"/>
+      <stop offset="45%" stop-color="#FF7A00"/>
+      <stop offset="85%" stop-color="#FFA800"/>
+      <stop offset="100%" stop-color="#FFD600"/>
+    </linearGradient>
+
+    <!-- Metallic/Forge Gradients for Logo -->
+    <linearGradient id="forgeMetalLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+    <linearGradient id="forgeMetalRight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="100%" stop-color="#1E293B"/>
+    </linearGradient>
+    <linearGradient id="forgeMetalTop" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#1E293B"/>
+    </linearGradient>
+    <linearGradient id="forgeMetalHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#64748B"/>
+      <stop offset="100%" stop-color="#334155"/>
+    </linearGradient>
+
+    <!-- Text Gradient -->
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#E2E8F0"/>
+    </linearGradient>
+
+    <!-- Grid Pattern -->
+    <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+      <path d="M 24 0 L 0 0 0 24" fill="none" stroke="#334155" stroke-width="0.5" opacity="0.15"/>
+    </pattern>
+  </defs>
+
+  <!-- Card Background -->
+  <rect width="800" height="220" rx="16" fill="url(#bgGrad)" />
+  <rect width="800" height="220" rx="16" fill="url(#grid)" />
+  <rect width="800" height="220" rx="16" fill="url(#cyanGlow)" />
+  <rect width="800" height="220" rx="16" fill="url(#orangeGlow)" />
+  <rect width="798" height="218" x="1" y="1" rx="15" fill="none" stroke="url(#bannerBorder)" stroke-width="1.5" />
+
+  <!-- Logo Group (Left) -->
+  <g transform="translate(68, 38) scale(0.40)">
+    <polygon points="180,32 46,88 46,152 180,112" fill="url(#forgeMetalLeft)" opacity="0.85"/>
+    <polygon points="180,32 314,88 314,152 180,112" fill="url(#forgeMetalRight)" opacity="0.9"/>
+    <polygon points="46,208 46,272 180,328 180,248" fill="url(#forgeMetalLeft)" opacity="0.85"/>
+    <polygon points="314,208 314,272 180,328 180,248" fill="url(#forgeMetalRight)" opacity="0.9"/>
+    <polyline points="46,88 180,32 314,88" fill="none" stroke="url(#techCyan)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>
+    <path d="M82,108 L130,90 L130,270 L82,252 Z" fill="url(#forgeMetalLeft)"/>
+    <path d="M130,90 L154,102 L154,260 L130,270 Z" fill="url(#forgeMetalTop)"/>
+    <path d="M278,108 L230,90 L230,270 L278,252 Z" fill="url(#forgeMetalTop)"/>
+    <path d="M230,90 L206,102 L206,260 L230,270 Z" fill="url(#forgeMetalLeft)"/>
+    <polygon points="130,168 180,154 230,168 180,182" fill="url(#forgeMetalHighlight)"/>
+    <polygon points="130,168 180,182 230,168 230,196 180,214 130,196" fill="url(#forgeMetalLeft)"/>
+    <polyline points="46,272 180,328 314,272" fill="none" stroke="url(#flamePrimary)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>
+  </g>
+
+  <!-- Typography & Content (Right) -->
+  <g transform="translate(240, 0)">
+    <!-- Title + Badge -->
+    <g transform="translate(0, 82)">
+      <text font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="44" font-weight="800" letter-spacing="2" fill="url(#textGrad)">AETHER</text>
+      
+      <!-- API Pill Badge -->
+      <g transform="translate(202, -34)">
+        <rect width="84" height="40" rx="8" fill="#00F2FE" fill-opacity="0.12" stroke="#00F2FE" stroke-width="1.2" stroke-opacity="0.6"/>
+        <text x="42" y="26" text-anchor="middle" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="22" font-weight="800" letter-spacing="1.5" fill="#00F2FE">API</text>
+      </g>
+    </g>
+
+    <!-- Subtitle / Tagline -->
+    <text x="2" y="118" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14.5" font-weight="500" letter-spacing="0.5" fill="#94A3B8">
+      Next-Generation Local-First &amp; Git-Centric API Client
+    </text>
+
+    <!-- Feature Tags -->
+    <g transform="translate(0, 142)">
+      <!-- Tag 1: Local-First -->
+      <g transform="translate(0, 0)">
+        <rect width="138" height="26" rx="6" fill="#1E293B" fill-opacity="0.7" stroke="#334155" stroke-width="1"/>
+        <circle cx="14" cy="13" r="3.5" fill="#10B981"/>
+        <text x="26" y="17" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11.5" font-weight="600" fill="#E2E8F0">100% Local-First</text>
+      </g>
+
+      <!-- Tag 2: Git Centric -->
+      <g transform="translate(148, 0)">
+        <rect width="118" height="26" rx="6" fill="#1E293B" fill-opacity="0.7" stroke="#334155" stroke-width="1"/>
+        <circle cx="14" cy="13" r="3.5" fill="#3B82F6"/>
+        <text x="26" y="17" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11.5" font-weight="600" fill="#E2E8F0">Git-Centric</text>
+      </g>
+
+      <!-- Tag 3: Ultra Fast -->
+      <g transform="translate(276, 0)">
+        <rect width="132" height="26" rx="6" fill="#1E293B" fill-opacity="0.7" stroke="#334155" stroke-width="1"/>
+        <circle cx="14" cy="13" r="3.5" fill="#F59E0B"/>
+        <text x="26" y="17" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11.5" font-weight="600" fill="#E2E8F0">Tauri + Rust</text>
+      </g>
+    </g>
+  </g>
+</svg>
