@@ -27,7 +27,56 @@ export default function App() {
   const [installTab, setInstallTab] = useState<"deb" | "rpm" | "appimage" | "source">("deb");
   const [copied, setCopied] = useState(false);
 
+  // Live GitHub star count
+  const [starCount, setStarCount] = useState<number | null>(() => {
+    try {
+      const cached = sessionStorage.getItem("aether_github_stars");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Date.now() - parsed.timestamp < 1000 * 60 * 10) {
+          return parsed.stars;
+        }
+      }
+    } catch {
+      // Ignore
+    }
+    return null;
+  });
+
   const t = translations[lang];
+
+  // Fetch live star count from GitHub API
+  useEffect(() => {
+    if (starCount !== null) return;
+    fetch("https://api.github.com/repos/Hephaestus-Studio/aether-api")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch star count");
+        return res.json();
+      })
+      .then((data) => {
+        if (typeof data.stargazers_count === "number") {
+          setStarCount(data.stargazers_count);
+          try {
+            sessionStorage.setItem(
+              "aether_github_stars",
+              JSON.stringify({ stars: data.stargazers_count, timestamp: Date.now() })
+            );
+          } catch {
+            // Ignore
+          }
+        }
+      })
+      .catch(() => {
+        // Fallback silently if offline or rate-limited
+      });
+  }, [starCount]);
+
+  const formatStars = (count: number) => {
+    if (count >= 1000) {
+      return `${(count / 1000).toFixed(1).replace(/\.0$/, "")}k`;
+    }
+    return count.toString();
+  };
 
   // Save language changes and update DOM attributes
   const handleLanguageChange = (newLang: Language) => {
@@ -48,15 +97,18 @@ export default function App() {
     }
   }, [lang]);
 
-  // Lock body scroll when mobile menu is open
+  // Lock body & html scroll when mobile menu is open
   useEffect(() => {
     if (mobileMenuOpen) {
-      document.body.style.overflow = "hidden";
+      document.documentElement.classList.add("menu-open");
+      document.body.classList.add("menu-open");
     } else {
-      document.body.style.overflow = "";
+      document.documentElement.classList.remove("menu-open");
+      document.body.classList.remove("menu-open");
     }
     return () => {
-      document.body.style.overflow = "";
+      document.documentElement.classList.remove("menu-open");
+      document.body.classList.remove("menu-open");
     };
   }, [mobileMenuOpen]);
 
@@ -175,6 +227,14 @@ pnpm tauri build`,
                 <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
               </svg>
               <span className="btn-github-text">{t.nav.starGitHub}</span>
+              {starCount !== null && (
+                <span className="github-star-badge" aria-label={`${starCount} GitHub stars`}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="star-icon">
+                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                  </svg>
+                  <span>{formatStars(starCount)}</span>
+                </span>
+              )}
             </a>
 
             {/* Mobile Hamburger Menu Toggle Button */}
@@ -248,6 +308,14 @@ pnpm tauri build`,
                 <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
               </svg>
               <span>{t.nav.starGitHub}</span>
+              {starCount !== null && (
+                <span className="github-star-badge mobile" aria-label={`${starCount} GitHub stars`}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" className="star-icon">
+                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                  </svg>
+                  <span>{formatStars(starCount)}</span>
+                </span>
+              )}
             </a>
             <div className="mobile-drawer-badge">
               <span className="dot"></span>
@@ -855,8 +923,13 @@ pnpm tauri build`,
 
             <ul className="footer-links">
               <li>
-                <a href={GITHUB_REPO} target="_blank" rel="noreferrer">
-                  {t.footer.github}
+                <a href={GITHUB_REPO} target="_blank" rel="noreferrer" className="footer-github-link">
+                  <span>{t.footer.github}</span>
+                  {starCount !== null && (
+                    <span className="footer-star-pill">
+                      ★ {formatStars(starCount)}
+                    </span>
+                  )}
                 </a>
               </li>
               <li>

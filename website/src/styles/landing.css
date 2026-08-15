@@ -74,11 +74,24 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+html.menu-open,
+body.menu-open {
+  overflow: hidden !important;
+  height: 100% !important;
+  touch-action: none;
+  -webkit-overflow-scrolling: auto;
+}
+
 .landing-root {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
   position: relative;
+  padding-top: 70px;
+}
+
+section {
+  scroll-margin-top: 80px;
 }
 
 /* Background Ambient Glows */
@@ -125,8 +138,10 @@ body {
    HEADER & NAVBAR
    ========================================================================== */
 .site-header {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   width: 100%;
   z-index: 100;
   backdrop-filter: blur(16px);
@@ -245,7 +260,7 @@ body {
   border: 1px solid rgba(0, 242, 254, 0.3);
 }
 
-/* GitHub Button */
+/* GitHub Button & Star Badge */
 .btn-github {
   display: inline-flex;
   align-items: center;
@@ -266,6 +281,49 @@ body {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.2);
   transform: translateY(-1px);
+}
+
+.github-star-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin-left: 6px;
+  line-height: 1;
+}
+
+.github-star-badge .star-icon {
+  color: #f59e0b;
+}
+
+.github-star-badge.mobile {
+  background: rgba(0, 242, 254, 0.12);
+  border-color: rgba(0, 242, 254, 0.25);
+  color: var(--accent-cyan);
+}
+
+.footer-github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.footer-star-pill {
+  font-family: var(--font-mono);
+  font-size: 0.725rem;
+  font-weight: 700;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  padding: 1px 6px;
+  border-radius: 9999px;
 }
 
 /* Mobile Hamburger Button */
@@ -982,6 +1040,14 @@ body {
 
 /* Mobile Devices (< 768px) */
 @media (max-width: 768px) {
+  .landing-root {
+    padding-top: 64px;
+  }
+
+  section {
+    scroll-margin-top: 72px;
+  }
+
   .container {
     padding: 0 20px;
   }
@@ -1024,6 +1090,8 @@ body {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
+    touch-action: none;
+    overscroll-behavior: contain;
     transition: all 0.25s ease;
   }
 
@@ -1055,6 +1123,8 @@ body {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
+    touch-action: pan-y;
+    overscroll-behavior: contain;
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
     overflow-y: auto;
