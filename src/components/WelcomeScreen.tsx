@@ -547,7 +547,7 @@ export default function WelcomeScreen() {
                 <div className={classes.locationPicker}>
                   <input
                     type="text"
-                    placeholder="e.g. /home/haipn/Workspace"
+                    placeholder="Select parent folder (e.g. ~/Workspaces)"
                     value={newWsParent}
                     onChange={(e) => setNewWsParent(e.target.value)}
                     className={classes.locationInput}
@@ -608,7 +608,7 @@ export default function WelcomeScreen() {
                     <div className={classes.locationPicker}>
                       <input
                         type="text"
-                        placeholder="e.g. /home/haipn/Workspace"
+                        placeholder="Select destination folder (e.g. ~/Workspaces)"
                         value={cloneDest}
                         onChange={(e) => setCloneDest(e.target.value)}
                         className={classes.locationInput}
