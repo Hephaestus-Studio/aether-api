@@ -8,14 +8,11 @@ const RAW_VERSION = "0.2.0-beta.2";
 const RELEASE_BASE = `${GITHUB_REPO}/releases/download/${LATEST_TAG}`;
 
 export default function App() {
-  // Initialize language from localStorage or browser language
+  // Initialize language from localStorage (defaults to English "en")
   const [lang, setLang] = useState<Language>(() => {
     try {
       const saved = localStorage.getItem("aether_lang");
       if (saved === "en" || saved === "vi") return saved;
-      if (typeof navigator !== "undefined" && navigator.language?.startsWith("vi")) {
-        return "vi";
-      }
     } catch {
       // Fallback
     }
