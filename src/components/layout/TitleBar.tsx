@@ -4,7 +4,18 @@ import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useTabStore } from "@/stores/tabStore";
-import { IconMinus, IconSquare, IconCopy, IconX } from "@tabler/icons-react";
+import { useEnvStore } from "@/stores/envStore";
+import { Menu } from "@mantine/core";
+import {
+  IconMinus,
+  IconSquare,
+  IconCopy,
+  IconX,
+  IconWorld,
+  IconChevronDown,
+  IconAdjustments,
+  IconCheck,
+} from "@tabler/icons-react";
 import AboutModal from "@/components/modals/AboutModal";
 import logoUrl from "@/assets/logo.svg";
 import classes from "./TitleBar.module.css";
@@ -12,6 +23,9 @@ import classes from "./TitleBar.module.css";
 export default function TitleBar() {
   const { open: openWorkspace, close: closeWorkspace } = useWorkspace();
   const { workspacePath } = useWorkspaceStore();
+  const environments = useEnvStore((s) => s.environments);
+  const activeEnvironmentName = useEnvStore((s) => s.activeEnvironmentName);
+  const setActiveEnvironment = useEnvStore((s) => s.setActiveEnvironment);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [isMaximized, setIsMaximized] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
@@ -253,8 +267,63 @@ export default function TitleBar() {
       {/* Middle: Drag Region */}
       <div className={classes.center} data-tauri-drag-region />
 
-      {/* Right: Window Controls */}
+      {/* Right: Environment Selector & Window Controls */}
       <div className={classes.right}>
+        {workspacePath && (
+          <div className={classes.envSelectorWrapper}>
+            <Menu position="bottom-end" withinPortal shadow="xl">
+              <Menu.Target>
+                <button className={classes.envButton} title="Switch Active Environment">
+                  <IconWorld size={13} className={classes.envIcon} />
+                  <span className={classes.envText}>
+                    {activeEnvironmentName === "global"
+                      ? "Global"
+                      : activeEnvironmentName || "Global"}
+                  </span>
+                  <IconChevronDown size={11} className={classes.envChevron} />
+                </button>
+              </Menu.Target>
+              <Menu.Dropdown className={classes.envDropdown}>
+                <Menu.Item
+                  onClick={() => setActiveEnvironment("global")}
+                  className={
+                    activeEnvironmentName === "global" || !activeEnvironmentName
+                      ? classes.envItemActive
+                      : ""
+                  }
+                  rightSection={
+                    activeEnvironmentName === "global" || !activeEnvironmentName ? (
+                      <IconCheck size={12} color="#ffffff" />
+                    ) : null
+                  }
+                >
+                  Global
+                </Menu.Item>
+                {environments.map((env) => {
+                  const isActive = activeEnvironmentName?.toLowerCase() === env.name.toLowerCase();
+                  return (
+                    <Menu.Item
+                      key={env.name}
+                      onClick={() => setActiveEnvironment(env.name)}
+                      className={isActive ? classes.envItemActive : ""}
+                      rightSection={isActive ? <IconCheck size={12} color="#ffffff" /> : null}
+                    >
+                      {env.name}
+                    </Menu.Item>
+                  );
+                })}
+                <Menu.Divider />
+                <Menu.Item
+                  leftSection={<IconAdjustments size={12} />}
+                  onClick={() => useTabStore.getState().openBottomPanel("environment")}
+                >
+                  Configure Environments...
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          </div>
+        )}
+
         <div className={classes.windowControls}>
           <button onClick={handleMinimize} className={classes.controlButton} title="Minimize">
             <IconMinus size={14} stroke={1.8} />

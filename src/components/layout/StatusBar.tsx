@@ -1,16 +1,8 @@
-import { Menu } from "@mantine/core";
 import { IconWorld, IconTerminal } from "@tabler/icons-react";
-import { useEnvStore } from "@/stores/envStore";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useTabStore } from "@/stores/tabStore";
 import classes from "./StatusBar.module.css";
 
 export default function StatusBar() {
-  const environments = useEnvStore((s) => s.environments);
-  const activeEnvironmentName = useEnvStore((s) => s.activeEnvironmentName);
-  const setActiveEnvironment = useEnvStore((s) => s.setActiveEnvironment);
-  const workspacePath = useWorkspaceStore((s) => s.workspacePath);
-  const activeTabId = useTabStore((s) => s.activeTabId);
   const bottomPanelOpened = useTabStore((s) => s.bottomPanelOpened);
   const activeBottomPanelTab = useTabStore((s) => s.activeBottomPanelTab);
   const toggleTerminal = useTabStore((s) => s.toggleTerminal);
@@ -36,7 +28,7 @@ export default function StatusBar() {
             borderRadius: 3,
             transition: "all 0.15s ease",
           }}
-          title="Toggle Terminal Panel"
+          title="Toggle Terminal Panel (Ctrl+`)"
           onMouseEnter={(e) =>
             (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.05)")
           }
@@ -60,7 +52,7 @@ export default function StatusBar() {
             borderRadius: 3,
             transition: "all 0.15s ease",
           }}
-          title="Toggle Environment Panel"
+          title="Toggle Environments Panel"
           onMouseEnter={(e) =>
             (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.05)")
           }
@@ -76,31 +68,7 @@ export default function StatusBar() {
         <span className={classes.mutedText}>Ready</span>
       </div>
 
-      <div className={classes.rightGroup}>
-        {workspacePath && (
-          <Menu position="top-end" withinPortal>
-            <Menu.Target>
-              <button className={classes.envBtn}>
-                <IconWorld size={12} />
-                <span className={classes.envText}>
-                  {activeEnvironmentName === "global"
-                    ? "Global"
-                    : activeEnvironmentName || "Global"}
-                </span>
-              </button>
-            </Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Item onClick={() => setActiveEnvironment("global")}>Global</Menu.Item>
-              {environments.map((env) => (
-                <Menu.Item key={env.name} onClick={() => setActiveEnvironment(env.name)}>
-                  {env.name}
-                </Menu.Item>
-              ))}
-            </Menu.Dropdown>
-          </Menu>
-        )}
-        {activeTabId && <span className={classes.mutedText}>UTF-8</span>}
-      </div>
+      <div className={classes.rightGroup} />
     </div>
   );
 }

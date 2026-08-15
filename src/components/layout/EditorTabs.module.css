@@ -4,10 +4,36 @@
   border-bottom: 1px solid var(--border-color);
   display: flex;
   flex-direction: row;
+  overflow: hidden;
 }
 
 .scrollArea {
   flex: 1;
+  overflow: hidden;
+  height: 100%;
+}
+
+/* Make Mantine ScrollArea horizontal scrollbar ultra-thin (3px) and auto-hide */
+.scrollArea :global(.mantine-ScrollArea-scrollbar[data-orientation="horizontal"]) {
+  height: 3px !important;
+  background: transparent !important;
+  padding: 0 !important;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+}
+
+.scrollArea:hover :global(.mantine-ScrollArea-scrollbar[data-orientation="horizontal"]) {
+  opacity: 1;
+}
+
+.scrollArea :global(.mantine-ScrollArea-thumb) {
+  background-color: rgba(255, 255, 255, 0.25) !important;
+  border-radius: 3px !important;
+}
+
+.scrollArea :global(.mantine-ScrollArea-thumb:hover) {
+  background-color: rgba(255, 255, 255, 0.45) !important;
 }
 
 .tabGroup {
@@ -16,7 +42,7 @@
 
 .tab {
   height: calc(var(--height-tab-bar) - 1px);
-  padding: 0 14px;
+  padding: 0 12px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -25,10 +51,12 @@
   cursor: pointer;
   position: relative;
   transition: background-color 0.1s ease;
+  user-select: none;
+  white-space: nowrap;
 }
 
 .tab:hover {
-  background-color: rgba(255, 255, 255, 0.02);
+  background-color: rgba(255, 255, 255, 0.03);
 }
 
 .tabActive {
@@ -37,23 +65,27 @@
 
 .methodText {
   font-weight: 700;
+  font-size: 11px;
+  font-family: var(--aether-font-mono, monospace);
 }
 
 .nameText {
   color: var(--text-primary);
-  max-width: 120px;
+  max-width: 140px;
+  font-size: 12px;
 }
 
 .dirtyMarker {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: var(--mantine-color-indigo-4);
-  margin-left: 6px;
+  background-color: #f97316;
+  margin-left: 2px;
+  flex-shrink: 0;
 }
 
 .closeBtn {
-  margin-left: 8px;
+  margin-left: 4px;
 }
 
 .actionsGroup {
@@ -61,6 +93,8 @@
   height: 100%;
   display: flex;
   align-items: center;
+  background-color: var(--bg-app);
+  z-index: 5;
 }
 
 .actionBtn {

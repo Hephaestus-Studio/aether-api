@@ -145,8 +145,8 @@ export default function TerminalPanel() {
                 onClick={() => setActiveTabId(tab.id)}
                 className={`${classes.tab} ${isActive ? classes.tabActive : ""}`}
               >
-                <IconTerminal2 size={12} style={{ opacity: isActive ? 1 : 0.7 }} />
-                <span>{tab.title}</span>
+                <IconTerminal2 size={13} style={{ opacity: isActive ? 1 : 0.65, flexShrink: 0 }} />
+                <span className={classes.tabTitle}>{tab.title}</span>
                 <span
                   role="button"
                   tabIndex={0}
@@ -166,11 +166,7 @@ export default function TerminalPanel() {
           })}
 
           <Tooltip label="New Terminal" position="top" withArrow>
-            <UnstyledButton
-              onClick={createNewTab}
-              className={classes.actionBtn}
-              style={{ width: 22, height: 22 }}
-            >
+            <UnstyledButton onClick={createNewTab} className={classes.actionBtn}>
               <IconPlus size={13} />
             </UnstyledButton>
           </Tooltip>

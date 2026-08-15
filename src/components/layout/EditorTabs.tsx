@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Box,
   ScrollArea,
@@ -22,6 +22,7 @@ import { getMethodColor } from "@/utils/httpMethods";
 import UnsavedChangesModal, {
   type PendingCloseAction,
 } from "@/components/modals/UnsavedChangesModal";
+import SearchTabsPopover from "./SearchTabsPopover";
 import classes from "./EditorTabs.module.css";
 
 export default function EditorTabs() {
@@ -37,6 +38,7 @@ export default function EditorTabs() {
   const layoutOrientation = useTabStore((s) => s.layoutOrientation);
 
   const [pendingCloseAction, setPendingCloseAction] = useState<PendingCloseAction | null>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
 
   const handleRequestCloseTab = useCallback(
     (tabId: string) => {
@@ -99,9 +101,30 @@ export default function EditorTabs() {
     return () => window.removeEventListener("keydown", handleKeyDown, true);
   }, [activeTabId, handleRequestCloseTab]);
 
+  // Mouse wheel horizontal scrolling
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (viewportRef.current && e.deltaY) {
+      viewportRef.current.scrollLeft += e.deltaY;
+    }
+  };
+
+  // Scroll active tab into view when switched
+  useEffect(() => {
+    if (!activeTabId || !viewportRef.current) return;
+    const activeEl = viewportRef.current.querySelector(`.${classes.tabActive}`) as HTMLElement;
+    if (activeEl) {
+      activeEl.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+    }
+  }, [activeTabId]);
+
   return (
     <Box className={classes.tabBar}>
-      <ScrollArea className={classes.scrollArea} scrollbars="x">
+      <ScrollArea
+        className={classes.scrollArea}
+        scrollbars="x"
+        viewportRef={viewportRef}
+        onWheel={handleWheel}
+      >
         <Group gap={0} wrap="nowrap" className={classes.tabGroup}>
           {tabs.map((tab) => {
             const isActive = tab.id === activeTabId;
@@ -163,8 +186,12 @@ export default function EditorTabs() {
           })}
         </Group>
       </ScrollArea>
+
       {tabs.length > 0 && (
-        <Group gap={6} px="xs" className={classes.actionsGroup}>
+        <Group gap={4} px={6} className={classes.actionsGroup}>
+          {/* Quick Tab Search Popover (Ctrl+Shift+A) */}
+          <SearchTabsPopover onRequestCloseTab={handleRequestCloseTab} />
+
           {responsePanelOpened && (
             <Tooltip
               label={
@@ -183,9 +210,9 @@ export default function EditorTabs() {
                 className={classes.actionBtn}
               >
                 {layoutOrientation === "horizontal" ? (
-                  <IconLayoutRows size={16} />
+                  <IconLayoutRows size={15} />
                 ) : (
-                  <IconLayoutColumns size={16} />
+                  <IconLayoutColumns size={15} />
                 )}
               </ActionIcon>
             </Tooltip>
@@ -204,9 +231,9 @@ export default function EditorTabs() {
               className={classes.actionBtn}
             >
               {responsePanelOpened ? (
-                <IconLayoutSidebarRightCollapse size={16} />
+                <IconLayoutSidebarRightCollapse size={15} />
               ) : (
-                <IconLayoutSidebarRightExpand size={16} />
+                <IconLayoutSidebarRightExpand size={15} />
               )}
             </ActionIcon>
           </Tooltip>

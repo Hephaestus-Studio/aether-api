@@ -12,9 +12,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 8px 0 12px;
-  height: 34px;
-  min-height: 34px;
+  padding: 0 6px 0 10px;
+  height: 28px;
+  min-height: 28px;
   border-bottom: 1px solid var(--border-color);
   background-color: var(--bg-sidebar);
   user-select: none;
@@ -23,7 +23,7 @@
 .tabsContainer {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   height: 100%;
   overflow-x: auto;
   scrollbar-width: none;
@@ -37,76 +37,91 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 0 6px 0 7px;
+  padding: 0 6px 0 8px;
   height: 22px;
-  border-radius: 3px;
-  font-size: 10.5px;
-  color: var(--text-muted);
-  font-weight: 400;
+  border-radius: 4px;
+  font-size: 11.5px !important;
+  font-family: var(
+    --aether-font-sans,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif
+  ) !important;
+  color: var(--text-muted, #8e8e93);
+  font-weight: 500;
   cursor: pointer;
   background: transparent;
   border: 1px solid transparent;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
   white-space: nowrap;
+  line-height: 1;
 }
 
 .tab:hover {
-  color: var(--text-primary);
+  color: var(--text-primary, #ffffff);
   background-color: rgba(255, 255, 255, 0.05);
 }
 
 .tabActive {
-  color: var(--text-primary);
+  color: var(--text-primary, #ffffff) !important;
   background-color: var(--bg-app);
   border-color: var(--border-color);
-  font-weight: 500;
+}
+
+.tabTitle {
+  font-size: 11.5px !important;
+  line-height: 1 !important;
+  font-weight: inherit;
+  letter-spacing: -0.1px;
 }
 
 .tabCloseBtn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 3px;
-  color: var(--text-muted);
+  color: var(--text-muted, #8e8e93);
   cursor: pointer;
   transition: all 0.12s ease;
+  margin-left: 2px;
 }
 
 .tabCloseBtn:hover {
-  color: var(--text-primary);
+  color: var(--text-primary, #ffffff);
   background-color: rgba(255, 255, 255, 0.15);
 }
 
 .actions {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   margin-left: 8px;
 }
 
 .actionBtn {
-  color: var(--text-muted);
+  color: var(--text-muted, #8e8e93);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  transition: all 0.15s ease;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  transition: all 0.12s ease;
 }
 
 .actionBtn:hover {
-  color: var(--text-primary);
+  color: var(--text-primary, #ffffff);
   background-color: rgba(255, 255, 255, 0.06);
 }
 
 .terminalBody {
   flex: 1;
   width: 100%;
-  height: calc(100% - 34px);
+  height: calc(100% - 28px);
   position: relative;
   overflow: hidden;
   background-color: var(--bg-app);
