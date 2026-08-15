@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Language, translations } from "./i18n/translations";
 import "./styles/landing.css";
 
 const GITHUB_REPO = "https://github.com/Hephaestus-Studio/aether-api";
@@ -7,40 +8,100 @@ const RAW_VERSION = "0.2.0-beta.2";
 const RELEASE_BASE = `${GITHUB_REPO}/releases/download/${LATEST_TAG}`;
 
 export default function App() {
+  // Initialize language from localStorage or browser language
+  const [lang, setLang] = useState<Language>(() => {
+    try {
+      const saved = localStorage.getItem("aether_lang");
+      if (saved === "en" || saved === "vi") return saved;
+      if (typeof navigator !== "undefined" && navigator.language?.startsWith("vi")) {
+        return "vi";
+      }
+    } catch {
+      // Fallback
+    }
+    return "en";
+  });
+
   const [downloadOpen, setDownloadOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [installTab, setInstallTab] = useState<"deb" | "rpm" | "appimage" | "source">("deb");
   const [copied, setCopied] = useState(false);
 
+  const t = translations[lang];
+
+  // Save language changes and update DOM attributes
+  const handleLanguageChange = (newLang: Language) => {
+    setLang(newLang);
+    try {
+      localStorage.setItem("aether_lang", newLang);
+    } catch {
+      // Ignore
+    }
+  };
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    if (lang === "vi") {
+      document.title = "Aether API | API Client Chuẩn Git & Cục Bộ Thế Hệ Mới";
+    } else {
+      document.title = "Aether API | Next-Gen Local-First & Git-Centric API Client";
+    }
+  }, [lang]);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (downloadOpen && !target?.closest(".download-dropdown-wrapper")) {
+        setDownloadOpen(false);
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [downloadOpen]);
+
   const installSnippets = {
-    deb: `# 1. Download Debian/Ubuntu package
+    deb: `${t.install.comments.deb1}
 wget ${RELEASE_BASE}/Aether.API_${RAW_VERSION}_amd64.deb
 
-# 2. Install package
+${t.install.comments.deb2}
 sudo dpkg -i Aether.API_${RAW_VERSION}_amd64.deb
-sudo apt-get install -f # resolve any missing dependencies`,
+sudo apt-get install -f ${t.install.comments.deb3}`,
 
-    rpm: `# 1. Download Fedora/RHEL package
+    rpm: `${t.install.comments.rpm1}
 wget ${RELEASE_BASE}/Aether.API-${RAW_VERSION}-1.x86_64.rpm
 
-# 2. Install with dnf or rpm
+${t.install.comments.rpm2}
 sudo dnf install ./Aether.API-${RAW_VERSION}-1.x86_64.rpm`,
 
-    appimage: `# 1. Download Universal AppImage
+    appimage: `${t.install.comments.appimage1}
 wget ${RELEASE_BASE}/Aether.API_${RAW_VERSION}_amd64.AppImage
 
-# 2. Make executable and run
+${t.install.comments.appimage2}
 chmod +x Aether.API_${RAW_VERSION}_amd64.AppImage
 ./Aether.API_${RAW_VERSION}_amd64.AppImage`,
 
-    source: `# 1. Clone repository
+    source: `${t.install.comments.source1}
 git clone https://github.com/Hephaestus-Studio/aether-api.git
 cd aether-api
 
-# 2. Install dependencies & run development server
+${t.install.comments.source2}
 pnpm install
 pnpm tauri dev
 
-# 3. Build release bundle
+${t.install.comments.source3}
 pnpm tauri build`,
   };
 
@@ -49,6 +110,8 @@ pnpm tauri build`,
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
     <div className="landing-root">
@@ -60,24 +123,47 @@ pnpm tauri build`,
           ================================================================== */}
       <header className="site-header">
         <div className="container nav-wrapper">
-          <a href="#" className="brand-logo">
+          <a href="#" className="brand-logo" onClick={closeMobileMenu}>
             <img src="./logo.svg" alt="Aether API Logo" />
             <span className="brand-name">
               AETHER <span className="brand-badge">API</span>
             </span>
           </a>
 
+          {/* Desktop Navigation Links */}
           <nav className="nav-links">
-            <a href="#comparison">Why Aether</a>
-            <a href="#features">Features</a>
-            <a href="#installation">Download</a>
-            <a href="#shortcuts">Shortcuts</a>
+            <a href="#comparison">{t.nav.whyAether}</a>
+            <a href="#features">{t.nav.features}</a>
+            <a href="#installation">{t.nav.download}</a>
+            <a href="#shortcuts">{t.nav.shortcuts}</a>
             <a href={`${GITHUB_REPO}/blob/main/CHANGELOG.md`} target="_blank" rel="noreferrer">
-              Changelog
+              {t.nav.changelog}
             </a>
           </nav>
 
+          {/* Header Actions */}
           <div className="nav-actions">
+            {/* Language Switcher Segmented Control */}
+            <div className="lang-switcher" role="group" aria-label="Language selection">
+              <button
+                type="button"
+                className={`lang-btn ${lang === "en" ? "active" : ""}`}
+                onClick={() => handleLanguageChange("en")}
+                aria-pressed={lang === "en"}
+              >
+                EN
+              </button>
+              <button
+                type="button"
+                className={`lang-btn ${lang === "vi" ? "active" : ""}`}
+                onClick={() => handleLanguageChange("vi")}
+                aria-pressed={lang === "vi"}
+              >
+                VI
+              </button>
+            </div>
+
+            {/* Desktop GitHub Star Button */}
             <a
               href={GITHUB_REPO}
               target="_blank"
@@ -88,11 +174,88 @@ pnpm tauri build`,
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
               </svg>
-              <span>Star on GitHub</span>
+              <span className="btn-github-text">{t.nav.starGitHub}</span>
             </a>
+
+            {/* Mobile Hamburger Menu Toggle Button */}
+            <button
+              type="button"
+              className={`btn-hamburger ${mobileMenuOpen ? "open" : ""}`}
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label={mobileMenuOpen ? t.nav.close : t.nav.menu}
+              aria-expanded={mobileMenuOpen}
+            >
+              <span className="hamburger-bar"></span>
+              <span className="hamburger-bar"></span>
+              <span className="hamburger-bar"></span>
+            </button>
           </div>
         </div>
       </header>
+
+      {/* ==================================================================
+          MOBILE NAVIGATION DRAWER & BACKDROP
+          ================================================================== */}
+      <div
+        className={`mobile-backdrop ${mobileMenuOpen ? "open" : ""}`}
+        onClick={closeMobileMenu}
+      ></div>
+
+      <nav className={`mobile-nav-drawer ${mobileMenuOpen ? "open" : ""}`}>
+        <div className="mobile-nav-content">
+          <div className="mobile-nav-links">
+            <a href="#comparison" onClick={closeMobileMenu}>
+              <span className="mobile-link-icon">⚡</span>
+              <span className="mobile-link-text">{t.nav.whyAether}</span>
+              <span className="mobile-link-arrow">→</span>
+            </a>
+            <a href="#features" onClick={closeMobileMenu}>
+              <span className="mobile-link-icon">✨</span>
+              <span className="mobile-link-text">{t.nav.features}</span>
+              <span className="mobile-link-arrow">→</span>
+            </a>
+            <a href="#installation" onClick={closeMobileMenu}>
+              <span className="mobile-link-icon">📥</span>
+              <span className="mobile-link-text">{t.nav.download}</span>
+              <span className="mobile-link-arrow">→</span>
+            </a>
+            <a href="#shortcuts" onClick={closeMobileMenu}>
+              <span className="mobile-link-icon">⌨️</span>
+              <span className="mobile-link-text">{t.nav.shortcuts}</span>
+              <span className="mobile-link-arrow">→</span>
+            </a>
+            <a
+              href={`${GITHUB_REPO}/blob/main/CHANGELOG.md`}
+              target="_blank"
+              rel="noreferrer"
+              onClick={closeMobileMenu}
+            >
+              <span className="mobile-link-icon">📝</span>
+              <span className="mobile-link-text">{t.nav.changelog}</span>
+              <span className="mobile-link-arrow">↗</span>
+            </a>
+          </div>
+
+          <div className="mobile-nav-footer">
+            <a
+              href={GITHUB_REPO}
+              target="_blank"
+              rel="noreferrer"
+              className="btn-mobile-github"
+              onClick={closeMobileMenu}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+              </svg>
+              <span>{t.nav.starGitHub}</span>
+            </a>
+            <div className="mobile-drawer-badge">
+              <span className="dot"></span>
+              <span>Aether API {LATEST_TAG}</span>
+            </div>
+          </div>
+        </div>
+      </nav>
 
       {/* ==================================================================
           HERO SECTION
@@ -106,27 +269,25 @@ pnpm tauri build`,
             className="version-pill"
           >
             <span className="dot"></span>
-            <span>Release {LATEST_TAG} is now available!</span>
-            <span>&rarr;</span>
+            <span>{t.hero.releaseBadge.replace("{version}", LATEST_TAG)}</span>
+            <span>→</span>
           </a>
 
           <h1 className="hero-title">
-            Your APIs. Your Files. <br />
-            <span className="hero-gradient-text">Your Control.</span>
+            {t.hero.titleLine1} <br />
+            <span className="hero-gradient-text">{t.hero.titleHighlight}</span>
           </h1>
 
-          <p className="hero-subtitle">
-            The modern, open-source API client that stores everything as plain YAML files in your
-            Git repository. <strong>Zero telemetry</strong>, <strong>on-device encryption</strong>,
-            and native <strong>Rust performance</strong>.
-          </p>
+          <p className="hero-subtitle">{t.hero.subtitle}</p>
 
           <div className="hero-cta-group">
             {/* Primary Download Dropdown */}
-            <div className="download-dropdown-wrapper" onMouseLeave={() => setDownloadOpen(false)}>
+            <div className="download-dropdown-wrapper">
               <button
+                type="button"
                 className="btn-primary-download"
                 onClick={() => setDownloadOpen(!downloadOpen)}
+                aria-expanded={downloadOpen}
               >
                 <svg
                   width="20"
@@ -142,7 +303,7 @@ pnpm tauri build`,
                     d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                   />
                 </svg>
-                <span>Download for Linux</span>
+                <span>{t.hero.downloadLinux}</span>
                 <svg
                   width="14"
                   height="14"
@@ -150,6 +311,7 @@ pnpm tauri build`,
                   stroke="currentColor"
                   strokeWidth="2.5"
                   viewBox="0 0 24 24"
+                  className={`dropdown-chevron ${downloadOpen ? "open" : ""}`}
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
@@ -160,22 +322,25 @@ pnpm tauri build`,
                   <a
                     href={`${RELEASE_BASE}/Aether.API_${RAW_VERSION}_amd64.AppImage`}
                     className="download-item"
+                    onClick={() => setDownloadOpen(false)}
                   >
-                    <span>Universal Linux</span>
+                    <span>{t.hero.downloads.universal}</span>
                     <span className="ext">.AppImage</span>
                   </a>
                   <a
                     href={`${RELEASE_BASE}/Aether.API_${RAW_VERSION}_amd64.deb`}
                     className="download-item"
+                    onClick={() => setDownloadOpen(false)}
                   >
-                    <span>Debian / Ubuntu</span>
+                    <span>{t.hero.downloads.debian}</span>
                     <span className="ext">.deb</span>
                   </a>
                   <a
                     href={`${RELEASE_BASE}/Aether.API-${RAW_VERSION}-1.x86_64.rpm`}
                     className="download-item"
+                    onClick={() => setDownloadOpen(false)}
                   >
-                    <span>Fedora / RHEL</span>
+                    <span>{t.hero.downloads.fedora}</span>
                     <span className="ext">.rpm</span>
                   </a>
                   <a
@@ -183,8 +348,9 @@ pnpm tauri build`,
                     target="_blank"
                     rel="noreferrer"
                     className="download-item"
+                    onClick={() => setDownloadOpen(false)}
                   >
-                    <span>GPG &amp; Checksums</span>
+                    <span>{t.hero.downloads.checksums}</span>
                     <span className="ext">SHA256</span>
                   </a>
                 </div>
@@ -192,14 +358,20 @@ pnpm tauri build`,
             </div>
 
             <a href="#comparison" className="btn-secondary">
-              <span>Why Aether?</span>
-              <span>&darr;</span>
+              <span>{t.hero.whyAetherBtn}</span>
+              <span>↓</span>
             </a>
           </div>
 
           {/* Hero Banner Preview */}
           <div className="hero-banner-preview">
-            <img src="./banner.svg" alt="Aether API Hero Banner" />
+            <img
+              src="./banner.svg"
+              alt="Aether API Hero Banner"
+              loading="eager"
+              width="1200"
+              height="600"
+            />
           </div>
         </div>
       </section>
@@ -210,141 +382,169 @@ pnpm tauri build`,
       <section id="comparison" className="comparison-section">
         <div className="container">
           <div className="section-header">
-            <span className="section-badge">Comparison</span>
-            <h2 className="section-title">Built for Engineers Who Value Privacy &amp; Speed</h2>
-            <p className="section-desc">
-              Tired of vendor lock-in, mandatory cloud logins, and multi-gigabyte RAM usage? See how
-              Aether API compares to traditional API clients.
-            </p>
+            <span className="section-badge">{t.comparison.badge}</span>
+            <h2 className="section-title">{t.comparison.title}</h2>
+            <p className="section-desc">{t.comparison.description}</p>
           </div>
 
+          {/* Responsive Comparison Table with Scroll Wrapper for Desktop/Tablet */}
           <div className="comparison-table-wrapper">
-            <table className="comparison-table">
-              <thead>
-                <tr>
-                  <th style={{ width: "38%" }}>Feature / Architecture</th>
-                  <th className="col-aether" style={{ width: "32%" }}>
-                    ⚡ Aether API (Local-First)
-                  </th>
-                  <th style={{ width: "30%" }}>Traditional Cloud Clients</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="feature-title-cell">
-                    <strong>Storage &amp; Collaboration</strong>
-                    <span>How collections and requests are stored and shared</span>
-                  </td>
-                  <td className="col-aether">
-                    <div className="badge-check">
-                      <span>✓</span>
-                      <span>Plain YAML files in Git</span>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="badge-cross">
-                      <span>✗</span>
-                      <span>Proprietary Cloud Sync</span>
-                    </div>
-                  </td>
-                </tr>
+            <div className="comparison-scroll-container">
+              <table className="comparison-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: "38%" }}>{t.comparison.tableHeaders.feature}</th>
+                    <th className="col-aether" style={{ width: "32%" }}>
+                      {t.comparison.tableHeaders.aether}
+                    </th>
+                    <th style={{ width: "30%" }}>{t.comparison.tableHeaders.traditional}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="feature-title-cell">
+                      <strong>{t.comparison.rows.storage.title}</strong>
+                      <span>{t.comparison.rows.storage.desc}</span>
+                    </td>
+                    <td className="col-aether">
+                      <div className="badge-check">
+                        <span>✓</span>
+                        <span>{t.comparison.rows.storage.aether}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="badge-cross">
+                        <span>✗</span>
+                        <span>{t.comparison.rows.storage.traditional}</span>
+                      </div>
+                    </td>
+                  </tr>
 
-                <tr>
-                  <td className="feature-title-cell">
-                    <strong>Privacy &amp; Telemetry</strong>
-                    <span>Whether your payloads, tokens, and data leave your device</span>
-                  </td>
-                  <td className="col-aether">
-                    <div className="badge-check">
-                      <span>✓</span>
-                      <span>100% Zero Telemetry</span>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="badge-cross">
-                      <span>✗</span>
-                      <span>Telemetry &amp; Tracking</span>
-                    </div>
-                  </td>
-                </tr>
+                  <tr>
+                    <td className="feature-title-cell">
+                      <strong>{t.comparison.rows.privacy.title}</strong>
+                      <span>{t.comparison.rows.privacy.desc}</span>
+                    </td>
+                    <td className="col-aether">
+                      <div className="badge-check">
+                        <span>✓</span>
+                        <span>{t.comparison.rows.privacy.aether}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="badge-cross">
+                        <span>✗</span>
+                        <span>{t.comparison.rows.privacy.traditional}</span>
+                      </div>
+                    </td>
+                  </tr>
 
-                <tr>
-                  <td className="feature-title-cell">
-                    <strong>Secret Encryption</strong>
-                    <span>Protection for API keys, passwords, and tokens</span>
-                  </td>
-                  <td className="col-aether">
-                    <div className="badge-check">
-                      <span>✓</span>
-                      <span>AES-256-GCM On-Device</span>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="badge-cross">
-                      <span>✗</span>
-                      <span>Stored on Cloud Servers</span>
-                    </div>
-                  </td>
-                </tr>
+                  <tr>
+                    <td className="feature-title-cell">
+                      <strong>{t.comparison.rows.encryption.title}</strong>
+                      <span>{t.comparison.rows.encryption.desc}</span>
+                    </td>
+                    <td className="col-aether">
+                      <div className="badge-check">
+                        <span>✓</span>
+                        <span>{t.comparison.rows.encryption.aether}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="badge-cross">
+                        <span>✗</span>
+                        <span>{t.comparison.rows.encryption.traditional}</span>
+                      </div>
+                    </td>
+                  </tr>
 
-                <tr>
-                  <td className="feature-title-cell">
-                    <strong>Engine &amp; Memory Footprint</strong>
-                    <span>Runtime performance and system resource consumption</span>
-                  </td>
-                  <td className="col-aether">
-                    <div className="badge-check">
-                      <span>✓</span>
-                      <span>Tauri v2 + Rust Reqwest (&lt;80MB)</span>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="badge-cross">
-                      <span>✗</span>
-                      <span>Heavy Electron (&gt;800MB RAM)</span>
-                    </div>
-                  </td>
-                </tr>
+                  <tr>
+                    <td className="feature-title-cell">
+                      <strong>{t.comparison.rows.engine.title}</strong>
+                      <span>{t.comparison.rows.engine.desc}</span>
+                    </td>
+                    <td className="col-aether">
+                      <div className="badge-check">
+                        <span>✓</span>
+                        <span>{t.comparison.rows.engine.aether}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="badge-cross">
+                        <span>✗</span>
+                        <span>{t.comparison.rows.engine.traditional}</span>
+                      </div>
+                    </td>
+                  </tr>
 
-                <tr>
-                  <td className="feature-title-cell">
-                    <strong>Integrated Terminal</strong>
-                    <span>Run git, curl, npm directly inside workspace</span>
-                  </td>
-                  <td className="col-aether">
-                    <div className="badge-check">
-                      <span>✓</span>
-                      <span>Native Multi-Tab PTY Terminal</span>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="badge-cross">
-                      <span>✗</span>
-                      <span>Not Available</span>
-                    </div>
-                  </td>
-                </tr>
+                  <tr>
+                    <td className="feature-title-cell">
+                      <strong>{t.comparison.rows.terminal.title}</strong>
+                      <span>{t.comparison.rows.terminal.desc}</span>
+                    </td>
+                    <td className="col-aether">
+                      <div className="badge-check">
+                        <span>✓</span>
+                        <span>{t.comparison.rows.terminal.aether}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="badge-cross">
+                        <span>✗</span>
+                        <span>{t.comparison.rows.terminal.traditional}</span>
+                      </div>
+                    </td>
+                  </tr>
 
-                <tr>
-                  <td className="feature-title-cell">
-                    <strong>Git Workflow Integration</strong>
-                    <span>Branching, Code Review, and Pull Requests</span>
-                  </td>
-                  <td className="col-aether">
+                  <tr>
+                    <td className="feature-title-cell">
+                      <strong>{t.comparison.rows.gitWorkflow.title}</strong>
+                      <span>{t.comparison.rows.gitWorkflow.desc}</span>
+                    </td>
+                    <td className="col-aether">
+                      <div className="badge-check">
+                        <span>✓</span>
+                        <span>{t.comparison.rows.gitWorkflow.aether}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="badge-cross">
+                        <span>✗</span>
+                        <span>{t.comparison.rows.gitWorkflow.traditional}</span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Mobile Optimized Comparison Cards for Small Phones */}
+          <div className="comparison-cards-mobile">
+            {Object.entries(t.comparison.rows).map(([key, item]) => (
+              <div key={key} className="comparison-card-item">
+                <div className="comp-card-header">
+                  <h4>{item.title}</h4>
+                  <p>{item.desc}</p>
+                </div>
+                <div className="comp-card-body">
+                  <div className="comp-card-side aether">
+                    <span className="side-tag">Aether API</span>
                     <div className="badge-check">
                       <span>✓</span>
-                      <span>Standard Git PRs &amp; Diffs</span>
+                      <span>{item.aether}</span>
                     </div>
-                  </td>
-                  <td>
+                  </div>
+                  <div className="comp-card-side traditional">
+                    <span className="side-tag">Traditional</span>
                     <div className="badge-cross">
                       <span>✗</span>
-                      <span>Paywalled Team Tiers</span>
+                      <span>{item.traditional}</span>
                     </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -355,16 +555,13 @@ pnpm tauri build`,
       <section id="features" className="features-section">
         <div className="container">
           <div className="section-header">
-            <span className="section-badge">Capabilities</span>
-            <h2 className="section-title">Engineered for Frictionless API Workflows</h2>
-            <p className="section-desc">
-              Every tool and UI interaction in Aether API was crafted to maximize developer velocity
-              without compromising privacy.
-            </p>
+            <span className="section-badge">{t.features.badge}</span>
+            <h2 className="section-title">{t.features.title}</h2>
+            <p className="section-desc">{t.features.description}</p>
           </div>
 
           <div className="features-grid">
-            {/* Feature 1 */}
+            {/* Feature 1: Git-Centric */}
             <div className="feature-card">
               <div className="feature-icon-box">
                 <svg
@@ -382,15 +579,11 @@ pnpm tauri build`,
                   />
                 </svg>
               </div>
-              <h3>Git-Centric Workspaces</h3>
-              <p>
-                Workspaces are real directories on your disk. Requests and environments are saved as
-                human-readable YAML files, ready for instant branch switches, merges, and code
-                reviews.
-              </p>
+              <h3>{t.features.items.git.title}</h3>
+              <p>{t.features.items.git.desc}</p>
             </div>
 
-            {/* Feature 2 */}
+            {/* Feature 2: Secret Masking */}
             <div className="feature-card">
               <div className="feature-icon-box">
                 <svg
@@ -408,14 +601,11 @@ pnpm tauri build`,
                   />
                 </svg>
               </div>
-              <h3>AES-256 Secret Masking</h3>
-              <p>
-                Environment variables support secret masking with toggleable eye icons. Sensitive
-                passwords and tokens are securely encrypted on-device using a master passphrase.
-              </p>
+              <h3>{t.features.items.security.title}</h3>
+              <p>{t.features.items.security.desc}</p>
             </div>
 
-            {/* Feature 3 */}
+            {/* Feature 3: Embedded Terminal */}
             <div className="feature-card">
               <div className="feature-icon-box">
                 <svg
@@ -433,14 +623,11 @@ pnpm tauri build`,
                   />
                 </svg>
               </div>
-              <h3>Embedded Multi-Tab Terminal</h3>
-              <p>
-                Built-in native PTY terminal powered by Rust and xterm.js. Run git status, pull,
-                push, curl, or backend dev servers without leaving your workspace window.
-              </p>
+              <h3>{t.features.items.terminal.title}</h3>
+              <p>{t.features.items.terminal.desc}</p>
             </div>
 
-            {/* Feature 4 */}
+            {/* Feature 4: Code Snippet Generator */}
             <div className="feature-card">
               <div className="feature-icon-box">
                 <svg
@@ -458,14 +645,11 @@ pnpm tauri build`,
                   />
                 </svg>
               </div>
-              <h3>Code Snippet Generator</h3>
-              <p>
-                Transform any HTTP request into production-ready client code with 1 click: cURL,
-                Fetch API, Python Requests, Rust Reqwest, Go net/http, Java OkHttp, and HTTPie.
-              </p>
+              <h3>{t.features.items.generator.title}</h3>
+              <p>{t.features.items.generator.desc}</p>
             </div>
 
-            {/* Feature 5 */}
+            {/* Feature 5: Variable Autocomplete */}
             <div className="feature-card">
               <div className="feature-icon-box">
                 <svg
@@ -483,14 +667,11 @@ pnpm tauri build`,
                   />
                 </svg>
               </div>
-              <h3>Variable Autocomplete</h3>
-              <p>
-                Type <code>{"{{"}</code> anywhere in URLs, Headers, Auth, or Bodies to trigger smart
-                variable autocomplete with keyboard navigation and instant value preview tooltips.
-              </p>
+              <h3>{t.features.items.autocomplete.title}</h3>
+              <p>{t.features.items.autocomplete.desc}</p>
             </div>
 
-            {/* Feature 6 */}
+            {/* Feature 6: Quick Open */}
             <div className="feature-card">
               <div className="feature-icon-box">
                 <svg
@@ -508,12 +689,8 @@ pnpm tauri build`,
                   />
                 </svg>
               </div>
-              <h3>Quick Open &amp; Tab Search</h3>
-              <p>
-                Press <code>Ctrl+Shift+A</code> to search open tabs by method or URL with dirty-dot
-                indicators, or <code>Ctrl+P</code> to instantly open any request file in the
-                workspace.
-              </p>
+              <h3>{t.features.items.quickOpen.title}</h3>
+              <p>{t.features.items.quickOpen.desc}</p>
             </div>
           </div>
         </div>
@@ -525,37 +702,39 @@ pnpm tauri build`,
       <section id="installation" className="install-section">
         <div className="container">
           <div className="section-header">
-            <span className="section-badge">Get Started</span>
-            <h2 className="section-title">Install on Linux in Seconds</h2>
-            <p className="section-desc">
-              Choose your preferred Linux package format or build directly from source.
-            </p>
+            <span className="section-badge">{t.install.badge}</span>
+            <h2 className="section-title">{t.install.title}</h2>
+            <p className="section-desc">{t.install.description}</p>
           </div>
 
           <div className="install-tabs-nav">
             <button
+              type="button"
               className={`install-tab-btn ${installTab === "deb" ? "active" : ""}`}
               onClick={() => setInstallTab("deb")}
             >
-              Debian / Ubuntu (.deb)
+              {t.install.tabs.deb}
             </button>
             <button
+              type="button"
               className={`install-tab-btn ${installTab === "rpm" ? "active" : ""}`}
               onClick={() => setInstallTab("rpm")}
             >
-              Fedora / RHEL (.rpm)
+              {t.install.tabs.rpm}
             </button>
             <button
+              type="button"
               className={`install-tab-btn ${installTab === "appimage" ? "active" : ""}`}
               onClick={() => setInstallTab("appimage")}
             >
-              Universal (.AppImage)
+              {t.install.tabs.appimage}
             </button>
             <button
+              type="button"
               className={`install-tab-btn ${installTab === "source" ? "active" : ""}`}
               onClick={() => setInstallTab("source")}
             >
-              Build from Source
+              {t.install.tabs.source}
             </button>
           </div>
 
@@ -566,10 +745,12 @@ pnpm tauri build`,
                 <span className="terminal-dot yellow"></span>
                 <span className="terminal-dot green"></span>
               </div>
-              <span className="terminal-title">bash — installation</span>
+              <span className="terminal-title">{t.install.terminalTitle}</span>
               <button
+                type="button"
                 className="btn-copy"
                 onClick={() => handleCopyCode(installSnippets[installTab])}
+                aria-label={copied ? t.install.copied : t.install.copy}
               >
                 {copied ? (
                   <>
@@ -583,7 +764,7 @@ pnpm tauri build`,
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
-                    <span style={{ color: "#10B981" }}>Copied!</span>
+                    <span style={{ color: "#10B981" }}>{t.install.copied}</span>
                   </>
                 ) : (
                   <>
@@ -601,7 +782,7 @@ pnpm tauri build`,
                         d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
                       />
                     </svg>
-                    <span>Copy</span>
+                    <span>{t.install.copy}</span>
                   </>
                 )}
               </button>
@@ -619,45 +800,42 @@ pnpm tauri build`,
       <section id="shortcuts" className="shortcuts-section">
         <div className="container">
           <div className="section-header">
-            <span className="section-badge">Power Tools</span>
-            <h2 className="section-title">Built for Keyboard Power Users</h2>
-            <p className="section-desc">
-              Execute requests, search tabs, navigate workspace, and toggle terminals without
-              touching the mouse.
-            </p>
+            <span className="section-badge">{t.shortcuts.badge}</span>
+            <h2 className="section-title">{t.shortcuts.title}</h2>
+            <p className="section-desc">{t.shortcuts.description}</p>
           </div>
 
           <div className="shortcuts-grid">
             <div className="shortcut-card">
-              <span className="shortcut-label">Send Active Request</span>
+              <span className="shortcut-label">{t.shortcuts.items.sendRequest}</span>
               <kbd className="kbd">Ctrl + Enter</kbd>
             </div>
             <div className="shortcut-card">
-              <span className="shortcut-label">Save Current Request</span>
+              <span className="shortcut-label">{t.shortcuts.items.saveRequest}</span>
               <kbd className="kbd">Ctrl + S</kbd>
             </div>
             <div className="shortcut-card">
-              <span className="shortcut-label">Search Open Tabs</span>
+              <span className="shortcut-label">{t.shortcuts.items.searchTabs}</span>
               <kbd className="kbd">Ctrl + Shift + A</kbd>
             </div>
             <div className="shortcut-card">
-              <span className="shortcut-label">Quick Open Request / File</span>
+              <span className="shortcut-label">{t.shortcuts.items.quickOpen}</span>
               <kbd className="kbd">Ctrl + P</kbd>
             </div>
             <div className="shortcut-card">
-              <span className="shortcut-label">Command Palette</span>
+              <span className="shortcut-label">{t.shortcuts.items.commandPalette}</span>
               <kbd className="kbd">Ctrl + K</kbd>
             </div>
             <div className="shortcut-card">
-              <span className="shortcut-label">Toggle Terminal Panel</span>
+              <span className="shortcut-label">{t.shortcuts.items.toggleTerminal}</span>
               <kbd className="kbd">Ctrl + `</kbd>
             </div>
             <div className="shortcut-card">
-              <span className="shortcut-label">Close Active Tab</span>
+              <span className="shortcut-label">{t.shortcuts.items.closeTab}</span>
               <kbd className="kbd">Ctrl + W</kbd>
             </div>
             <div className="shortcut-card">
-              <span className="shortcut-label">Open Workspace Folder</span>
+              <span className="shortcut-label">{t.shortcuts.items.openFolder}</span>
               <kbd className="kbd">Ctrl + O</kbd>
             </div>
           </div>
@@ -672,28 +850,28 @@ pnpm tauri build`,
           <div className="footer-content">
             <div className="footer-brand">
               <h4>AETHER API</h4>
-              <p>Next-Generation Local-First &amp; Git-Centric API Client.</p>
+              <p>{t.footer.brandSubtitle}</p>
             </div>
 
             <ul className="footer-links">
               <li>
                 <a href={GITHUB_REPO} target="_blank" rel="noreferrer">
-                  GitHub
+                  {t.footer.github}
                 </a>
               </li>
               <li>
                 <a href={`${GITHUB_REPO}/releases`} target="_blank" rel="noreferrer">
-                  Releases
+                  {t.footer.releases}
                 </a>
               </li>
               <li>
                 <a href={`${GITHUB_REPO}/blob/main/LICENSE`} target="_blank" rel="noreferrer">
-                  MIT License
+                  {t.footer.license}
                 </a>
               </li>
               <li>
                 <a href={`${GITHUB_REPO}/blob/main/CHANGELOG.md`} target="_blank" rel="noreferrer">
-                  Changelog
+                  {t.footer.changelog}
                 </a>
               </li>
             </ul>
@@ -701,8 +879,7 @@ pnpm tauri build`,
 
           <div className="footer-bottom">
             <p>
-              Built with &hearts; by <strong>Hephaestus Studio</strong>. Released under the MIT
-              License.
+              {t.footer.credit} <strong>Hephaestus Studio</strong>. {t.footer.mitNote}
             </p>
           </div>
         </div>
