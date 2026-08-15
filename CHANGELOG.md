@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update README with custom banner and YAML format description - ([8226ae7](https://github.com/Hephaestus-Studio/aether-api/commit/8226ae7299056b19e6eac240098b95c75a5b5df4))
 - *(changelog)* Update CHANGELOG.md for v0.2.0-beta [skip ci] - ([3060baf](https://github.com/Hephaestus-Studio/aether-api/commit/3060baf08ae289c6db7516f3fa3e2fbf18d71a30))
+- *(changelog)* Update CHANGELOG.md for v0.2.0-beta [skip ci] - ([8276ef0](https://github.com/Hephaestus-Studio/aether-api/commit/8276ef05ffc6e6b5a69aa7d5749d7d18c721c9cd))
 
 ### Features
 
@@ -81,6 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Setup project dependencies, permissions, and workspace configuration - ([7e655fe](https://github.com/Hephaestus-Studio/aether-api/commit/7e655fe75db633d7503129f8a8daef2af994289b))
 - *(tauri)* Resolve compiler warnings and clippy lints across backend modules - ([c3d1351](https://github.com/Hephaestus-Studio/aether-api/commit/c3d1351ef79f90d6d166d1b6f5646804994cefdc))
 - Update node version to 24 and configure pnpm version for release workflow - ([b4f4a37](https://github.com/Hephaestus-Studio/aether-api/commit/b4f4a37388fbb327c5b2a6046565429801d59b9c))
+- Fix multiple pnpm versions error by using package.json packageManager - ([9fa4540](https://github.com/Hephaestus-Studio/aether-api/commit/9fa4540e225fe1ea74c20afe8fd951366f71381c))
 
 ### Refactoring
 
