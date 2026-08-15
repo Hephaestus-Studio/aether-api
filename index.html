@@ -9,8 +9,9 @@
       html,
       body,
       #root {
-        background-color: #0c0c0e !important;
-        color: #f3f4f6 !important;
+        background-color: transparent !important;
+        background: transparent !important;
+        color: #f9fafb;
         margin: 0;
         padding: 0;
         width: 100%;
@@ -26,10 +27,13 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        background: radial-gradient(circle at 50% 45%, #18181f 0%, #0c0c0e 80%);
+        background-color: #1c1c1c;
         transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         pointer-events: auto;
         user-select: none;
+        box-sizing: border-box;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 10px;
       }
 
       .splash-logo-container {
@@ -40,16 +44,6 @@
         display: flex;
         align-items: center;
         justify-content: center;
-      }
-
-      .splash-glow {
-        position: absolute;
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(59, 130, 246, 0.35) 0%, rgba(59, 130, 246, 0) 70%);
-        filter: blur(14px);
-        animation: splash-pulse 2.4s ease-in-out infinite alternate;
       }
 
       .splash-logo {
@@ -84,7 +78,7 @@
       .splash-subtitle {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         font-size: 12px;
-        color: #64748b;
+        color: #9ca3af;
         margin: 0 0 24px 0;
       }
 
@@ -102,20 +96,9 @@
         top: 0;
         bottom: 0;
         width: 45%;
-        background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        background: linear-gradient(90deg, #2563eb, #3b82f6);
         border-radius: 3px;
         animation: splash-loading 1.4s ease-in-out infinite;
-      }
-
-      @keyframes splash-pulse {
-        0% {
-          transform: scale(0.9);
-          opacity: 0.5;
-        }
-        100% {
-          transform: scale(1.2);
-          opacity: 0.9;
-        }
       }
 
       @keyframes splash-loading {
@@ -145,7 +128,6 @@
   <body>
     <div id="splash-screen" data-tauri-drag-region>
       <div class="splash-logo-container">
-        <div class="splash-glow"></div>
         <img src="/src/assets/logo.svg" alt="AetherAPI" class="splash-logo" />
       </div>
       <div class="splash-title">

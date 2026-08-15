@@ -21,7 +21,8 @@
         "decorations": false,
         "resizable": true,
         "center": true,
-        "visible": true
+        "visible": true,
+        "transparent": true
       },
       {
         "label": "main",
@@ -31,7 +32,8 @@
         "decorations": false,
         "resizable": true,
         "center": true,
-        "visible": false
+        "visible": false,
+        "transparent": true
       }
     ],
     "security": {

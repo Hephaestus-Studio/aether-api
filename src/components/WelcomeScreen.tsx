@@ -13,8 +13,8 @@ import {
 import { useWorkspace } from "@/hooks/useWorkspace";
 import logoUrl from "@/assets/logo.svg";
 import { invoke } from "@tauri-apps/api/core";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useConfigStore } from "@/stores/configStore";
+import { useWindowState } from "@/hooks/useWindowState";
 import classes from "./WelcomeScreen.module.css";
 
 const parseWorkspacePath = (path: string) => {
@@ -186,49 +186,8 @@ export default function WelcomeScreen() {
     });
   }, [recents, searchQuery]);
 
-  const appWindow = getCurrentWindow();
-  const [isMaximized, setIsMaximized] = useState(false);
-
-  useEffect(() => {
-    const updateMaximized = async () => {
-      try {
-        const max = await appWindow.isMaximized();
-        setIsMaximized(max);
-      } catch (err) {
-        console.error("Failed to check window maximized state:", err);
-      }
-    };
-
-    updateMaximized();
-
-    let unlisten: () => void;
-    appWindow
-      .onResized(() => {
-        updateMaximized();
-      })
-      .then((fn) => {
-        unlisten = fn;
-      })
-      .catch(console.error);
-
-    return () => {
-      if (unlisten) unlisten();
-    };
-  }, [appWindow]);
-
-  const handleMinimize = () => appWindow.minimize();
-  const handleMaximize = async () => {
-    try {
-      if (await appWindow.isMaximized()) {
-        await appWindow.unmaximize();
-      } else {
-        await appWindow.maximize();
-      }
-    } catch (err) {
-      console.error("Failed to toggle maximize:", err);
-    }
-  };
-  const handleClose = () => appWindow.close();
+  const { isMaximized, toggleMaximize: handleMaximize, minimize: handleMinimize, close: handleClose } =
+    useWindowState();
 
   return (
     <div className={classes.container}>

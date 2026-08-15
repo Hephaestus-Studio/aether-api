@@ -7,11 +7,22 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+html,
+body,
+#root {
+  background-color: transparent !important;
+  background: transparent !important;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   font-family: var(--aether-font-sans);
   font-size: var(--aether-font-size-md);
   line-height: var(--aether-line-height-base);
-  background-color: var(--bg-app);
   color: var(--text-primary);
   overflow: hidden;
   user-select: none;
@@ -68,9 +79,16 @@ code {
   width: 100vw;
   box-sizing: border-box;
   border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
   overflow: hidden;
   position: relative;
   background-color: var(--bg-app);
+  transition: border-radius 0.1s ease;
+}
+
+.window-root.maximized {
+  border-radius: 0;
+  border: none;
 }
 
 /* Mantine Form & Input Customization */

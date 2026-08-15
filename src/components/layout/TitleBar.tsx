@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
@@ -16,6 +15,7 @@ import {
   IconAdjustments,
   IconCheck,
 } from "@tabler/icons-react";
+import { useWindowState } from "@/hooks/useWindowState";
 import AboutModal from "@/components/modals/AboutModal";
 import logoUrl from "@/assets/logo.svg";
 import classes from "./TitleBar.module.css";
@@ -23,11 +23,12 @@ import classes from "./TitleBar.module.css";
 export default function TitleBar() {
   const { open: openWorkspace, close: closeWorkspace } = useWorkspace();
   const { workspacePath } = useWorkspaceStore();
+  const { isMaximized, toggleMaximize: handleMaximize, minimize: handleMinimize, close: handleClose } =
+    useWindowState();
   const environments = useEnvStore((s) => s.environments);
   const activeEnvironmentName = useEnvStore((s) => s.activeEnvironmentName);
   const setActiveEnvironment = useEnvStore((s) => s.setActiveEnvironment);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
-  const [isMaximized, setIsMaximized] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const toggleTerminal = useTabStore((s) => s.toggleTerminal);
@@ -44,36 +45,6 @@ export default function TitleBar() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [toggleTerminal]);
 
-  const appWindow = getCurrentWindow();
-
-  // Monitor Window Maximized State
-  useEffect(() => {
-    const updateMaximized = async () => {
-      try {
-        const max = await appWindow.isMaximized();
-        setIsMaximized(max);
-      } catch (err) {
-        console.error("Failed to check window maximized state:", err);
-      }
-    };
-
-    updateMaximized();
-
-    let unlisten: () => void;
-    appWindow
-      .onResized(() => {
-        updateMaximized();
-      })
-      .then((fn) => {
-        unlisten = fn;
-      })
-      .catch(console.error);
-
-    return () => {
-      if (unlisten) unlisten();
-    };
-  }, [appWindow]);
-
   // Click outside to close menus
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -86,34 +57,6 @@ export default function TitleBar() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
-  const handleMinimize = async () => {
-    try {
-      await appWindow.minimize();
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleMaximize = async () => {
-    try {
-      if (await appWindow.isMaximized()) {
-        await appWindow.unmaximize();
-      } else {
-        await appWindow.maximize();
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleClose = async () => {
-    try {
-      await appWindow.close();
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const handleOpenFolder = async () => {
     setActiveMenu(null);

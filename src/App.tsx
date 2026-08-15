@@ -13,6 +13,7 @@ import TitleBar from "./components/layout/TitleBar";
 import ResizeBorders from "./components/layout/ResizeBorders";
 import { Notifications } from "@mantine/notifications";
 import { useConfigStore } from "./stores/configStore";
+import { useWindowState } from "./hooks/useWindowState";
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
 import "./styles/theme.css";
@@ -28,6 +29,7 @@ const theme = createTheme({
 });
 
 export default function App() {
+  const { isMaximized } = useWindowState();
   const workspacePath = useWorkspaceStore((s) => s.workspacePath);
   const setTreeData = useWorkspaceStore((s) => s.setTreeData);
   const reset = useWorkspaceStore((s) => s.reset);
@@ -242,9 +244,9 @@ export default function App() {
     return (
       <MantineProvider theme={theme} forceColorScheme="dark">
         <Notifications position="bottom-right" zIndex={1000} />
-        <div className="window-root">
+        <div className={`window-root ${isMaximized ? "maximized" : ""}`}>
           <WelcomeScreen />
-          <ResizeBorders />
+          {!isMaximized && <ResizeBorders />}
         </div>
       </MantineProvider>
     );
@@ -253,12 +255,15 @@ export default function App() {
   return (
     <MantineProvider theme={theme} forceColorScheme="dark">
       <Notifications position="bottom-right" zIndex={1000} />
-      <div className="window-root" style={{ display: "flex", flexDirection: "column" }}>
+      <div
+        className={`window-root ${isMaximized ? "maximized" : ""}`}
+        style={{ display: "flex", flexDirection: "column" }}
+      >
         <TitleBar />
         <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
           <AppShell />
         </div>
-        <ResizeBorders />
+        {!isMaximized && <ResizeBorders />}
       </div>
     </MantineProvider>
   );
