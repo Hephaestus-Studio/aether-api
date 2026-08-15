@@ -106,7 +106,7 @@ export default function AboutModal({ opened, onClose }: Readonly<AboutModalProps
 
             <div className={classes.appName}>Aether API</div>
             <div className={classes.appVersionBadge}>
-              <span>v0.1.0</span>
+              <span>v0.2.0-beta</span>
             </div>
 
             <div className={classes.appSlogan}>Your APIs. Your Files. Your Control.</div>
