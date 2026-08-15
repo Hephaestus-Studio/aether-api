@@ -10,6 +10,7 @@ import {
   IconChevronDown,
 } from "@tabler/icons-react";
 import UndoableTextInput from "@/components/common/UndoableTextInput";
+import PlaceholderInput from "@/components/common/PlaceholderInput";
 import type { KeyValuePair } from "@/types/request";
 import clsx from "clsx";
 import classes from "./HeadersEditor.module.css";
@@ -309,20 +310,18 @@ export default function HeadersEditor({ headers, onChange }: Readonly<HeadersEdi
                     />
                   </td>
                   <td className={classes.inputCell}>
-                    <UndoableTextInput
+                    <PlaceholderInput
                       value={h.key}
-                      onChange={(e) => handleItemChange(idx, { key: e.target.value })}
+                      onChange={(val) => handleItemChange(idx, { key: val })}
                       placeholder="Key"
-                      variant="unstyled"
                       className={clsx(classes.tableInput, classes.monoInput)}
                     />
                   </td>
                   <td className={classes.inputCell}>
-                    <UndoableTextInput
+                    <PlaceholderInput
                       value={h.value}
-                      onChange={(e) => handleItemChange(idx, { value: e.target.value })}
+                      onChange={(val) => handleItemChange(idx, { value: val })}
                       placeholder="Value"
-                      variant="unstyled"
                       className={clsx(classes.tableInput, classes.monoInput)}
                     />
                   </td>

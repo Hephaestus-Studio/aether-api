@@ -3,6 +3,7 @@ import { Box, Checkbox, ActionIcon, ScrollArea, Tooltip } from "@mantine/core";
 import { useElementSize } from "@mantine/hooks";
 import { IconTrash, IconGripVertical, IconChevronUp, IconChevronDown } from "@tabler/icons-react";
 import UndoableTextInput from "@/components/common/UndoableTextInput";
+import PlaceholderInput from "@/components/common/PlaceholderInput";
 import type { KeyValuePair } from "@/types/request";
 import clsx from "clsx";
 import classes from "./ParamsEditor.module.css";
@@ -233,20 +234,18 @@ export default function ParamsEditor({ params, onChange }: Readonly<ParamsEditor
                     />
                   </td>
                   <td className={classes.inputCell}>
-                    <UndoableTextInput
+                    <PlaceholderInput
                       value={p.key}
-                      onChange={(e) => handleItemChange(idx, { key: e.target.value })}
+                      onChange={(val) => handleItemChange(idx, { key: val })}
                       placeholder="Key"
-                      variant="unstyled"
                       className={clsx(classes.tableInput, classes.monoInput)}
                     />
                   </td>
                   <td className={classes.inputCell}>
-                    <UndoableTextInput
+                    <PlaceholderInput
                       value={p.value}
-                      onChange={(e) => handleItemChange(idx, { value: e.target.value })}
+                      onChange={(val) => handleItemChange(idx, { value: val })}
                       placeholder="Value"
-                      variant="unstyled"
                       className={clsx(classes.tableInput, classes.monoInput)}
                     />
                   </td>

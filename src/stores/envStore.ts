@@ -10,6 +10,8 @@ interface EnvState {
   hasMasterKey: boolean;
   hasEncryptedSecrets: boolean;
   hasLegacyDotenv: boolean;
+  isUnlockModalOpen: boolean;
+  isManageMasterKeyModalOpen: boolean;
   isMasterKeyModalOpen: boolean;
 
   setEnvironments: (envs: EnvironmentSummary[]) => void;
@@ -19,6 +21,8 @@ interface EnvState {
   setEnvVariables: (envName: string, vars: EnvVariableItem[]) => void;
   setEnvDirty: (envName: string, dirty: boolean) => void;
   setMasterKeyStatus: (status: MasterKeyStatus) => void;
+  setUnlockModalOpen: (open: boolean) => void;
+  setManageMasterKeyModalOpen: (open: boolean) => void;
   setMasterKeyModalOpen: (open: boolean) => void;
   reset: () => void;
 }
@@ -32,6 +36,8 @@ export const useEnvStore = create<EnvState>((set, get) => ({
   hasMasterKey: false,
   hasEncryptedSecrets: false,
   hasLegacyDotenv: false,
+  isUnlockModalOpen: false,
+  isManageMasterKeyModalOpen: false,
   isMasterKeyModalOpen: false,
 
   setEnvironments: (envs) => set({ environments: envs }),
@@ -79,17 +85,17 @@ export const useEnvStore = create<EnvState>((set, get) => ({
     });
   },
   setEnvVariables: (envName, vars) => {
-    const { activeEnvironmentName, variablesByEnv } = get();
     const envKey = envName.toLowerCase();
-    const currentKey = (activeEnvironmentName || "global").toLowerCase();
-    const isCurrent = currentKey === envKey;
-
-    set({
-      variablesByEnv: {
-        ...variablesByEnv,
-        [envKey]: vars,
-      },
-      ...(isCurrent ? { activeVariables: vars } : {}),
+    set((state) => {
+      const currentKey = (state.activeEnvironmentName || "global").toLowerCase();
+      const isCurrent = currentKey === envKey;
+      return {
+        variablesByEnv: {
+          ...state.variablesByEnv,
+          [envKey]: vars,
+        },
+        ...(isCurrent ? { activeVariables: vars } : {}),
+      };
     });
   },
   setEnvDirty: (envName, dirty) => {
@@ -108,8 +114,27 @@ export const useEnvStore = create<EnvState>((set, get) => ({
       hasLegacyDotenv: status.hasLegacyDotenv,
     });
   },
+  setUnlockModalOpen: (open) => {
+    set({ isUnlockModalOpen: open });
+  },
+  setManageMasterKeyModalOpen: (open) => {
+    set({ isManageMasterKeyModalOpen: open });
+  },
   setMasterKeyModalOpen: (open) => {
-    set({ isMasterKeyModalOpen: open });
+    if (open) {
+      const { hasEncryptedSecrets, hasMasterKey } = get();
+      if (hasEncryptedSecrets && !hasMasterKey) {
+        set({ isUnlockModalOpen: true, isMasterKeyModalOpen: true });
+      } else {
+        set({ isManageMasterKeyModalOpen: true, isMasterKeyModalOpen: true });
+      }
+    } else {
+      set({
+        isUnlockModalOpen: false,
+        isManageMasterKeyModalOpen: false,
+        isMasterKeyModalOpen: false,
+      });
+    }
   },
   reset: () => {
     set({
@@ -121,6 +146,8 @@ export const useEnvStore = create<EnvState>((set, get) => ({
       hasMasterKey: false,
       hasEncryptedSecrets: false,
       hasLegacyDotenv: false,
+      isUnlockModalOpen: false,
+      isManageMasterKeyModalOpen: false,
       isMasterKeyModalOpen: false,
     });
   },

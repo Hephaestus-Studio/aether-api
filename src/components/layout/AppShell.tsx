@@ -14,7 +14,8 @@ import FolderEditor from "@/components/editor/FolderEditor";
 import ResponseViewer from "@/components/response/ResponseViewer";
 import QuickOpen from "@/components/tools/QuickOpen";
 import CommandPalette from "@/components/tools/CommandPalette";
-import MasterKeyModal from "@/components/modals/MasterKeyModal";
+import UnlockMasterKeyModal from "@/components/modals/UnlockMasterKeyModal";
+import ManageMasterKeyModal from "@/components/modals/ManageMasterKeyModal";
 import { useEnvStore } from "@/stores/envStore";
 import classes from "./AppShell.module.css";
 
@@ -25,8 +26,10 @@ export default function AppShell() {
   const [quickOpenOpened, setQuickOpenOpened] = useState(false);
   const [commandPaletteOpened, setCommandPaletteOpened] = useState(false);
 
-  const isMasterKeyModalOpen = useEnvStore((s) => s.isMasterKeyModalOpen);
-  const setMasterKeyModalOpen = useEnvStore((s) => s.setMasterKeyModalOpen);
+  const isUnlockModalOpen = useEnvStore((s) => s.isUnlockModalOpen);
+  const setUnlockModalOpen = useEnvStore((s) => s.setUnlockModalOpen);
+  const isManageMasterKeyModalOpen = useEnvStore((s) => s.isManageMasterKeyModalOpen);
+  const setManageMasterKeyModalOpen = useEnvStore((s) => s.setManageMasterKeyModalOpen);
 
   const tabs = useTabStore((s) => s.tabs);
   const activeTabId = useTabStore((s) => s.activeTabId);
@@ -224,7 +227,11 @@ export default function AppShell() {
         opened={commandPaletteOpened}
         onClose={() => setCommandPaletteOpened(false)}
       />
-      <MasterKeyModal opened={isMasterKeyModalOpen} onClose={() => setMasterKeyModalOpen(false)} />
+      <UnlockMasterKeyModal opened={isUnlockModalOpen} onClose={() => setUnlockModalOpen(false)} />
+      <ManageMasterKeyModal
+        opened={isManageMasterKeyModalOpen}
+        onClose={() => setManageMasterKeyModalOpen(false)}
+      />
     </Box>
   );
 }

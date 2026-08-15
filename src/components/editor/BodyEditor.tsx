@@ -15,6 +15,11 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { useConfigStore } from "@/stores/configStore";
 import MonacoErrorBoundary from "@/components/common/MonacoErrorBoundary";
 import UndoableTextInput from "@/components/common/UndoableTextInput";
+import PlaceholderInput from "@/components/common/PlaceholderInput";
+import {
+  registerMonacoVariableProviders,
+  setupMonacoVariableDecorations,
+} from "@/components/common/monacoVariables";
 import { useCollision } from "@/hooks/useCollision";
 import type { RequestBody, KeyValuePair, MultipartField } from "@/types/request";
 import clsx from "clsx";
@@ -537,9 +542,13 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
                 } catch {
                   // theme already defined or failed safely
                 }
+                registerMonacoVariableProviders(monaco);
               }}
               onMount={(editor, monaco) => {
                 try {
+                  registerMonacoVariableProviders(monaco);
+                  setupMonacoVariableDecorations(editor, monaco);
+
                   // Bind Shift+Alt+F as an alternative shortcut for Format Document without duplicating context menu item
                   editor.addCommand(
                     monaco.KeyMod.Shift | monaco.KeyMod.Alt | monaco.KeyCode.KeyF,
@@ -595,20 +604,18 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
                     />
                   </td>
                   <td>
-                    <UndoableTextInput
+                    <PlaceholderInput
                       value={item.key}
-                      onChange={(e) => handleUrlencodedChange(idx, { key: e.target.value })}
+                      onChange={(val) => handleUrlencodedChange(idx, { key: val })}
                       placeholder="Key"
-                      variant="unstyled"
                       className={classes.tableInput}
                     />
                   </td>
                   <td>
-                    <UndoableTextInput
+                    <PlaceholderInput
                       value={item.value}
-                      onChange={(e) => handleUrlencodedChange(idx, { value: e.target.value })}
+                      onChange={(val) => handleUrlencodedChange(idx, { value: val })}
                       placeholder="Value"
-                      variant="unstyled"
                       className={classes.tableInput}
                     />
                   </td>
@@ -671,11 +678,10 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
                     />
                   </td>
                   <td>
-                    <UndoableTextInput
+                    <PlaceholderInput
                       value={item.key}
-                      onChange={(e) => handleMultipartChange(idx, { key: e.target.value })}
+                      onChange={(val) => handleMultipartChange(idx, { key: val })}
                       placeholder="Key"
-                      variant="unstyled"
                       className={classes.tableInput}
                     />
                   </td>
@@ -691,11 +697,10 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
                   </td>
                   <td>
                     {item.fieldType === "text" ? (
-                      <UndoableTextInput
+                      <PlaceholderInput
                         value={item.value}
-                        onChange={(e) => handleMultipartChange(idx, { value: e.target.value })}
+                        onChange={(val) => handleMultipartChange(idx, { value: val })}
                         placeholder="Value"
-                        variant="unstyled"
                         className={classes.tableInput}
                       />
                     ) : (

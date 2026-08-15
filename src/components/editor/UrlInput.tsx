@@ -1,10 +1,17 @@
-import { useRef, useEffect, useMemo } from "react";
-import { Box, HoverCard } from "@mantine/core";
+import { useRef, useEffect, useMemo, useState } from "react";
+import { Box, Popover } from "@mantine/core";
+import { IconEye, IconEyeOff, IconKey, IconLock } from "@tabler/icons-react";
 import { useEnvStore } from "@/stores/envStore";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
-import { parseUrlPlaceholders } from "@/utils/placeholder";
+import { useTabStore } from "@/stores/tabStore";
+import {
+  getMergedActiveVariables,
+  parseVariablePlaceholders,
+  type MergedEnvVariable,
+} from "@/utils/placeholder";
 import { parseCurl, isCurlCommand, type ParsedCurl } from "@/utils/curlParser";
 import { useUndoableInput } from "@/hooks/useUndoableInput";
+import { useVariableAutocomplete } from "@/hooks/useVariableAutocomplete";
+import clsx from "clsx";
 import classes from "./UrlInput.module.css";
 
 interface UrlInputProps {
@@ -22,20 +29,41 @@ export default function UrlInput({
   placeholder = "Enter URL or paste cURL text",
   className,
 }: Readonly<UrlInputProps>) {
-  const activeVariables = useEnvStore((s) => s.activeVariables);
+  const variablesByEnv = useEnvStore((s) => s.variablesByEnv);
   const activeEnvironmentName = useEnvStore((s) => s.activeEnvironmentName);
-  const setMasterKeyModalOpen = useEnvStore((s) => s.setMasterKeyModalOpen);
+  const setUnlockModalOpen = useEnvStore((s) => s.setUnlockModalOpen);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const [revealedSecrets, setRevealedSecrets] = useState<Record<string, boolean>>({});
+  const [openedPopoverIdx, setOpenedPopoverIdx] = useState<number | null>(null);
 
   const { handleChange: handleUndoableChange, handleKeyDown: handleUndoableKeyDown } =
     useUndoableInput(value, onChange);
 
-  const segments = useMemo(
-    () => parseUrlPlaceholders(value, activeVariables),
-    [value, activeVariables],
+  const mergedVariables: MergedEnvVariable[] = useMemo(
+    () => getMergedActiveVariables(variablesByEnv, activeEnvironmentName),
+    [variablesByEnv, activeEnvironmentName],
   );
+
+  const segments = useMemo(
+    () => parseVariablePlaceholders(value, mergedVariables),
+    [value, mergedVariables],
+  );
+
+  const {
+    isOpen: isAutocompleteOpen,
+    selectedIndex,
+    filteredVariables,
+    checkTrigger,
+    selectVariable,
+    handleKeyDown: handleAutocompleteKeyDown,
+  } = useVariableAutocomplete({
+    value,
+    onChange: handleUndoableChange,
+    inputRef,
+    variables: mergedVariables,
+  });
 
   const handleScroll = () => {
     if (inputRef.current && overlayRef.current) {
@@ -47,9 +75,14 @@ export default function UrlInput({
     handleScroll();
   }, [value]);
 
-  const handleOpenEnvEditor = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    useWorkspaceStore.getState().setActiveView("environment");
+  const handleOpenEnvEditor = (sourceEnv?: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setOpenedPopoverIdx(null);
+    setRevealedSecrets({});
+    if (sourceEnv && sourceEnv.toLowerCase() !== "global") {
+      useEnvStore.getState().setActiveEnvironment(sourceEnv);
+    }
+    useTabStore.getState().openBottomPanel("environment");
   };
 
   const handlePlaceholderMouseDown = (e: React.MouseEvent<HTMLSpanElement>, startIndex: number) => {
@@ -94,6 +127,22 @@ export default function UrlInput({
       }
     }
     handleUndoableChange(val);
+    checkTrigger(val);
+  };
+
+  const handleCombinedKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (handleAutocompleteKeyDown(e)) {
+      return;
+    }
+    handleUndoableKeyDown(e);
+  };
+
+  const toggleRevealSecret = (varName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRevealedSecrets((prev) => ({
+      ...prev,
+      [varName]: !prev[varName],
+    }));
   };
 
   let charOffset = 0;
@@ -110,6 +159,8 @@ export default function UrlInput({
             if (seg.isPlaceholder) {
               const isLocked = seg.isLocked;
               const isResolved = seg.isResolved;
+              const isSecret = seg.isSecret;
+              const isRevealed = seg.varName ? !!revealedSecrets[seg.varName] : false;
 
               let targetClassName = classes.varUnresolved;
               if (isLocked) {
@@ -119,25 +170,31 @@ export default function UrlInput({
               }
 
               return (
-                <HoverCard
+                <Popover
                   key={idx}
-                  shadow="xl"
                   position="bottom-start"
-                  openDelay={0}
-                  closeDelay={150}
+                  shadow="xl"
                   withinPortal
+                  opened={openedPopoverIdx === idx}
+                  onChange={(opened) => {
+                    setOpenedPopoverIdx(opened ? idx : null);
+                    if (!opened) setRevealedSecrets({});
+                  }}
                 >
-                  <HoverCard.Target>
+                  <Popover.Target>
                     <span
                       className={targetClassName}
-                      onMouseDown={(e) => handlePlaceholderMouseDown(e, start)}
-                      onClick={() => inputRef.current?.focus()}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenedPopoverIdx((prev) => (prev === idx ? null : idx));
+                      }}
                     >
                       {seg.text}
                     </span>
-                  </HoverCard.Target>
+                  </Popover.Target>
 
-                  <HoverCard.Dropdown className={classes.hoverCardDropdown}>
+                  <Popover.Dropdown className={classes.hoverCardDropdown}>
                     {isLocked ? (
                       <>
                         <div className={classes.hoverValueBoxLocked}>
@@ -149,10 +206,7 @@ export default function UrlInput({
                           <div className={classes.envSection}>
                             <span className={classes.envBadgeLocked}>🔒</span>
                             <span className={classes.envText}>
-                              Encrypted in{" "}
-                              {activeEnvironmentName === "global"
-                                ? "Global"
-                                : activeEnvironmentName || "Global"}
+                              Encrypted in {seg.sourceEnv || "Global"}
                             </span>
                           </div>
                           <button
@@ -160,7 +214,9 @@ export default function UrlInput({
                             className={classes.unlockBtn}
                             onClick={(e) => {
                               e.stopPropagation();
-                              setMasterKeyModalOpen(true);
+                              setOpenedPopoverIdx(null);
+                              setRevealedSecrets({});
+                              setUnlockModalOpen(true);
                             }}
                           >
                             Unlock Secrets →
@@ -169,46 +225,69 @@ export default function UrlInput({
                       </>
                     ) : isResolved ? (
                       <>
-                        <div className={classes.hoverValueBox}>
-                          {seg.resolvedValue || "(empty string)"}
+                        <div
+                          className={clsx(
+                            classes.hoverValueBox,
+                            isSecret && !isRevealed && classes.hoverValueBoxMasked,
+                          )}
+                        >
+                          <span className={classes.hoverValueText}>
+                            {isSecret && !isRevealed
+                              ? "••••••••"
+                              : seg.resolvedValue || "(empty string)"}
+                          </span>
+                          {isSecret && (
+                            <button
+                              type="button"
+                              className={classes.eyeBtn}
+                              onClick={(e) => toggleRevealSecret(seg.varName || "", e)}
+                              title={isRevealed ? "Hide Secret" : "Show Secret"}
+                            >
+                              {isRevealed ? <IconEyeOff size={13} /> : <IconEye size={13} />}
+                            </button>
+                          )}
                         </div>
                         <div className={classes.hoverFooter}>
                           <div className={classes.envSection}>
-                            <span className={classes.envBadge}>E</span>
+                            <span className={classes.envBadge}>
+                              {seg.sourceEnv ? seg.sourceEnv[0].toUpperCase() : "E"}
+                            </span>
                             <span className={classes.envText}>
-                              {activeEnvironmentName === "global"
-                                ? "Global"
-                                : activeEnvironmentName || "Global"}
+                              {seg.sourceEnv || "Global"}
+                              {isSecret ? " (Secret)" : ""}
                             </span>
                           </div>
-                          <span className={classes.varsRequest} onClick={handleOpenEnvEditor}>
-                            Open Environment Editor →
+                          <span
+                            className={classes.varsRequest}
+                            onClick={(e) => handleOpenEnvEditor(seg.sourceEnv, e)}
+                          >
+                            Open Editor →
                           </span>
                         </div>
                       </>
                     ) : (
                       <>
                         <div className={classes.hoverValueBoxUnresolved}>
-                          Unresolved variable: {seg.varName}
+                          Unresolved variable: <strong>{seg.varName}</strong>
                         </div>
                         <div className={classes.hoverFooter}>
                           <div className={classes.envSection}>
                             <span className={classes.envBadgeUnresolved}>!</span>
                             <span className={classes.envText}>
-                              Not defined in{" "}
-                              {activeEnvironmentName === "global"
-                                ? "Global"
-                                : activeEnvironmentName || "Global"}
+                              Not defined in {activeEnvironmentName || "Global"}
                             </span>
                           </div>
-                          <span className={classes.varsRequest} onClick={handleOpenEnvEditor}>
-                            Open Environment Editor →
+                          <span
+                            className={classes.varsRequest}
+                            onClick={(e) => handleOpenEnvEditor(seg.sourceEnv, e)}
+                          >
+                            Open Editor →
                           </span>
                         </div>
                       </>
                     )}
-                  </HoverCard.Dropdown>
-                </HoverCard>
+                  </Popover.Dropdown>
+                </Popover>
               );
             }
 
@@ -230,7 +309,7 @@ export default function UrlInput({
           type="text"
           value={value}
           onChange={handleInputChange}
-          onKeyDown={handleUndoableKeyDown}
+          onKeyDown={handleCombinedKeyDown}
           onPaste={handlePaste}
           onScroll={handleScroll}
           onSelect={handleScroll}
@@ -241,6 +320,39 @@ export default function UrlInput({
           spellCheck={false}
           autoComplete="off"
         />
+
+        {/* Autocomplete Suggestion Dropdown */}
+        {isAutocompleteOpen && (
+          <div className={classes.autocompleteDropdown}>
+            {filteredVariables.map((item, idx) => {
+              const isSelected = idx === selectedIndex;
+              const isSecret = item.type === "secret";
+
+              return (
+                <div
+                  key={item.key}
+                  className={clsx(
+                    classes.autocompleteItem,
+                    isSelected && classes.autocompleteItemSelected,
+                  )}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    selectVariable(item);
+                  }}
+                >
+                  <div className={classes.itemLeft}>
+                    {isSecret ? <IconLock size={12} /> : <IconKey size={12} />}
+                    <span className={classes.itemKey}>{item.key}</span>
+                  </div>
+                  <div className={classes.itemRight}>
+                    <span className={classes.badgeEnv}>{item.sourceEnv}</span>
+                    {isSecret && <span className={classes.badgeSecret}>secret</span>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </Box>
   );

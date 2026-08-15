@@ -123,20 +123,17 @@ pub async fn close_workspace(state: State<'_, AppState>) -> Result<(), AppError>
 #[tauri::command]
 pub async fn get_workspace_info(state: State<'_, AppState>) -> Result<WorkspaceInfo, AppError> {
     let ws = state.workspace.lock().await;
-    if let Some(ws_state) = &*ws {
-        let ws_file = ws_state.path.join("workspace.yml");
-        let workspace: crate::models::workspace::Workspace =
-            crate::engine::yaml_parser::read_and_validate_yaml(&ws_file)?;
+    let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
+    let ws_file = ws_state.path.join("workspace.yml");
+    let workspace: crate::models::workspace::Workspace =
+        crate::engine::yaml_parser::read_and_validate_yaml(&ws_file)?;
 
-        Ok(WorkspaceInfo {
-            path: ws_state.path.to_string_lossy().to_string(),
-            name: workspace.name,
-            created_at: workspace.created_at.to_rfc3339(),
-            settings: workspace.settings,
-        })
-    } else {
-        Err(AppError::WorkspaceNotOpened)
-    }
+    Ok(WorkspaceInfo {
+        path: ws_state.path.to_string_lossy().to_string(),
+        name: workspace.name,
+        created_at: workspace.created_at.to_rfc3339(),
+        settings: workspace.settings,
+    })
 }
 
 /// Inputs for updating the state layout configuration of the workspace.
@@ -161,35 +158,32 @@ pub async fn save_workspace_state(
     state: State<'_, AppState>,
 ) -> Result<(), AppError> {
     let ws = state.workspace.lock().await;
-    if let Some(ws_state) = &*ws {
-        let ws_file = ws_state.path.join("workspace.yml");
-        let mut workspace: crate::models::workspace::Workspace =
-            crate::engine::yaml_parser::read_and_validate_yaml(&ws_file)?;
+    let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
+    let ws_file = ws_state.path.join("workspace.yml");
+    let mut workspace: crate::models::workspace::Workspace =
+        crate::engine::yaml_parser::read_and_validate_yaml(&ws_file)?;
 
-        workspace.active_tabs = input
-            .open_tabs
-            .into_iter()
-            .map(|path| crate::models::workspace::TabReference { path })
-            .collect();
+    workspace.active_tabs = input
+        .open_tabs
+        .into_iter()
+        .map(|path| crate::models::workspace::TabReference { path })
+        .collect();
 
-        if let Some(active_id) = &input.active_tab_id {
-            workspace.active_tab_index = workspace
-                .active_tabs
-                .iter()
-                .position(|t| t.path == *active_id)
-                .unwrap_or(0);
-        } else {
-            workspace.active_tab_index = 0;
-        }
-
-        workspace.settings.sidebar_width = input.sidebar_width;
-        workspace.updated_at = Utc::now();
-
-        crate::engine::yaml_parser::atomic_write_yaml(&ws_file, &workspace)?;
-        Ok(())
+    if let Some(active_id) = &input.active_tab_id {
+        workspace.active_tab_index = workspace
+            .active_tabs
+            .iter()
+            .position(|t| t.path == *active_id)
+            .unwrap_or(0);
     } else {
-        Err(AppError::WorkspaceNotOpened)
+        workspace.active_tab_index = 0;
     }
+
+    workspace.settings.sidebar_width = input.sidebar_width;
+    workspace.updated_at = Utc::now();
+
+    crate::engine::yaml_parser::atomic_write_yaml(&ws_file, &workspace)?;
+    Ok(())
 }
 
 /// Describes git category characteristics for modified files.

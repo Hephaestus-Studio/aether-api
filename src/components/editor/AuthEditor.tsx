@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Box, Select, ActionIcon } from "@mantine/core";
-import UndoableTextInput from "@/components/common/UndoableTextInput";
+import PlaceholderInput from "@/components/common/PlaceholderInput";
 import {
   IconShieldOff,
   IconKey,
@@ -239,13 +239,13 @@ export default function AuthEditor({
                     Supports &#123;&#123;variable&#125;&#125;
                   </span>
                 </div>
-                <UndoableTextInput
+                <PlaceholderInput
                   type={showSecret["bearer_token"] ? "text" : "password"}
                   value={auth.bearer.token}
-                  onChange={(e) =>
+                  onChange={(val) =>
                     onChange({
                       type: "bearer",
-                      bearer: { ...auth.bearer, token: e.target.value },
+                      bearer: { ...auth.bearer, token: val },
                     })
                   }
                   placeholder="e.g. {{token}} or eyJhbGciOi..."
@@ -273,12 +273,12 @@ export default function AuthEditor({
                   <span>Header Prefix</span>
                   <span className={classes.fieldHint}>Default: Bearer</span>
                 </div>
-                <UndoableTextInput
+                <PlaceholderInput
                   value={auth.bearer.prefix ?? "Bearer"}
-                  onChange={(e) =>
+                  onChange={(val) =>
                     onChange({
                       type: "bearer",
-                      bearer: { ...auth.bearer, prefix: e.target.value },
+                      bearer: { ...auth.bearer, prefix: val },
                     })
                   }
                   placeholder="Bearer"
@@ -348,12 +348,12 @@ export default function AuthEditor({
                     Supports &#123;&#123;variable&#125;&#125;
                   </span>
                 </div>
-                <UndoableTextInput
+                <PlaceholderInput
                   value={auth.basic.username}
-                  onChange={(e) =>
+                  onChange={(val) =>
                     onChange({
                       type: "basic",
-                      basic: { ...auth.basic, username: e.target.value },
+                      basic: { ...auth.basic, username: val },
                     })
                   }
                   placeholder="Username"
@@ -368,13 +368,13 @@ export default function AuthEditor({
                     Supports &#123;&#123;variable&#125;&#125;
                   </span>
                 </div>
-                <UndoableTextInput
+                <PlaceholderInput
                   type={showSecret["basic_password"] ? "text" : "password"}
                   value={auth.basic.password}
-                  onChange={(e) =>
+                  onChange={(val) =>
                     onChange({
                       type: "basic",
-                      basic: { ...auth.basic, password: e.target.value },
+                      basic: { ...auth.basic, password: val },
                     })
                   }
                   placeholder="Password"
@@ -456,12 +456,12 @@ export default function AuthEditor({
                   <span>Key Name</span>
                   <span className={classes.fieldHint}>e.g. X-API-Key</span>
                 </div>
-                <UndoableTextInput
+                <PlaceholderInput
                   value={auth.apikey.key}
-                  onChange={(e) =>
+                  onChange={(val) =>
                     onChange({
                       type: "apikey",
-                      apikey: { ...auth.apikey, key: e.target.value },
+                      apikey: { ...auth.apikey, key: val },
                     })
                   }
                   placeholder="X-API-Key"
@@ -476,13 +476,13 @@ export default function AuthEditor({
                     Supports &#123;&#123;variable&#125;&#125;
                   </span>
                 </div>
-                <UndoableTextInput
+                <PlaceholderInput
                   type={showSecret["api_key"] ? "text" : "password"}
                   value={auth.apikey.value}
-                  onChange={(e) =>
+                  onChange={(val) =>
                     onChange({
                       type: "apikey",
-                      apikey: { ...auth.apikey, value: e.target.value },
+                      apikey: { ...auth.apikey, value: val },
                     })
                   }
                   placeholder="API Key secret value"

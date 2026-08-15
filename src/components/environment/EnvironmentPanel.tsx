@@ -40,7 +40,8 @@ export default function EnvironmentPanel() {
   const hasMasterKey = useEnvStore((s) => s.hasMasterKey);
   const hasEncryptedSecrets = useEnvStore((s) => s.hasEncryptedSecrets);
   const setMasterKeyStatus = useEnvStore((s) => s.setMasterKeyStatus);
-  const setMasterKeyModalOpen = useEnvStore((s) => s.setMasterKeyModalOpen);
+  const setUnlockModalOpen = useEnvStore((s) => s.setUnlockModalOpen);
+  const setManageMasterKeyModalOpen = useEnvStore((s) => s.setManageMasterKeyModalOpen);
 
   const closeBottomPanel = useTabStore((s) => s.closeBottomPanel);
 
@@ -118,7 +119,7 @@ export default function EnvironmentPanel() {
     (index: number, fields: Partial<EnvVariableItem>) => {
       // If user toggles variable to secret and there is no master key, prompt to set one
       if (fields.type === "secret" && !hasMasterKey) {
-        setMasterKeyModalOpen(true);
+        setManageMasterKeyModalOpen(true);
         notifications.show({
           title: "Master Key Required",
           message: "Please set a Master Key to encrypt secret variables.",
@@ -128,7 +129,7 @@ export default function EnvironmentPanel() {
 
       updateActiveVariable(index, fields);
     },
-    [hasMasterKey, setMasterKeyModalOpen, updateActiveVariable],
+    [hasMasterKey, setManageMasterKeyModalOpen, updateActiveVariable],
   );
 
   const handleAddVariable = useCallback(() => {
@@ -342,7 +343,7 @@ export default function EnvironmentPanel() {
       console.error("Error updating environment:", err);
       const errStr = String(err);
       if (errStr.includes("MASTER_KEY_REQUIRED")) {
-        setMasterKeyModalOpen(true);
+        setManageMasterKeyModalOpen(true);
         notifications.show({
           title: "Master Key Required",
           message: "Please set a Master Key before saving secret variables.",
@@ -526,7 +527,13 @@ export default function EnvironmentPanel() {
         <Box className={classes.actions}>
           <button
             type="button"
-            onClick={() => setMasterKeyModalOpen(true)}
+            onClick={() => {
+              if (hasEncryptedSecrets && !hasMasterKey) {
+                setUnlockModalOpen(true);
+              } else {
+                setManageMasterKeyModalOpen(true);
+              }
+            }}
             className={clsx(
               classes.actionBtn,
               hasMasterKey ? classes.keyBtnActive : classes.keyBtnWarning,
@@ -677,7 +684,7 @@ export default function EnvironmentPanel() {
                   onDragEnd={handleDragEnd}
                   onDragOver={handleDragOver}
                   onDrop={handleDrop}
-                  onOpenMasterKeyModal={() => setMasterKeyModalOpen(true)}
+                  onOpenMasterKeyModal={() => setUnlockModalOpen(true)}
                 />
               );
             })}

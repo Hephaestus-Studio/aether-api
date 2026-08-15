@@ -138,3 +138,14 @@ code {
   font-size: 13.5px;
   color: var(--text-primary);
 }
+
+/* Monaco Variable Placeholder Highlight */
+.monaco-variable-placeholder {
+  color: #a5b4fc !important;
+  background-color: rgba(165, 180, 252, 0.14) !important;
+  border-radius: 3px !important;
+  padding: 1px 2px !important;
+  font-weight: 500 !important;
+  text-decoration: underline !important;
+  text-decoration-color: rgba(165, 180, 252, 0.4) !important;
+}

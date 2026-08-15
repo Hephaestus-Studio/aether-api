@@ -49,7 +49,7 @@ export function useWorkspace() {
             const { useEnvStore } = await import("@/stores/envStore");
             useEnvStore.getState().setMasterKeyStatus(status);
             if (status.hasEncryptedSecrets && !status.hasMasterKey) {
-              useEnvStore.getState().setMasterKeyModalOpen(true);
+              useEnvStore.getState().setUnlockModalOpen(true);
             }
           } catch (keyErr) {
             console.error("Failed to check master key status:", keyErr);
