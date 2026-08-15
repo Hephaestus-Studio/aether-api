@@ -6,8 +6,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:web": "vite --config website/vite.config.ts website",
     "build": "tsc && vite build",
+    "build:web": "vite build --config website/vite.config.ts website",
     "preview": "vite preview",
+    "preview:web": "vite preview --config website/vite.config.ts website",
     "tauri": "tauri",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
