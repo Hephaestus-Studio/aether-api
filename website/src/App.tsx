@@ -12,24 +12,24 @@ export default function App() {
 
   const installSnippets = {
     deb: `# 1. Download Debian/Ubuntu package
-wget ${RELEASE_BASE}/aether-api_0.2.0-beta_amd64.deb
+wget ${RELEASE_BASE}/Aether.API_0.2.0-beta_amd64.deb
 
 # 2. Install package
-sudo dpkg -i aether-api_0.2.0-beta_amd64.deb
+sudo dpkg -i Aether.API_0.2.0-beta_amd64.deb
 sudo apt-get install -f # resolve any missing dependencies`,
 
     rpm: `# 1. Download Fedora/RHEL package
-wget ${RELEASE_BASE}/aether-api-0.2.0-beta.x86_64.rpm
+wget ${RELEASE_BASE}/Aether.API-0.2.0-beta-1.x86_64.rpm
 
 # 2. Install with dnf or rpm
-sudo dnf install ./aether-api-0.2.0-beta.x86_64.rpm`,
+sudo dnf install ./Aether.API-0.2.0-beta-1.x86_64.rpm`,
 
     appimage: `# 1. Download Universal AppImage
-wget ${RELEASE_BASE}/aether-api_0.2.0-beta_amd64.AppImage
+wget ${RELEASE_BASE}/Aether.API_0.2.0-beta_amd64.AppImage
 
 # 2. Make executable and run
-chmod +x aether-api_0.2.0-beta_amd64.AppImage
-./aether-api_0.2.0-beta_amd64.AppImage`,
+chmod +x Aether.API_0.2.0-beta_amd64.AppImage
+./Aether.API_0.2.0-beta_amd64.AppImage`,
 
     source: `# 1. Clone repository
 git clone https://github.com/Hephaestus-Studio/aether-api.git
@@ -157,21 +157,21 @@ pnpm tauri build`,
               {downloadOpen && (
                 <div className="download-dropdown-menu">
                   <a
-                    href={`${RELEASE_BASE}/aether-api_0.2.0-beta_amd64.AppImage`}
+                    href={`${RELEASE_BASE}/Aether.API_0.2.0-beta_amd64.AppImage`}
                     className="download-item"
                   >
                     <span>Universal Linux</span>
                     <span className="ext">.AppImage</span>
                   </a>
                   <a
-                    href={`${RELEASE_BASE}/aether-api_0.2.0-beta_amd64.deb`}
+                    href={`${RELEASE_BASE}/Aether.API_0.2.0-beta_amd64.deb`}
                     className="download-item"
                   >
                     <span>Debian / Ubuntu</span>
                     <span className="ext">.deb</span>
                   </a>
                   <a
-                    href={`${RELEASE_BASE}/aether-api-0.2.0-beta.x86_64.rpm`}
+                    href={`${RELEASE_BASE}/Aether.API-0.2.0-beta-1.x86_64.rpm`}
                     className="download-item"
                   >
                     <span>Fedora / RHEL</span>
