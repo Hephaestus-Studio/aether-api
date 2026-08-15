@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0-beta.3] - 2026-08-15
+
+### Documentation
+
+- *(changelog)* Update CHANGELOG.md for v0.2.0-beta.2 [skip ci] - ([267dca9](https://github.com/Hephaestus-Studio/aether-api/commit/267dca95410dceb17c6428fe9a02f3487253e22f))
+
+### Features
+
+- *(website)* Add bilingual EN/VI support, mobile responsive navigation, and Inter typography - ([e714b5b](https://github.com/Hephaestus-Studio/aether-api/commit/e714b5b827c1222d4aeae0dd7ce51ae6fa007d5d))
+- *(website)* Add live GitHub stars count and improve background scroll locking & fixed header - ([91c1e1a](https://github.com/Hephaestus-Studio/aether-api/commit/91c1e1ab2084affd8b71f155e37ff9eb83b1d3bf))
+- *(website)* Default landing page language mode to English - ([5453e7a](https://github.com/Hephaestus-Studio/aether-api/commit/5453e7a8b93fdd018106df005274f7f637d006c9))
+- *(ui)* Add rounded window corners in non-maximized state and sync splash screen - ([0116d4e](https://github.com/Hephaestus-Studio/aether-api/commit/0116d4eb4e4999a0f7a169b757fb01c89132a2ec))
+- *(ui)* Add visual icons to titlebar menubar dropdown items - ([4f89705](https://github.com/Hephaestus-Studio/aether-api/commit/4f89705d9f3cff17a1d6172c7d355ed262179d71))
+
+### Release
+
+- V0.2.0-beta.3 - ([135764b](https://github.com/Hephaestus-Studio/aether-api/commit/135764b526e4eeffba7551909be61d45e745add4))
 ## [0.2.0-beta.2] - 2026-08-15
 
 ### Bug Fixes
@@ -125,6 +142,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Build
 
 - Generate application icons for desktop, android, and ios using tauri icon - ([d2fefe2](https://github.com/Hephaestus-Studio/aether-api/commit/d2fefe202e673796672317eccc27645b96d45d15))
+[0.2.0-beta.3]: https://github.com/Hephaestus-Studio/aether-api/compare/v0.2.0-beta.2...v0.2.0-beta.3
 [0.2.0-beta.2]: https://github.com/Hephaestus-Studio/aether-api/compare/v0.2.0-beta...v0.2.0-beta.2
 [0.2.0-beta]: https://github.com/Hephaestus-Studio/aether-api/releases/tag/v0.2.0-beta
 
