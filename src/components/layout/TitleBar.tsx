@@ -14,6 +14,15 @@ import {
   IconChevronDown,
   IconAdjustments,
   IconCheck,
+  IconFolderOpen,
+  IconFolderMinus,
+  IconPower,
+  IconTerminal2,
+  IconArrowBackUp,
+  IconArrowForwardUp,
+  IconCut,
+  IconClipboard,
+  IconInfoCircle,
 } from "@tabler/icons-react";
 import { useWindowState } from "@/hooks/useWindowState";
 import AboutModal from "@/components/modals/AboutModal";
@@ -110,18 +119,27 @@ export default function TitleBar() {
               {activeMenu === menu && menu === "File" && (
                 <div className={classes.dropdownMenu}>
                   <div className={classes.dropdownItem} onClick={handleOpenFolder}>
-                    <span>Open Workspace</span>
+                    <div className={classes.dropdownItemLeft}>
+                      <IconFolderOpen size={14} stroke={1.8} className={classes.dropdownItemIcon} />
+                      <span>Open Workspace</span>
+                    </div>
                     <span className={classes.dropdownShortcut}>Ctrl+O</span>
                   </div>
                   {workspacePath && (
                     <div className={classes.dropdownItem} onClick={handleCloseWorkspace}>
-                      <span>Close Workspace</span>
+                      <div className={classes.dropdownItemLeft}>
+                        <IconFolderMinus size={14} stroke={1.8} className={classes.dropdownItemIcon} />
+                        <span>Close Workspace</span>
+                      </div>
                       <span className={classes.dropdownShortcut}>Ctrl+F4</span>
                     </div>
                   )}
                   <div className={classes.divider} />
                   <div className={classes.dropdownItem} onClick={handleClose}>
-                    <span>Exit</span>
+                    <div className={classes.dropdownItemLeft}>
+                      <IconPower size={14} stroke={1.8} className={classes.dropdownItemIcon} />
+                      <span>Exit</span>
+                    </div>
                     <span className={classes.dropdownShortcut}>Alt+F4</span>
                   </div>
                 </div>
@@ -136,7 +154,10 @@ export default function TitleBar() {
                       setActiveMenu(null);
                     }}
                   >
-                    <span>Toggle Environments</span>
+                    <div className={classes.dropdownItemLeft}>
+                      <IconWorld size={14} stroke={1.8} className={classes.dropdownItemIcon} />
+                      <span>Toggle Environments</span>
+                    </div>
                   </div>
                   <div
                     className={classes.dropdownItem}
@@ -145,7 +166,10 @@ export default function TitleBar() {
                       setActiveMenu(null);
                     }}
                   >
-                    <span>Toggle Terminal</span>
+                    <div className={classes.dropdownItemLeft}>
+                      <IconTerminal2 size={14} stroke={1.8} className={classes.dropdownItemIcon} />
+                      <span>Toggle Terminal</span>
+                    </div>
                     <span className={classes.dropdownShortcut}>Ctrl+`</span>
                   </div>
                 </div>
@@ -157,33 +181,48 @@ export default function TitleBar() {
                     className={classes.dropdownItem}
                     onClick={() => document.execCommand("undo")}
                   >
-                    <span>Undo</span>
+                    <div className={classes.dropdownItemLeft}>
+                      <IconArrowBackUp size={14} stroke={1.8} className={classes.dropdownItemIcon} />
+                      <span>Undo</span>
+                    </div>
                     <span className={classes.dropdownShortcut}>Ctrl+Z</span>
                   </div>
                   <div
                     className={classes.dropdownItem}
                     onClick={() => document.execCommand("redo")}
                   >
-                    <span>Redo</span>
+                    <div className={classes.dropdownItemLeft}>
+                      <IconArrowForwardUp size={14} stroke={1.8} className={classes.dropdownItemIcon} />
+                      <span>Redo</span>
+                    </div>
                     <span className={classes.dropdownShortcut}>Ctrl+Y</span>
                   </div>
                   <div className={classes.divider} />
                   <div className={classes.dropdownItem} onClick={() => document.execCommand("cut")}>
-                    <span>Cut</span>
+                    <div className={classes.dropdownItemLeft}>
+                      <IconCut size={14} stroke={1.8} className={classes.dropdownItemIcon} />
+                      <span>Cut</span>
+                    </div>
                     <span className={classes.dropdownShortcut}>Ctrl+X</span>
                   </div>
                   <div
                     className={classes.dropdownItem}
                     onClick={() => document.execCommand("copy")}
                   >
-                    <span>Copy</span>
+                    <div className={classes.dropdownItemLeft}>
+                      <IconCopy size={14} stroke={1.8} className={classes.dropdownItemIcon} />
+                      <span>Copy</span>
+                    </div>
                     <span className={classes.dropdownShortcut}>Ctrl+C</span>
                   </div>
                   <div
                     className={classes.dropdownItem}
                     onClick={() => document.execCommand("paste")}
                   >
-                    <span>Paste</span>
+                    <div className={classes.dropdownItemLeft}>
+                      <IconClipboard size={14} stroke={1.8} className={classes.dropdownItemIcon} />
+                      <span>Paste</span>
+                    </div>
                     <span className={classes.dropdownShortcut}>Ctrl+V</span>
                   </div>
                 </div>
@@ -198,7 +237,10 @@ export default function TitleBar() {
                       setActiveMenu(null);
                     }}
                   >
-                    <span>About</span>
+                    <div className={classes.dropdownItemLeft}>
+                      <IconInfoCircle size={14} stroke={1.8} className={classes.dropdownItemIcon} />
+                      <span>About</span>
+                    </div>
                   </div>
                 </div>
               )}

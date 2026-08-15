@@ -70,7 +70,7 @@
 }
 
 .dropdownItem {
-  padding: 6px 14px;
+  padding: 6px 12px;
   color: #cccccc;
   cursor: pointer;
   display: flex;
@@ -86,6 +86,24 @@
 
 .dropdownItem:hover {
   background-color: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.dropdownItemLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dropdownItemIcon {
+  color: var(--text-muted, #8e8e93);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  transition: color 0.1s ease;
+}
+
+.dropdownItem:hover .dropdownItemIcon {
   color: #ffffff;
 }
 
