@@ -324,40 +324,40 @@ export default function PlaceholderInput({
         />
 
         {rightSection && <div>{rightSection}</div>}
-
-        {/* Autocomplete Suggestion Dropdown */}
-        {isAutocompleteOpen && (
-          <div className={classes.autocompleteDropdown}>
-            {filteredVariables.map((item, idx) => {
-              const isSelected = idx === selectedIndex;
-              const isSecret = item.type === "secret";
-
-              return (
-                <div
-                  key={item.key}
-                  className={clsx(
-                    classes.autocompleteItem,
-                    isSelected && classes.autocompleteItemSelected,
-                  )}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    selectVariable(item);
-                  }}
-                >
-                  <div className={classes.itemLeft}>
-                    {isSecret ? <IconLock size={12} /> : <IconKey size={12} />}
-                    <span className={classes.itemKey}>{item.key}</span>
-                  </div>
-                  <div className={classes.itemRight}>
-                    <span className={classes.badgeEnv}>{item.sourceEnv}</span>
-                    {isSecret && <span className={classes.badgeSecret}>secret</span>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
       </div>
+
+      {/* Autocomplete Suggestion Dropdown */}
+      {isAutocompleteOpen && (
+        <div className={classes.autocompleteDropdown}>
+          {filteredVariables.map((item, idx) => {
+            const isSelected = idx === selectedIndex;
+            const isSecret = item.type === "secret";
+
+            return (
+              <div
+                key={item.key}
+                className={clsx(
+                  classes.autocompleteItem,
+                  isSelected && classes.autocompleteItemSelected,
+                )}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  selectVariable(item);
+                }}
+              >
+                <div className={classes.itemLeft}>
+                  {isSecret ? <IconLock size={12} /> : <IconKey size={12} />}
+                  <span className={classes.itemKey}>{item.key}</span>
+                </div>
+                <div className={classes.itemRight}>
+                  <span className={classes.badgeEnv}>{item.sourceEnv}</span>
+                  {isSecret && <span className={classes.badgeSecret}>secret</span>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </Box>
   );
 }

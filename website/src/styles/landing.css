@@ -1196,7 +1196,9 @@ section {
   .mobile-link-arrow {
     color: var(--text-muted);
     font-size: 1.1rem;
-    transition: transform 0.2s ease, color 0.2s ease;
+    transition:
+      transform 0.2s ease,
+      color 0.2s ease;
     flex-shrink: 0;
     margin-left: 8px;
   }

@@ -186,8 +186,12 @@ export default function WelcomeScreen() {
     });
   }, [recents, searchQuery]);
 
-  const { isMaximized, toggleMaximize: handleMaximize, minimize: handleMinimize, close: handleClose } =
-    useWindowState();
+  const {
+    isMaximized,
+    toggleMaximize: handleMaximize,
+    minimize: handleMinimize,
+    close: handleClose,
+  } = useWindowState();
 
   return (
     <div className={classes.container}>
@@ -227,7 +231,7 @@ export default function WelcomeScreen() {
               <img src={logoUrl} alt="AetherAPI Logo" className={classes.logo} />
               <div>
                 <h1 className={classes.title}>AetherAPI</h1>
-                <span className={classes.version}>v0.2.0-beta.3</span>
+                <span className={classes.version}>v0.2.0-beta.4</span>
               </div>
             </div>
           </div>

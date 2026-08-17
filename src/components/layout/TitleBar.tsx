@@ -32,8 +32,12 @@ import classes from "./TitleBar.module.css";
 export default function TitleBar() {
   const { open: openWorkspace, close: closeWorkspace } = useWorkspace();
   const { workspacePath } = useWorkspaceStore();
-  const { isMaximized, toggleMaximize: handleMaximize, minimize: handleMinimize, close: handleClose } =
-    useWindowState();
+  const {
+    isMaximized,
+    toggleMaximize: handleMaximize,
+    minimize: handleMinimize,
+    close: handleClose,
+  } = useWindowState();
   const environments = useEnvStore((s) => s.environments);
   const activeEnvironmentName = useEnvStore((s) => s.activeEnvironmentName);
   const setActiveEnvironment = useEnvStore((s) => s.setActiveEnvironment);
@@ -128,7 +132,11 @@ export default function TitleBar() {
                   {workspacePath && (
                     <div className={classes.dropdownItem} onClick={handleCloseWorkspace}>
                       <div className={classes.dropdownItemLeft}>
-                        <IconFolderMinus size={14} stroke={1.8} className={classes.dropdownItemIcon} />
+                        <IconFolderMinus
+                          size={14}
+                          stroke={1.8}
+                          className={classes.dropdownItemIcon}
+                        />
                         <span>Close Workspace</span>
                       </div>
                       <span className={classes.dropdownShortcut}>Ctrl+F4</span>
@@ -182,7 +190,11 @@ export default function TitleBar() {
                     onClick={() => document.execCommand("undo")}
                   >
                     <div className={classes.dropdownItemLeft}>
-                      <IconArrowBackUp size={14} stroke={1.8} className={classes.dropdownItemIcon} />
+                      <IconArrowBackUp
+                        size={14}
+                        stroke={1.8}
+                        className={classes.dropdownItemIcon}
+                      />
                       <span>Undo</span>
                     </div>
                     <span className={classes.dropdownShortcut}>Ctrl+Z</span>
@@ -192,7 +204,11 @@ export default function TitleBar() {
                     onClick={() => document.execCommand("redo")}
                   >
                     <div className={classes.dropdownItemLeft}>
-                      <IconArrowForwardUp size={14} stroke={1.8} className={classes.dropdownItemIcon} />
+                      <IconArrowForwardUp
+                        size={14}
+                        stroke={1.8}
+                        className={classes.dropdownItemIcon}
+                      />
                       <span>Redo</span>
                     </div>
                     <span className={classes.dropdownShortcut}>Ctrl+Y</span>

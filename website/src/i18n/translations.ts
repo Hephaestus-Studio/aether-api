@@ -267,8 +267,7 @@ export const translations: Record<Language, Translations> = {
     install: {
       badge: "Get Started",
       title: "Install on Linux in Seconds",
-      description:
-        "Choose your preferred Linux package format or build directly from source.",
+      description: "Choose your preferred Linux package format or build directly from source.",
       tabs: {
         deb: "Debian / Ubuntu (.deb)",
         rpm: "Fedora / RHEL (.rpm)",

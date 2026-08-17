@@ -3,8 +3,8 @@ import { Language, translations } from "./i18n/translations";
 import "./styles/landing.css";
 
 const GITHUB_REPO = "https://github.com/Hephaestus-Studio/aether-api";
-const LATEST_TAG = "v0.2.0-beta.3";
-const RAW_VERSION = "0.2.0-beta.3";
+const LATEST_TAG = "v0.2.0-beta.4";
+const RAW_VERSION = "0.2.0-beta.4";
 const RELEASE_BASE = `${GITHUB_REPO}/releases/download/${LATEST_TAG}`;
 
 export default function App() {
@@ -56,7 +56,7 @@ export default function App() {
           try {
             sessionStorage.setItem(
               "aether_github_stars",
-              JSON.stringify({ stars: data.stargazers_count, timestamp: Date.now() })
+              JSON.stringify({ stars: data.stargazers_count, timestamp: Date.now() }),
             );
           } catch {
             // Ignore
@@ -226,7 +226,13 @@ pnpm tauri build`,
               <span className="btn-github-text">{t.nav.starGitHub}</span>
               {starCount !== null && (
                 <span className="github-star-badge" aria-label={`${starCount} GitHub stars`}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="star-icon">
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="star-icon"
+                  >
                     <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
                   </svg>
                   <span>{formatStars(starCount)}</span>
@@ -307,7 +313,13 @@ pnpm tauri build`,
               <span>{t.nav.starGitHub}</span>
               {starCount !== null && (
                 <span className="github-star-badge mobile" aria-label={`${starCount} GitHub stars`}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" className="star-icon">
+                  <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="star-icon"
+                  >
                     <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
                   </svg>
                   <span>{formatStars(starCount)}</span>
@@ -920,12 +932,15 @@ pnpm tauri build`,
 
             <ul className="footer-links">
               <li>
-                <a href={GITHUB_REPO} target="_blank" rel="noreferrer" className="footer-github-link">
+                <a
+                  href={GITHUB_REPO}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="footer-github-link"
+                >
                   <span>{t.footer.github}</span>
                   {starCount !== null && (
-                    <span className="footer-star-pill">
-                      ★ {formatStars(starCount)}
-                    </span>
+                    <span className="footer-star-pill">★ {formatStars(starCount)}</span>
                   )}
                 </a>
               </li>
