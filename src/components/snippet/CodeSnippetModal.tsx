@@ -1,7 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Modal, Select, Tooltip } from "@mantine/core";
 import { IconTerminal2, IconSettings, IconCopy, IconCheck } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
+import { invoke } from "@tauri-apps/api/core";
 import { useSnippetStore } from "@/stores/snippetStore";
 import { useEnvStore } from "@/stores/envStore";
 import {
@@ -11,15 +12,19 @@ import {
 } from "@/utils/codeGenerators";
 import { highlightSnippet } from "@/utils/codeGenerators/syntaxHighlighter";
 import type { EnvVariableItem } from "@/types/environment";
-import type { HttpRequestDetails } from "@/types/request";
+import type { HttpRequestDetails, KeyValuePair } from "@/types/request";
 import LanguageSettingsModal from "./LanguageSettingsModal";
 import classes from "./CodeSnippetModal.module.css";
 
 interface CodeSnippetModalProps {
   request: HttpRequestDetails;
+  requestPath?: string;
 }
 
-export default function CodeSnippetModal({ request }: Readonly<CodeSnippetModalProps>) {
+export default function CodeSnippetModal({
+  request,
+  requestPath,
+}: Readonly<CodeSnippetModalProps>) {
   const {
     isSnippetModalOpen,
     setSnippetModalOpen,
@@ -30,9 +35,36 @@ export default function CodeSnippetModal({ request }: Readonly<CodeSnippetModalP
   } = useSnippetStore();
 
   const [copied, setCopied] = useState(false);
+  const [inheritedContext, setInheritedContext] = useState<{
+    headers: KeyValuePair[];
+    auth: any;
+  } | null>(null);
   const activeVariables = useEnvStore((s) => s.activeVariables);
 
-  // Resolve headers and URL with environment variables
+  // Fetch inherited headers & auth from parent folders/collection
+  useEffect(() => {
+    if (!isSnippetModalOpen || !requestPath) {
+      setInheritedContext(null);
+      return;
+    }
+
+    let isCancelled = false;
+    invoke<any>("resolve_inherited_context", { requestPath })
+      .then((ctx) => {
+        if (!isCancelled && ctx) {
+          setInheritedContext(ctx);
+        }
+      })
+      .catch((err) => {
+        console.warn("Could not resolve inherited context for snippet:", err);
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isSnippetModalOpen, requestPath]);
+
+  // Resolve headers and URL with environment variables and inheritance
   const { resolvedUrl, resolvedHeaders } = useMemo(() => {
     if (!isSnippetModalOpen) {
       return { resolvedUrl: "", resolvedHeaders: {} };
@@ -54,39 +86,60 @@ export default function CodeSnippetModal({ request }: Readonly<CodeSnippetModalP
 
     const rUrl = replaceVars(request.url);
 
+    // Merge headers: inherited from ancestor folders/collection + request headers (with override)
+    const mergedHeadersList: KeyValuePair[] = [
+      ...(inheritedContext?.headers || []).map((h) => ({ ...h })),
+    ];
+
+    (request.headers || []).forEach((reqH) => {
+      const existingIdx = mergedHeadersList.findIndex(
+        (existing) => existing.key.trim().toLowerCase() === reqH.key.trim().toLowerCase(),
+      );
+      if (existingIdx >= 0) {
+        mergedHeadersList[existingIdx] = reqH;
+      } else {
+        mergedHeadersList.push(reqH);
+      }
+    });
+
     const rHeaders: Record<string, string> = {};
-    (request.headers || []).forEach((h) => {
+    mergedHeadersList.forEach((h) => {
       if (h.enabled && h.key.trim()) {
         rHeaders[replaceVars(h.key.trim())] = replaceVars(h.value || "");
       }
     });
 
-    // Injected Auth headers
-    if (request.auth) {
-      if (request.auth.type === "bearer" && request.auth.bearer.token) {
-        const token = replaceVars(request.auth.bearer.token);
-        const prefix = request.auth.bearer.prefix || "Bearer";
+    // Injected Auth headers (check request auth, fallback to inherited auth if inherit or none specified)
+    const effectiveAuth =
+      request.auth?.type === "inherit" || !request.auth
+        ? inheritedContext?.auth || { type: "none" }
+        : request.auth;
+
+    if (effectiveAuth) {
+      if (effectiveAuth.type === "bearer" && effectiveAuth.bearer?.token) {
+        const token = replaceVars(effectiveAuth.bearer.token);
+        const prefix = effectiveAuth.bearer.prefix || "Bearer";
         rHeaders["Authorization"] = `${prefix} ${token}`;
-      } else if (request.auth.type === "basic") {
-        const user = replaceVars(request.auth.basic.username);
-        const pass = replaceVars(request.auth.basic.password);
+      } else if (effectiveAuth.type === "basic" && effectiveAuth.basic) {
+        const user = replaceVars(effectiveAuth.basic.username || "");
+        const pass = replaceVars(effectiveAuth.basic.password || "");
         try {
           const b64 = btoa(unescape(encodeURIComponent(`${user}:${pass}`)));
           rHeaders["Authorization"] = `Basic ${b64}`;
         } catch {
           // Fallback if encoding fails
         }
-      } else if (request.auth.type === "apikey" && request.auth.apikey.key) {
-        const key = replaceVars(request.auth.apikey.key);
-        const val = replaceVars(request.auth.apikey.value);
-        if (request.auth.apikey.addTo === "header") {
+      } else if (effectiveAuth.type === "apikey" && effectiveAuth.apikey?.key) {
+        const key = replaceVars(effectiveAuth.apikey.key);
+        const val = replaceVars(effectiveAuth.apikey.value || "");
+        if (effectiveAuth.apikey.addTo === "header") {
           rHeaders[key] = val;
         }
       }
     }
 
     return { resolvedUrl: rUrl, resolvedHeaders: rHeaders };
-  }, [isSnippetModalOpen, request, activeVariables]);
+  }, [isSnippetModalOpen, request, activeVariables, inheritedContext]);
 
   const generatedCode = useMemo(() => {
     if (!isSnippetModalOpen) return "";

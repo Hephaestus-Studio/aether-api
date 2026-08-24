@@ -8,7 +8,9 @@ export default function EnvSelector() {
 
   const data = [
     { value: "global", label: "Global" },
-    ...environments.map((e) => ({ value: e.name, label: e.name })),
+    ...environments
+      .filter((e) => e.name.toLowerCase() !== "global")
+      .map((e) => ({ value: e.name, label: e.name })),
   ];
 
   return (

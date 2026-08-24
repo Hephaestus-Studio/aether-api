@@ -530,6 +530,33 @@ pub async fn save_response_to_file(
     Ok(())
 }
 
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct InheritedContext {
+    pub headers: Vec<crate::models::request::KeyValuePair>,
+    pub auth: crate::models::request::AuthConfig,
+}
+
+/// Tauri command to resolve inherited headers and auth for a given request path.
+#[tauri::command]
+pub async fn resolve_inherited_context(
+    request_path: String,
+    state: State<'_, AppState>,
+) -> Result<InheritedContext, AppError> {
+    let ws = state.workspace.lock().await;
+    let ws_state = ws.as_ref().ok_or(AppError::WorkspaceNotOpened)?;
+
+    let abs_file_path = if Path::new(&request_path).is_absolute() {
+        PathBuf::from(&request_path)
+    } else {
+        ws_state.path.join(&request_path)
+    };
+
+    let headers = collect_inherited_headers(&abs_file_path, &ws_state.path);
+    let auth = resolve_inherited_auth(&abs_file_path, &ws_state.path);
+
+    Ok(InheritedContext { headers, auth })
+}
+
 /// Helper function to resolve inherited authentication configuration by walking up the directory tree
 /// from the request's parent directory up to the workspace root.
 pub fn resolve_inherited_auth(

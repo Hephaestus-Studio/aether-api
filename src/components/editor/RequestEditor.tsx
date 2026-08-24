@@ -571,7 +571,7 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
       </Tabs>
 
       {/* Code Snippet Generator Modal - only render for active tab to prevent multi-modal overlap */}
-      {isActive && <CodeSnippetModal request={request} />}
+      {isActive && <CodeSnippetModal request={request} requestPath={tabId} />}
     </Box>
   );
 }

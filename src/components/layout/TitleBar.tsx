@@ -300,19 +300,22 @@ export default function TitleBar() {
                 >
                   Global
                 </Menu.Item>
-                {environments.map((env) => {
-                  const isActive = activeEnvironmentName?.toLowerCase() === env.name.toLowerCase();
-                  return (
-                    <Menu.Item
-                      key={env.name}
-                      onClick={() => setActiveEnvironment(env.name)}
-                      className={isActive ? classes.envItemActive : ""}
-                      rightSection={isActive ? <IconCheck size={12} color="#ffffff" /> : null}
-                    >
-                      {env.name}
-                    </Menu.Item>
-                  );
-                })}
+                {environments
+                  .filter((env) => env.name.toLowerCase() !== "global")
+                  .map((env) => {
+                    const isActive =
+                      activeEnvironmentName?.toLowerCase() === env.name.toLowerCase();
+                    return (
+                      <Menu.Item
+                        key={env.name}
+                        onClick={() => setActiveEnvironment(env.name)}
+                        className={isActive ? classes.envItemActive : ""}
+                        rightSection={isActive ? <IconCheck size={12} color="#ffffff" /> : null}
+                      >
+                        {env.name}
+                      </Menu.Item>
+                    );
+                  })}
                 <Menu.Divider />
                 <Menu.Item
                   leftSection={<IconAdjustments size={12} />}
