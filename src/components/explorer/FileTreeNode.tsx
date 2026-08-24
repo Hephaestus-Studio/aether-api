@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Box, Group, Text, Menu, UnstyledButton, Modal, TextInput, Button } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import {
   IconFolder,
   IconFolderOpen,
@@ -29,6 +30,9 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
   const [modalType, setModalType] = useState<"newFolder" | "rename" | "delete" | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [error, setError] = useState("");
+  const [isInlineRenaming, setIsInlineRenaming] = useState(false);
+  const [inlineName, setInlineName] = useState(() => node.name.replace(/\.(yml|yaml|json)$/i, ""));
+  const inlineInputRef = useRef<HTMLInputElement>(null);
   const isDragging = useWorkspaceStore((s) => s.activeDraggedId === node.id);
   const setActiveDraggedId = useWorkspaceStore((s) => s.setActiveDraggedId);
   const [dropPosition, setDropPosition] = useState<"above" | "below" | "inside" | null>(null);
@@ -40,6 +44,19 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
   const gitStatus = useWorkspaceStore((s) => s.gitStatus);
   const workspacePath = useWorkspaceStore((s) => s.workspacePath);
   const setTreeData = useWorkspaceStore((s) => s.setTreeData);
+
+  useEffect(() => {
+    if (!isInlineRenaming) {
+      setInlineName(node.name.replace(/\.(yml|yaml|json)$/i, ""));
+    }
+  }, [node.name, isInlineRenaming]);
+
+  useEffect(() => {
+    if (isInlineRenaming) {
+      inlineInputRef.current?.focus();
+      inlineInputRef.current?.select();
+    }
+  }, [isInlineRenaming]);
 
   const getNodeGitStatus = () => {
     if (!gitStatus || !gitStatus.modifiedFiles) return null;
@@ -108,6 +125,7 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
   };
 
   const handleNodeClick = () => {
+    if (isInlineRenaming) return;
     if (node.nodeType === "request") {
       openTab({
         id: node.path,
@@ -123,6 +141,76 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
         isDirty: false,
         nodeType: node.nodeType,
       });
+    }
+  };
+
+  const startInlineRename = () => {
+    setInlineName(node.name.replace(/\.(yml|yaml|json)$/i, ""));
+    setIsInlineRenaming(true);
+  };
+
+  const handleInlineKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      e.stopPropagation();
+      handleInlineSubmit();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsInlineRenaming(false);
+      setInlineName(node.name.replace(/\.(yml|yaml|json)$/i, ""));
+    }
+  };
+
+  const handleInlineSubmit = async () => {
+    if (!isInlineRenaming) return;
+    const cleanInput = inlineName.trim();
+    const originalName = node.name.replace(/\.(yml|yaml|json)$/i, "");
+
+    if (!cleanInput || cleanInput === originalName) {
+      setIsInlineRenaming(false);
+      setInlineName(originalName);
+      return;
+    }
+
+    try {
+      const result = await invoke<{ newPath: string }>("rename_item", {
+        oldPath: node.id,
+        newName: cleanInput,
+      });
+
+      if (node.nodeType === "request") {
+        updateTab(node.path, { name: cleanInput });
+        if (node.id && node.id !== node.path) {
+          updateTab(node.id, { name: cleanInput });
+        }
+      } else if (result.newPath && result.newPath !== node.path) {
+        replaceTabId(node.path, result.newPath);
+        if (node.id && node.id !== node.path) {
+          replaceTabId(node.id, result.newPath);
+        }
+      } else {
+        updateTab(node.path, { name: cleanInput });
+        if (node.id && node.id !== node.path) {
+          updateTab(node.id, { name: cleanInput });
+        }
+      }
+
+      setIsInlineRenaming(false);
+
+      if (workspacePath) {
+        const tree = await invoke<any>("open_workspace", { directoryPath: workspacePath });
+        setTreeData(tree.children);
+      }
+    } catch (err: any) {
+      console.error("Failed to rename item:", err);
+      notifications.show({
+        title: "Rename Failed",
+        message: err?.message || String(err),
+        color: "red",
+      });
+      setIsInlineRenaming(false);
+      setInlineName(originalName);
     }
   };
 
@@ -187,9 +275,7 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
   };
 
   const handleRename = () => {
-    setModalType("rename");
-    setInputValue(node.name.replace(/\.(yml|yaml|json)$/i, ""));
-    setError("");
+    startInlineRename();
   };
 
   const handleDelete = () => {
@@ -479,7 +565,15 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
               dropPosition === "below" && classes.dropBelow,
               dropPosition === "inside" && classes.dropInside,
             )}
-            draggable
+            tabIndex={0}
+            draggable={!isInlineRenaming}
+            onKeyDown={(e) => {
+              if (e.key === "F2") {
+                e.preventDefault();
+                e.stopPropagation();
+                startInlineRename();
+              }
+            }}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             onDragOver={handleDragOver}
@@ -509,11 +603,27 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
                   </span>
                 </>
               )}
-              <span className={classes.label} style={{ color: getGitColor(nodeGitStatus) }}>
-                {node.name.replace(/\.(yml|yaml|json)$/i, "")}
-              </span>
+              {isInlineRenaming ? (
+                <input
+                  ref={inlineInputRef}
+                  type="text"
+                  className={classes.inlineRenameInput}
+                  value={inlineName}
+                  onChange={(e) => setInlineName(e.target.value)}
+                  onKeyDown={handleInlineKeyDown}
+                  onBlur={handleInlineSubmit}
+                  onClick={(e) => e.stopPropagation()}
+                  onDoubleClick={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
+                />
+              ) : (
+                <span className={classes.label} style={{ color: getGitColor(nodeGitStatus) }}>
+                  {node.name.replace(/\.(yml|yaml|json)$/i, "")}
+                </span>
+              )}
             </div>
-            {!isFolder && nodeGitStatus && (
+            {!isFolder && nodeGitStatus && !isInlineRenaming && (
               <span
                 className={classes.gitBadge}
                 style={{

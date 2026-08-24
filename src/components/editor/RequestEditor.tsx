@@ -63,6 +63,14 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
   const removeDraft = useTabStore((s) => s.removeDraft);
   const activeTabId = useTabStore((s) => s.activeTabId);
   const isActive = activeTabId === tabId;
+  const tabName = useTabStore((s) => s.tabs.find((t) => t.id === tabId)?.name);
+
+  // Synchronize request name if updated externally (e.g. from Sidebar rename)
+  useEffect(() => {
+    if (tabName && request && request.name !== tabName) {
+      setRequest((prev) => (prev ? { ...prev, name: tabName } : null));
+    }
+  }, [tabName]);
 
   const activeProtocol = useTabStore((s) => s.protocols[tabId]) || "http";
   const setProtocol = useTabStore((s) => s.setProtocol);

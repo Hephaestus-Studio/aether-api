@@ -38,6 +38,14 @@ export default function FolderEditor({ tabId, nodeType }: Readonly<FolderEditorP
   const markClean = useTabStore((s) => s.markClean);
   const isDirty = useTabStore((s) => !!s.tabs.find((t) => t.id === tabId)?.isDirty);
   const updateTab = useTabStore((s) => s.updateTab);
+  const tabName = useTabStore((s) => s.tabs.find((t) => t.id === tabId)?.name);
+
+  // Synchronize folder/collection name if updated externally (e.g. from Sidebar rename)
+  useEffect(() => {
+    if (tabName && details && details.name !== tabName) {
+      setDetails((prev) => (prev ? { ...prev, name: tabName } : null));
+    }
+  }, [tabName]);
 
   // Load collection/folder details from disk
   const loadDetails = useCallback(async () => {

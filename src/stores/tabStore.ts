@@ -175,8 +175,20 @@ export const useTabStore = create<TabState>((set, get) => ({
   },
 
   updateTab: (tabId, updates) => {
+    const { drafts } = get();
+    let newDrafts = drafts;
+    if (updates.name && drafts[tabId]) {
+      newDrafts = {
+        ...drafts,
+        [tabId]: {
+          ...drafts[tabId],
+          name: updates.name,
+        },
+      };
+    }
     set({
       tabs: get().tabs.map((t) => (t.id === tabId ? { ...t, ...updates } : t)),
+      drafts: newDrafts,
     });
   },
 
