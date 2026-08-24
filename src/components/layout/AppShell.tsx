@@ -42,29 +42,6 @@ export default function AppShell() {
   const isFolderOrCollectionTab =
     activeTab?.nodeType === "folder" || activeTab?.nodeType === "collection";
 
-  // Lazy Mount + Keep-Alive: only mount tabs when activated once, keep mounted until closed
-  const [mountedTabIds, setMountedTabIds] = useState<Set<string>>(
-    () => new Set(activeTabId ? [activeTabId] : []),
-  );
-
-  useEffect(() => {
-    setMountedTabIds((prev) => {
-      const next = new Set<string>();
-      const openIds = new Set(tabs.map((t) => t.id));
-      for (const id of prev) {
-        if (openIds.has(id)) {
-          next.add(id);
-        }
-      }
-      if (activeTabId && openIds.has(activeTabId)) {
-        next.add(activeTabId);
-      }
-      return next;
-    });
-  }, [activeTabId, tabs]);
-
-  const renderedTabs = tabs.filter((t) => mountedTabIds.has(t.id));
-
   const MIN_SIDEBAR_WIDTH = 280;
   const MAX_SIDEBAR_WIDTH = 600;
 
@@ -137,43 +114,27 @@ export default function AppShell() {
             <SplitPane
               collapsed={!bottomPanelOpened}
               topPanel={
-                activeTabId && renderedTabs.length > 0 ? (
+                activeTab ? (
                   <SplitPane
                     collapsed={!responsePanelOpened || isFolderOrCollectionTab}
                     topPanel={
                       <Box style={{ width: "100%", height: "100%", position: "relative" }}>
-                        {renderedTabs.map((tab) => (
-                          <Box
-                            key={tab.id}
-                            style={{
-                              display: tab.id === activeTabId ? "block" : "none",
-                              width: "100%",
-                              height: "100%",
-                            }}
-                          >
-                            {tab.nodeType === "folder" || tab.nodeType === "collection" ? (
-                              <FolderEditor tabId={tab.id} nodeType={tab.nodeType} />
-                            ) : (
-                              <RequestEditor tabId={tab.id} />
-                            )}
-                          </Box>
-                        ))}
+                        {activeTab.nodeType === "folder" || activeTab.nodeType === "collection" ? (
+                          <FolderEditor
+                            key={activeTab.id}
+                            tabId={activeTab.id}
+                            nodeType={activeTab.nodeType}
+                          />
+                        ) : (
+                          <RequestEditor key={activeTab.id} tabId={activeTab.id} />
+                        )}
                       </Box>
                     }
                     bottomPanel={
                       <Box style={{ width: "100%", height: "100%", position: "relative" }}>
-                        {renderedTabs.map((tab) => (
-                          <Box
-                            key={tab.id}
-                            style={{
-                              display: tab.id === activeTabId ? "block" : "none",
-                              width: "100%",
-                              height: "100%",
-                            }}
-                          >
-                            <ResponseViewer tabId={tab.id} />
-                          </Box>
-                        ))}
+                        {activeTab.nodeType !== "folder" && activeTab.nodeType !== "collection" && (
+                          <ResponseViewer key={activeTab.id} tabId={activeTab.id} />
+                        )}
                       </Box>
                     }
                     orientation={layoutOrientation}

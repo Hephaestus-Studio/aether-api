@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { Box, Button, LoadingOverlay } from "@mantine/core";
 import {
   IconFolder,
@@ -25,7 +25,7 @@ interface FolderEditorProps {
   nodeType?: "collection" | "folder";
 }
 
-export default function FolderEditor({ tabId, nodeType }: Readonly<FolderEditorProps>) {
+export default memo(function FolderEditor({ tabId, nodeType }: Readonly<FolderEditorProps>) {
   const isFolder = nodeType === "folder";
   const isCollection = nodeType === "collection" || !isFolder;
 
@@ -261,4 +261,4 @@ export default function FolderEditor({ tabId, nodeType }: Readonly<FolderEditorP
       </Box>
     </Box>
   );
-}
+});

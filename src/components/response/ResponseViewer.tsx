@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { Box, Text, Tabs, Loader, Menu, Button, HoverCard } from "@mantine/core";
 import {
   IconGlobe,
@@ -19,7 +19,7 @@ interface ResponseViewerProps {
   tabId: string;
 }
 
-export default function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>) {
+export default memo(function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>) {
   const response = useTabStore((s) => s.responses[tabId]);
   const isLoading = useTabStore((s) => s.loadingStates[tabId]);
   const hasResponse = !!response && !("error" in response);
@@ -508,4 +508,4 @@ export default function ResponseViewer({ tabId }: Readonly<ResponseViewerProps>)
       )}
     </Box>
   );
-}
+});

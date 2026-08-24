@@ -3,8 +3,8 @@ import { Language, translations } from "./i18n/translations";
 import "./styles/landing.css";
 
 const GITHUB_REPO = "https://github.com/Hephaestus-Studio/aether-api";
-const LATEST_TAG = "v0.2.0-beta.4";
-const RAW_VERSION = "0.2.0-beta.4";
+const LATEST_TAG = "v0.2.0";
+const RAW_VERSION = "0.2.0";
 const RELEASE_BASE = `${GITHUB_REPO}/releases/download/${LATEST_TAG}`;
 
 export default function App() {

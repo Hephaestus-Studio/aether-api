@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { Box, Button, Tabs, Menu, ScrollArea, Tooltip } from "@mantine/core";
 import { invoke } from "@tauri-apps/api/core";
 import {
@@ -33,7 +33,7 @@ interface RequestEditorProps {
   tabId: string;
 }
 
-export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
+export default memo(function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
   const [request, setRequest] = useState<HttpRequestDetails | null>(null);
 
   const {
@@ -582,4 +582,4 @@ export default function RequestEditor({ tabId }: Readonly<RequestEditorProps>) {
       {isActive && <CodeSnippetModal request={request} requestPath={tabId} />}
     </Box>
   );
-}
+});

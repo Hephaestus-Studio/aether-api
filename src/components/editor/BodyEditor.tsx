@@ -57,7 +57,8 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
     if (body.type === "json") return "json";
     if (body.type === "xml") return "xml";
     if (body.type === "yaml") return "yaml";
-    return "text";
+    if (body.type === "text") return "text";
+    return "json";
   });
 
   const [binaryPath, setBinaryPath] = useState<string>("");
@@ -113,7 +114,8 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
       if (bodyTypeProp === "json") setRawLang("json");
       else if (bodyTypeProp === "xml") setRawLang("xml");
       else if (bodyTypeProp === "yaml") setRawLang("yaml");
-      else setRawLang("text");
+      else if (bodyTypeProp === "text") setRawLang("text");
+      else setRawLang("json");
       cachedRawContentRef.current = (body as any).content || "";
     } else {
       setBodyType(bodyTypeProp);
@@ -138,7 +140,8 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
       if (rawLang === "json") onChange({ type: "json", content: rawContent });
       else if (rawLang === "xml") onChange({ type: "xml", content: rawContent });
       else if (rawLang === "yaml") onChange({ type: "yaml", content: rawContent });
-      else onChange({ type: "text", content: rawContent });
+      else if (rawLang === "text") onChange({ type: "text", content: rawContent });
+      else onChange({ type: "json", content: rawContent });
     } else if (type === "formUrlencoded") {
       const content =
         cachedFormUrlencodedRef.current.length > 0
@@ -464,7 +467,7 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
               >
                 <Select
                   value={rawLang}
-                  onChange={(val) => handleRawLangChange(val || "text")}
+                  onChange={(val) => handleRawLangChange(val || "json")}
                   data={[
                     { label: "Text", value: "text" },
                     { label: "JavaScript", value: "javascript" },
