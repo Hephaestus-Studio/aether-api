@@ -485,6 +485,7 @@ export default function ResponseBody({ response, isActive = true }: Readonly<Res
                 "'JetBrains Mono', 'Fira Code', 'Source Code Pro', Menlo, Monaco, Consolas, monospace",
               lineHeight: Math.round((config.fontSize || 13) * 1.5),
               renderLineHighlight: "none",
+              padding: { top: 0, bottom: 8 },
               scrollbar: {
                 vertical: "visible",
                 horizontal: "visible",
