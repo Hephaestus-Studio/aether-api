@@ -409,9 +409,12 @@ impl HttpExecutor {
         match body {
             RequestBody::None { .. } => Ok(builder),
 
-            RequestBody::Json { content } => Ok(builder
-                .header(CONTENT_TYPE, "application/json")
-                .body(content.clone())),
+            RequestBody::Json { content } => {
+                let sanitized = sanitize_json_payload(content);
+                Ok(builder
+                    .header(CONTENT_TYPE, "application/json")
+                    .body(sanitized))
+            }
 
             RequestBody::Xml { content } => Ok(builder
                 .header(CONTENT_TYPE, "application/xml")
@@ -548,3 +551,152 @@ impl Default for RequestTracker {
         Self::new()
     }
 }
+
+/// Strips single-line (`// ...`) and multi-line (`/* ... */`) comments from a JSON string,
+/// preserving comments inside string literals.
+pub fn strip_json_comments(input: &str) -> String {
+    let mut result = String::with_capacity(input.len());
+    let mut chars = input.chars().peekable();
+    let mut in_string = false;
+    let mut is_escaped = false;
+
+    while let Some(c) = chars.next() {
+        if in_string {
+            result.push(c);
+            if is_escaped {
+                is_escaped = false;
+            } else if c == '\\' {
+                is_escaped = true;
+            } else if c == '"' {
+                in_string = false;
+            }
+        } else if c == '"' {
+            in_string = true;
+            result.push(c);
+        } else if c == '/' {
+            if let Some(&next_c) = chars.peek() {
+                if next_c == '/' {
+                    // Single-line comment: skip until newline
+                    chars.next();
+                    while let Some(&ch) = chars.peek() {
+                        if ch == '\n' {
+                            break;
+                        }
+                        chars.next();
+                    }
+                } else if next_c == '*' {
+                    // Multi-line block comment: skip until */
+                    chars.next();
+                    while let Some(ch) = chars.next() {
+                        if ch == '*' {
+                            if let Some(&next_ch) = chars.peek() {
+                                if next_ch == '/' {
+                                    chars.next();
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    result.push(c);
+                }
+            } else {
+                result.push(c);
+            }
+        } else {
+            result.push(c);
+        }
+    }
+
+    result
+}
+
+/// Removes trailing commas before `}` or `]` outside of string literals.
+pub fn remove_trailing_commas(input: &str) -> String {
+    let mut result = String::with_capacity(input.len());
+    let mut in_string = false;
+    let mut is_escaped = false;
+    let chars: Vec<char> = input.chars().collect();
+    let len = chars.len();
+    let mut i = 0;
+
+    while i < len {
+        let c = chars[i];
+        if in_string {
+            result.push(c);
+            if is_escaped {
+                is_escaped = false;
+            } else if c == '\\' {
+                is_escaped = true;
+            } else if c == '"' {
+                in_string = false;
+            }
+            i += 1;
+        } else if c == '"' {
+            in_string = true;
+            result.push(c);
+            i += 1;
+        } else if c == ',' {
+            let mut j = i + 1;
+            while j < len && chars[j].is_whitespace() {
+                j += 1;
+            }
+            if j < len && (chars[j] == '}' || chars[j] == ']') {
+                // Skip the trailing comma
+                i += 1;
+            } else {
+                result.push(c);
+                i += 1;
+            }
+        } else {
+            result.push(c);
+            i += 1;
+        }
+    }
+
+    result
+}
+
+/// Sanitizes JSON content with comments (JSONC) into standard valid JSON
+/// by stripping comments and cleaning up trailing commas.
+pub fn sanitize_json_payload(input: &str) -> String {
+    let stripped = strip_json_comments(input);
+    remove_trailing_commas(&stripped)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_strip_json_comments() {
+        let input = r#"{
+            // This is a comment
+            "name": "aether", // inline comment
+            /* block comment */
+            "url": "http://example.com//not-a-comment",
+            "escaped": "test \" with quote // not a comment"
+        }"#;
+
+        let sanitized = sanitize_json_payload(input);
+        let parsed: serde_json::Value =
+            serde_json::from_str(&sanitized).expect("Should parse valid JSON");
+        assert_eq!(parsed["name"], "aether");
+        assert_eq!(parsed["url"], "http://example.com//not-a-comment");
+        assert_eq!(parsed["escaped"], "test \" with quote // not a comment");
+    }
+
+    #[test]
+    fn test_trailing_commas_after_comments() {
+        let input = r#"{
+            "a": 1,
+            // "b": 2,
+        }"#;
+
+        let sanitized = sanitize_json_payload(input);
+        let parsed: serde_json::Value =
+            serde_json::from_str(&sanitized).expect("Should parse valid JSON");
+        assert_eq!(parsed["a"], 1);
+    }
+}
+

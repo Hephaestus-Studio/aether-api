@@ -556,16 +556,16 @@ export default function BodyEditor({ body, onChange }: Readonly<BodyEditorProps>
                   editor.addCommand(
                     monaco.KeyMod.Shift | monaco.KeyMod.Alt | monaco.KeyCode.KeyF,
                     () => {
-                      const val = editor.getValue();
-                      if (!val) return;
                       try {
-                        const parsed = JSON.parse(val);
-                        const formatted = JSON.stringify(parsed, null, 2);
-                        editor.setValue(formatted);
-                        handleContentChange(formatted);
+                        editor.getAction("editor.action.formatDocument")?.run();
                       } catch {
+                        const val = editor.getValue();
+                        if (!val) return;
                         try {
-                          editor.getAction("editor.action.formatDocument")?.run();
+                          const parsed = JSON.parse(val);
+                          const formatted = JSON.stringify(parsed, null, 2);
+                          editor.setValue(formatted);
+                          handleContentChange(formatted);
                         } catch {}
                       }
                     },

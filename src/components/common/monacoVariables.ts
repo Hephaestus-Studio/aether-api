@@ -11,6 +11,16 @@ export function registerMonacoVariableProviders(monaco: any) {
   if (providersRegistered || !monaco) return;
   providersRegistered = true;
 
+  try {
+    monaco.languages.json?.jsonDefaults?.setDiagnosticsOptions({
+      validate: true,
+      allowComments: true,
+      trailingCommas: "ignore",
+    });
+  } catch {
+    // ignore if json language worker not available
+  }
+
   const supportedLanguages = [
     "json",
     "xml",
@@ -24,7 +34,7 @@ export function registerMonacoVariableProviders(monaco: any) {
   for (const lang of supportedLanguages) {
     // 1. Completion Provider for {{ trigger
     monaco.languages.registerCompletionItemProvider(lang, {
-      triggerCharacters: ["{", " "],
+      triggerCharacters: ["{"],
       provideCompletionItems: (model: any, position: any) => {
         const textUntilPosition = model.getValueInRange({
           startLineNumber: position.lineNumber,
@@ -33,8 +43,8 @@ export function registerMonacoVariableProviders(monaco: any) {
           endColumn: position.column,
         });
 
-        // Match if cursor is after { or {{
-        const match = textUntilPosition.match(/\{{1,2}([^}]*)$/);
+        // Match only if cursor is after {{
+        const match = textUntilPosition.match(/\{\{([^}]*)$/);
         if (!match) return { suggestions: [] };
 
         const query = match[1].toLowerCase();
@@ -43,11 +53,19 @@ export function registerMonacoVariableProviders(monaco: any) {
         const { variablesByEnv, activeEnvironmentName } = useEnvStore.getState();
         const mergedVariables = getMergedActiveVariables(variablesByEnv, activeEnvironmentName);
 
+        const textAfterPosition = model.getValueInRange({
+          startLineNumber: position.lineNumber,
+          startColumn: position.column,
+          endLineNumber: position.lineNumber,
+          endColumn: position.column + 2,
+        });
+        const hasClosing = textAfterPosition.startsWith("}}");
+
         const range = {
           startLineNumber: position.lineNumber,
           endLineNumber: position.lineNumber,
           startColumn: position.column - prefixLength,
-          endColumn: position.column,
+          endColumn: hasClosing ? position.column + 2 : position.column,
         };
 
         const suggestions = mergedVariables
