@@ -406,10 +406,35 @@ section {
   max-width: 100%;
 }
 
+.hero-pills-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.hero-pills-container .version-pill {
+  margin-bottom: 0;
+}
+
 .version-pill:hover {
   background: rgba(0, 242, 254, 0.15);
   border-color: var(--accent-cyan);
   box-shadow: 0 0 15px rgba(0, 242, 254, 0.2);
+}
+
+.version-pill.version-pill-beta {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+}
+
+.version-pill.version-pill-beta:hover {
+  background: rgba(245, 158, 11, 0.16);
+  border-color: #f59e0b;
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);
 }
 
 .version-pill .dot {
@@ -419,6 +444,27 @@ section {
   border-radius: 50%;
   box-shadow: 0 0 8px var(--accent-emerald);
   flex-shrink: 0;
+}
+
+.version-pill .dot.dot-beta {
+  background: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+}
+
+.pill-channel-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1px 6px;
+  background: rgba(0, 242, 254, 0.12);
+  color: var(--accent-cyan);
+  border-radius: 4px;
+}
+
+.pill-channel-tag.beta {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
 }
 
 .hero-title {
@@ -457,6 +503,10 @@ section {
   margin-bottom: 48px;
 }
 
+.hero-cta-group.dual-channel {
+  gap: 14px;
+}
+
 .download-dropdown-wrapper {
   position: relative;
   display: inline-block;
@@ -467,7 +517,8 @@ section {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 14px 28px;
+  padding: 12px 26px;
+  min-height: 52px;
   background: var(--gradient-cyan-blue);
   color: #04101e;
   font-size: 1rem;
@@ -478,11 +529,62 @@ section {
   box-shadow: 0 0 25px rgba(0, 242, 254, 0.35);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   text-decoration: none;
+  box-sizing: border-box;
 }
 
 .btn-primary-download:hover {
   transform: translateY(-2px);
   box-shadow: 0 0 35px rgba(0, 242, 254, 0.55);
+}
+
+.btn-beta-download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 24px;
+  min-height: 52px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(168, 85, 247, 0.12) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fef08a;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  box-shadow: 0 0 22px rgba(245, 158, 11, 0.2);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+  backdrop-filter: blur(12px);
+  box-sizing: border-box;
+}
+
+.btn-beta-download:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.22) 0%, rgba(168, 85, 247, 0.22) 100%);
+  border-color: #f59e0b;
+  box-shadow: 0 0 32px rgba(245, 158, 11, 0.4);
+  color: #fff;
+}
+
+.btn-text-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  line-height: 1.25;
+}
+
+.btn-main-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+.btn-sub-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  opacity: 0.85;
+  font-family: var(--font-mono);
 }
 
 .dropdown-chevron {
@@ -510,6 +612,51 @@ section {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.download-dropdown-menu.beta-menu {
+  border-color: rgba(245, 158, 11, 0.3);
+  box-shadow: 0 16px 40px rgba(245, 158, 11, 0.15);
+}
+
+.download-dropdown-menu.beta-menu .download-item:hover {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+}
+
+.dropdown-menu-header {
+  padding: 4px 8px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.channel-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  padding: 2px 8px;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+.channel-badge.stable {
+  background: rgba(0, 242, 254, 0.12);
+  color: var(--accent-cyan);
+}
+
+.channel-badge.beta {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+.beta-note {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+  margin: 0;
 }
 
 .download-item {
@@ -804,6 +951,80 @@ section {
   background: rgba(15, 23, 42, 0.3);
   border-top: 1px solid var(--border-subtle);
   border-bottom: 1px solid var(--border-subtle);
+}
+
+.install-channel-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.install-channel-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.install-channel-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  gap: 4px;
+}
+
+.channel-toggle-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  padding: 6px 14px;
+  border-radius: calc(var(--radius-md) - 2px);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.channel-toggle-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.channel-toggle-btn.active {
+  background: rgba(0, 242, 254, 0.12);
+  color: var(--accent-cyan);
+  border-color: rgba(0, 242, 254, 0.25);
+}
+
+.channel-toggle-btn.beta.active {
+  background: rgba(245, 158, 11, 0.14);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.channel-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.channel-dot.dot-stable {
+  background: var(--accent-cyan);
+  box-shadow: 0 0 6px var(--accent-cyan);
+}
+
+.channel-dot.dot-beta {
+  background: #f59e0b;
+  box-shadow: 0 0 6px #f59e0b;
 }
 
 .install-tabs-nav {
@@ -1308,9 +1529,10 @@ section {
   }
 
   .btn-primary-download,
+  .btn-beta-download,
   .btn-secondary {
     width: 100%;
-    height: 48px;
+    min-height: 48px;
     font-size: 0.95rem;
   }
 

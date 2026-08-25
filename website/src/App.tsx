@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Language, translations } from "./i18n/translations";
+import {
+  GITHUB_REPO,
+  DEFAULT_STABLE_RELEASE,
+  ReleasesData,
+  fetchReleasesData,
+} from "./utils/releases";
+import { DocsView } from "./docs/DocsView";
 import "./styles/landing.css";
-
-const GITHUB_REPO = "https://github.com/Hephaestus-Studio/aether-api";
-const LATEST_TAG = "v0.2.0";
-const RAW_VERSION = "0.2.0";
-const RELEASE_BASE = `${GITHUB_REPO}/releases/download/${LATEST_TAG}`;
 
 export default function App() {
   // Initialize language from localStorage (defaults to English "en")
@@ -19,7 +21,20 @@ export default function App() {
     return "en";
   });
 
-  const [downloadOpen, setDownloadOpen] = useState(false);
+  // View state: 'landing' or 'docs'
+  const [currentView, setCurrentView] = useState<"landing" | "docs">("landing");
+  const [activeDocId, setActiveDocId] = useState<string>("overview");
+
+  // Releases state (Dynamic Stable and Beta channels)
+  const [releases, setReleases] = useState<ReleasesData>(() => ({
+    stable: DEFAULT_STABLE_RELEASE,
+    beta: null,
+    hasBetaNewer: false,
+  }));
+
+  const [activeInstallChannel, setActiveInstallChannel] = useState<"stable" | "beta">("stable");
+  const [stableDownloadOpen, setStableDownloadOpen] = useState(false);
+  const [betaDownloadOpen, setBetaDownloadOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [installTab, setInstallTab] = useState<"deb" | "rpm" | "appimage" | "source">("deb");
   const [copied, setCopied] = useState(false);
@@ -41,6 +56,46 @@ export default function App() {
   });
 
   const t = translations[lang];
+
+  // Hash-based router listener
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash.startsWith("#/docs")) {
+        setCurrentView("docs");
+        const parts = hash.replace("#/docs", "").replace(/^\//, "").split("/");
+        if (parts[0] && parts[0].trim() !== "") {
+          setActiveDocId(parts[0].trim());
+        } else {
+          setActiveDocId("overview");
+        }
+      } else {
+        setCurrentView("landing");
+      }
+    };
+
+    handleHashChange();
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
+
+  const handleNavigateDocs = (docId: string = "overview") => {
+    window.location.hash = `#/docs/${docId}`;
+    setCurrentView("docs");
+    setActiveDocId(docId);
+  };
+
+  const handleBackToHome = () => {
+    window.location.hash = "#/";
+    setCurrentView("landing");
+  };
+
+  // Fetch live releases data from GitHub API
+  useEffect(() => {
+    fetchReleasesData().then((data) => {
+      setReleases(data);
+    });
+  }, []);
 
   // Fetch live star count from GitHub API
   useEffect(() => {
@@ -113,34 +168,40 @@ export default function App() {
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null;
-      if (downloadOpen && !target?.closest(".download-dropdown-wrapper")) {
-        setDownloadOpen(false);
+      if (stableDownloadOpen && !target?.closest(".stable-dropdown-wrapper")) {
+        setStableDownloadOpen(false);
+      }
+      if (betaDownloadOpen && !target?.closest(".beta-dropdown-wrapper")) {
+        setBetaDownloadOpen(false);
       }
     };
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
-  }, [downloadOpen]);
+  }, [stableDownloadOpen, betaDownloadOpen]);
+
+  const currentInstallRelease =
+    activeInstallChannel === "beta" && releases.beta ? releases.beta : releases.stable;
 
   const installSnippets = {
     deb: `${t.install.comments.deb1}
-wget ${RELEASE_BASE}/Aether.API_${RAW_VERSION}_amd64.deb
+wget ${currentInstallRelease.assets.deb}
 
 ${t.install.comments.deb2}
-sudo dpkg -i Aether.API_${RAW_VERSION}_amd64.deb
+sudo dpkg -i Aether.API_${currentInstallRelease.rawVersion}_amd64.deb
 sudo apt-get install -f ${t.install.comments.deb3}`,
 
     rpm: `${t.install.comments.rpm1}
-wget ${RELEASE_BASE}/Aether.API-${RAW_VERSION}-1.x86_64.rpm
+wget ${currentInstallRelease.assets.rpm}
 
 ${t.install.comments.rpm2}
-sudo dnf install ./Aether.API-${RAW_VERSION}-1.x86_64.rpm`,
+sudo dnf install ./Aether.API-${currentInstallRelease.rawVersion}-1.x86_64.rpm`,
 
     appimage: `${t.install.comments.appimage1}
-wget ${RELEASE_BASE}/Aether.API_${RAW_VERSION}_amd64.AppImage
+wget ${currentInstallRelease.assets.appImage}
 
 ${t.install.comments.appimage2}
-chmod +x Aether.API_${RAW_VERSION}_amd64.AppImage
-./Aether.API_${RAW_VERSION}_amd64.AppImage`,
+chmod +x Aether.API_${currentInstallRelease.rawVersion}_amd64.AppImage
+./Aether.API_${currentInstallRelease.rawVersion}_amd64.AppImage`,
 
     source: `${t.install.comments.source1}
 git clone https://github.com/Hephaestus-Studio/aether-api.git
@@ -162,6 +223,20 @@ pnpm tauri build`,
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
+  if (currentView === "docs") {
+    return (
+      <DocsView
+        articleId={activeDocId}
+        onNavigateArticle={handleNavigateDocs}
+        onBackToHome={handleBackToHome}
+        lang={lang}
+        onLanguageChange={handleLanguageChange}
+        starCount={starCount}
+        formatStars={formatStars}
+      />
+    );
+  }
+
   return (
     <div className="landing-root">
       <div className="ambient-glow-1"></div>
@@ -181,6 +256,9 @@ pnpm tauri build`,
 
           {/* Desktop Navigation Links */}
           <nav className="nav-links">
+            <a href="#/docs/overview" onClick={() => handleNavigateDocs("overview")}>
+              {t.nav.docs}
+            </a>
             <a href="#comparison">{t.nav.whyAether}</a>
             <a href="#features">{t.nav.features}</a>
             <a href="#installation">{t.nav.download}</a>
@@ -267,6 +345,17 @@ pnpm tauri build`,
       <nav className={`mobile-nav-drawer ${mobileMenuOpen ? "open" : ""}`}>
         <div className="mobile-nav-content">
           <div className="mobile-nav-links">
+            <a
+              href="#/docs/overview"
+              onClick={() => {
+                closeMobileMenu();
+                handleNavigateDocs("overview");
+              }}
+            >
+              <span className="mobile-link-icon">📚</span>
+              <span className="mobile-link-text">{t.nav.docs}</span>
+              <span className="mobile-link-arrow">→</span>
+            </a>
             <a href="#comparison" onClick={closeMobileMenu}>
               <span className="mobile-link-icon">⚡</span>
               <span className="mobile-link-text">{t.nav.whyAether}</span>
@@ -328,7 +417,7 @@ pnpm tauri build`,
             </a>
             <div className="mobile-drawer-badge">
               <span className="dot"></span>
-              <span>Aether API {LATEST_TAG}</span>
+              <span>Aether API {releases.stable.tag}</span>
             </div>
           </div>
         </div>
@@ -339,16 +428,43 @@ pnpm tauri build`,
           ================================================================== */}
       <section className="hero-section">
         <div className="container">
-          <a
-            href={`${GITHUB_REPO}/releases/tag/${LATEST_TAG}`}
-            target="_blank"
-            rel="noreferrer"
-            className="version-pill"
-          >
-            <span className="dot"></span>
-            <span>{t.hero.releaseBadge.replace("{version}", LATEST_TAG)}</span>
-            <span>→</span>
-          </a>
+          {releases.hasBetaNewer && releases.beta ? (
+            <div className="hero-pills-container">
+              <a
+                href={releases.stable.htmlUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="version-pill version-pill-stable"
+              >
+                <span className="dot dot-stable"></span>
+                <span className="pill-channel-tag">{t.hero.stableLabel}</span>
+                <span>{t.hero.releaseBadge.replace("{version}", releases.stable.tag)}</span>
+                <span>→</span>
+              </a>
+              <a
+                href={releases.beta.htmlUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="version-pill version-pill-beta"
+              >
+                <span className="dot dot-beta"></span>
+                <span className="pill-channel-tag beta">{t.hero.betaLabel}</span>
+                <span>{t.hero.betaBadge.replace("{version}", releases.beta.tag)}</span>
+                <span>→</span>
+              </a>
+            </div>
+          ) : (
+            <a
+              href={releases.stable.htmlUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="version-pill"
+            >
+              <span className="dot"></span>
+              <span>{t.hero.releaseBadge.replace("{version}", releases.stable.tag)}</span>
+              <span>→</span>
+            </a>
+          )}
 
           <h1 className="hero-title">
             {t.hero.titleLine1} <br />
@@ -357,14 +473,19 @@ pnpm tauri build`,
 
           <p className="hero-subtitle">{t.hero.subtitle}</p>
 
-          <div className="hero-cta-group">
-            {/* Primary Download Dropdown */}
-            <div className="download-dropdown-wrapper">
+          <div
+            className={`hero-cta-group ${releases.hasBetaNewer && releases.beta ? "dual-channel" : ""}`}
+          >
+            {/* Stable Download Button */}
+            <div className="download-dropdown-wrapper stable-dropdown-wrapper">
               <button
                 type="button"
                 className="btn-primary-download"
-                onClick={() => setDownloadOpen(!downloadOpen)}
-                aria-expanded={downloadOpen}
+                onClick={() => {
+                  setStableDownloadOpen(!stableDownloadOpen);
+                  setBetaDownloadOpen(false);
+                }}
+                aria-expanded={stableDownloadOpen}
               >
                 <svg
                   width="20"
@@ -380,7 +501,18 @@ pnpm tauri build`,
                     d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                   />
                 </svg>
-                <span>{t.hero.downloadLinux}</span>
+                {releases.hasBetaNewer && releases.beta ? (
+                  <span className="btn-text-block">
+                    <span className="btn-main-label">{t.hero.downloadStable}</span>
+                    <span className="btn-sub-label">
+                      {releases.stable.tag} • {t.hero.recommended}
+                    </span>
+                  </span>
+                ) : (
+                  <span>
+                    {t.hero.downloadLinux} ({releases.stable.tag})
+                  </span>
+                )}
                 <svg
                   width="14"
                   height="14"
@@ -388,44 +520,51 @@ pnpm tauri build`,
                   stroke="currentColor"
                   strokeWidth="2.5"
                   viewBox="0 0 24 24"
-                  className={`dropdown-chevron ${downloadOpen ? "open" : ""}`}
+                  className={`dropdown-chevron ${stableDownloadOpen ? "open" : ""}`}
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
 
-              {downloadOpen && (
+              {stableDownloadOpen && (
                 <div className="download-dropdown-menu">
+                  {releases.hasBetaNewer && releases.beta && (
+                    <div className="dropdown-menu-header">
+                      <span className="channel-badge stable">
+                        {t.hero.stableLabel} {releases.stable.tag}
+                      </span>
+                    </div>
+                  )}
                   <a
-                    href={`${RELEASE_BASE}/Aether.API_${RAW_VERSION}_amd64.AppImage`}
+                    href={releases.stable.assets.appImage}
                     className="download-item"
-                    onClick={() => setDownloadOpen(false)}
+                    onClick={() => setStableDownloadOpen(false)}
                   >
                     <span>{t.hero.downloads.universal}</span>
                     <span className="ext">.AppImage</span>
                   </a>
                   <a
-                    href={`${RELEASE_BASE}/Aether.API_${RAW_VERSION}_amd64.deb`}
+                    href={releases.stable.assets.deb}
                     className="download-item"
-                    onClick={() => setDownloadOpen(false)}
+                    onClick={() => setStableDownloadOpen(false)}
                   >
                     <span>{t.hero.downloads.debian}</span>
                     <span className="ext">.deb</span>
                   </a>
                   <a
-                    href={`${RELEASE_BASE}/Aether.API-${RAW_VERSION}-1.x86_64.rpm`}
+                    href={releases.stable.assets.rpm}
                     className="download-item"
-                    onClick={() => setDownloadOpen(false)}
+                    onClick={() => setStableDownloadOpen(false)}
                   >
                     <span>{t.hero.downloads.fedora}</span>
                     <span className="ext">.rpm</span>
                   </a>
                   <a
-                    href={`${RELEASE_BASE}/SHA256SUMS`}
+                    href={releases.stable.assets.sha256}
                     target="_blank"
                     rel="noreferrer"
                     className="download-item"
-                    onClick={() => setDownloadOpen(false)}
+                    onClick={() => setStableDownloadOpen(false)}
                   >
                     <span>{t.hero.downloads.checksums}</span>
                     <span className="ext">SHA256</span>
@@ -433,6 +572,98 @@ pnpm tauri build`,
                 </div>
               )}
             </div>
+
+            {/* Beta Download Button (Only displayed when Beta is newer than Stable) */}
+            {releases.hasBetaNewer && releases.beta && (
+              <div className="download-dropdown-wrapper beta-dropdown-wrapper">
+                <button
+                  type="button"
+                  className="btn-beta-download"
+                  onClick={() => {
+                    setBetaDownloadOpen(!betaDownloadOpen);
+                    setStableDownloadOpen(false);
+                  }}
+                  aria-expanded={betaDownloadOpen}
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                  <span className="btn-text-block">
+                    <span className="btn-main-label">{t.hero.downloadBeta}</span>
+                    <span className="btn-sub-label">
+                      {releases.beta.tag} • {t.hero.earlyAccess}
+                    </span>
+                  </span>
+                  <svg
+                    width="14"
+                    height="14"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    viewBox="0 0 24 24"
+                    className={`dropdown-chevron ${betaDownloadOpen ? "open" : ""}`}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {betaDownloadOpen && (
+                  <div className="download-dropdown-menu beta-menu">
+                    <div className="dropdown-menu-header">
+                      <span className="channel-badge beta">
+                        {t.hero.betaLabel} {releases.beta.tag}
+                      </span>
+                      <p className="beta-note">{t.hero.betaDisclaimer}</p>
+                    </div>
+                    <a
+                      href={releases.beta.assets.appImage}
+                      className="download-item"
+                      onClick={() => setBetaDownloadOpen(false)}
+                    >
+                      <span>{t.hero.downloads.universal}</span>
+                      <span className="ext">.AppImage</span>
+                    </a>
+                    <a
+                      href={releases.beta.assets.deb}
+                      className="download-item"
+                      onClick={() => setBetaDownloadOpen(false)}
+                    >
+                      <span>{t.hero.downloads.debian}</span>
+                      <span className="ext">.deb</span>
+                    </a>
+                    <a
+                      href={releases.beta.assets.rpm}
+                      className="download-item"
+                      onClick={() => setBetaDownloadOpen(false)}
+                    >
+                      <span>{t.hero.downloads.fedora}</span>
+                      <span className="ext">.rpm</span>
+                    </a>
+                    <a
+                      href={releases.beta.assets.sha256}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="download-item"
+                      onClick={() => setBetaDownloadOpen(false)}
+                    >
+                      <span>{t.hero.downloads.checksums}</span>
+                      <span className="ext">SHA256</span>
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
 
             <a href="#comparison" className="btn-secondary">
               <span>{t.hero.whyAetherBtn}</span>
@@ -784,6 +1015,31 @@ pnpm tauri build`,
             <p className="section-desc">{t.install.description}</p>
           </div>
 
+          {/* Release Channel Toggle (When Beta is available) */}
+          {releases.hasBetaNewer && releases.beta && (
+            <div className="install-channel-container">
+              <span className="install-channel-label">{t.install.channelLabel}:</span>
+              <div className="install-channel-toggle" role="group" aria-label="Release channel">
+                <button
+                  type="button"
+                  className={`channel-toggle-btn ${activeInstallChannel === "stable" ? "active" : ""}`}
+                  onClick={() => setActiveInstallChannel("stable")}
+                >
+                  <span className="channel-dot dot-stable"></span>
+                  {t.install.channelStable.replace("{version}", releases.stable.tag)}
+                </button>
+                <button
+                  type="button"
+                  className={`channel-toggle-btn beta ${activeInstallChannel === "beta" ? "active" : ""}`}
+                  onClick={() => setActiveInstallChannel("beta")}
+                >
+                  <span className="channel-dot dot-beta"></span>
+                  {t.install.channelBeta.replace("{version}", releases.beta.tag)}
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="install-tabs-nav">
             <button
               type="button"
@@ -931,6 +1187,11 @@ pnpm tauri build`,
             </div>
 
             <ul className="footer-links">
+              <li>
+                <a href="#/docs/overview" onClick={() => handleNavigateDocs("overview")}>
+                  {t.footer.docs}
+                </a>
+              </li>
               <li>
                 <a
                   href={GITHUB_REPO}

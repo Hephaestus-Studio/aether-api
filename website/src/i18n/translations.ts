@@ -4,6 +4,7 @@ export interface Translations {
   nav: {
     whyAether: string;
     features: string;
+    docs: string;
     download: string;
     shortcuts: string;
     changelog: string;
@@ -13,10 +14,18 @@ export interface Translations {
   };
   hero: {
     releaseBadge: string;
+    betaBadge: string;
     titleLine1: string;
     titleHighlight: string;
     subtitle: string;
     downloadLinux: string;
+    downloadStable: string;
+    downloadBeta: string;
+    stableLabel: string;
+    betaLabel: string;
+    recommended: string;
+    earlyAccess: string;
+    betaDisclaimer: string;
     whyAetherBtn: string;
     downloads: {
       universal: string;
@@ -108,6 +117,9 @@ export interface Translations {
     badge: string;
     title: string;
     description: string;
+    channelLabel: string;
+    channelStable: string;
+    channelBeta: string;
     tabs: {
       deb: string;
       rpm: string;
@@ -149,6 +161,7 @@ export interface Translations {
     brandSubtitle: string;
     github: string;
     releases: string;
+    docs: string;
     license: string;
     changelog: string;
     credit: string;
@@ -161,6 +174,7 @@ export const translations: Record<Language, Translations> = {
     nav: {
       whyAether: "Why Aether",
       features: "Features",
+      docs: "Docs",
       download: "Download",
       shortcuts: "Shortcuts",
       changelog: "Changelog",
@@ -170,11 +184,19 @@ export const translations: Record<Language, Translations> = {
     },
     hero: {
       releaseBadge: "Release {version} is now available!",
+      betaBadge: "Beta {version} is ready for preview!",
       titleLine1: "Your APIs. Your Files.",
       titleHighlight: "Your Control.",
       subtitle:
         "The modern, open-source API client that stores everything as plain YAML files in your Git repository. Zero telemetry, on-device encryption, and native Rust performance.",
       downloadLinux: "Download for Linux",
+      downloadStable: "Download Stable",
+      downloadBeta: "Download Beta Preview",
+      stableLabel: "Stable",
+      betaLabel: "Beta",
+      recommended: "Recommended",
+      earlyAccess: "Early Access",
+      betaDisclaimer: "Includes the latest preview features; may contain occasional bugs.",
       whyAetherBtn: "Why Aether?",
       downloads: {
         universal: "Universal Linux",
@@ -268,6 +290,9 @@ export const translations: Record<Language, Translations> = {
       badge: "Get Started",
       title: "Install on Linux in Seconds",
       description: "Choose your preferred Linux package format or build directly from source.",
+      channelLabel: "Release Channel",
+      channelStable: "Stable ({version})",
+      channelBeta: "Beta ({version})",
       tabs: {
         deb: "Debian / Ubuntu (.deb)",
         rpm: "Fedora / RHEL (.rpm)",
@@ -310,6 +335,7 @@ export const translations: Record<Language, Translations> = {
       brandSubtitle: "Next-Generation Local-First & Git-Centric API Client.",
       github: "GitHub",
       releases: "Releases",
+      docs: "Documentation",
       license: "MIT License",
       changelog: "Changelog",
       credit: "Built with ♥ by",
@@ -320,6 +346,7 @@ export const translations: Record<Language, Translations> = {
     nav: {
       whyAether: "Tại sao chọn Aether",
       features: "Tính năng",
+      docs: "Tài liệu",
       download: "Tải về",
       shortcuts: "Phím tắt",
       changelog: "Nhật ký",
@@ -329,11 +356,19 @@ export const translations: Record<Language, Translations> = {
     },
     hero: {
       releaseBadge: "Bản phát hành {version} đã sẵn sàng!",
+      betaBadge: "Bản thử nghiệm Beta {version} đã sẵn sàng!",
       titleLine1: "API Của Bạn. Tệp Của Bạn.",
       titleHighlight: "Quyền Kiểm Soát Của Bạn.",
       subtitle:
         "API client mã nguồn mở hiện đại, lưu trữ toàn bộ dữ liệu dưới dạng tệp YAML thuần trong kho Git của bạn. Không thu thập dữ liệu (Zero telemetry), mã hóa trực tiếp trên thiết bị và hiệu năng Rust vượt trội.",
       downloadLinux: "Tải về cho Linux",
+      downloadStable: "Tải bản Ổn định",
+      downloadBeta: "Tải bản Beta Thử nghiệm",
+      stableLabel: "Bản Ổn định",
+      betaLabel: "Bản Beta",
+      recommended: "Khuyên dùng",
+      earlyAccess: "Trải nghiệm sớm",
+      betaDisclaimer: "Bao gồm các tính năng thử nghiệm mới nhất; có thể còn lỗi nhỏ.",
       whyAetherBtn: "Tại sao chọn Aether?",
       downloads: {
         universal: "Linux Phổ quát",
@@ -428,6 +463,9 @@ export const translations: Record<Language, Translations> = {
       title: "Cài Đặt Trên Linux Trong Vài Giây",
       description:
         "Chọn định dạng gói cài đặt ưa thích của bạn hoặc tự biên dịch trực tiếp từ mã nguồn.",
+      channelLabel: "Kênh phát hành",
+      channelStable: "Ổn định ({version})",
+      channelBeta: "Beta ({version})",
       tabs: {
         deb: "Debian / Ubuntu (.deb)",
         rpm: "Fedora / RHEL (.rpm)",
@@ -470,6 +508,7 @@ export const translations: Record<Language, Translations> = {
       brandSubtitle: "API Client thế hệ mới lưu trữ cục bộ và chuẩn Git.",
       github: "GitHub",
       releases: "Bản phát hành",
+      docs: "Tài liệu hướng dẫn",
       license: "Giấy phép MIT",
       changelog: "Nhật ký thay đổi",
       credit: "Được phát triển với ♥ bởi",
