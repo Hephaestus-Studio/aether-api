@@ -264,7 +264,7 @@ pub async fn delete_item(path: String, state: State<'_, AppState>) -> Result<(),
     Ok(())
 }
 
-/// Response payload returned after replicating a Request node.
+/// Response payload returned after replicating a Request, Folder, or Collection node.
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DuplicateResult {
@@ -272,13 +272,90 @@ pub struct DuplicateResult {
     pub id: String,
     /// Absolute filesystem path.
     pub new_path: String,
-    /// Name of the duplicated request.
+    /// Name of the duplicated resource.
     pub name: String,
-    /// HTTP method of the duplicated request.
-    pub method: String,
+    /// HTTP method of the duplicated request (if node is request).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub method: Option<String>,
+    /// Node type of the duplicated item: "request" | "folder" | "collection".
+    pub node_type: String,
 }
 
-/// Tauri command to duplicate a request config file, appending copy suffixes to name and filename.
+/// Recursively clones children of a collection or folder directory, generating fresh UUID v7
+/// filenames and directory names, updating timestamps while preserving names and internal relative sequence ordering.
+fn duplicate_directory_children(src: &Path, dest: &Path) -> Result<(), AppError> {
+    if !src.is_dir() {
+        return Ok(());
+    }
+
+    let entries = std::fs::read_dir(src)?;
+    for entry in entries.flatten() {
+        let path = entry.path();
+        let file_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+
+        // Skip parent metadata files as they have already been customized and written to dest
+        if file_name == "collection.yml"
+            || file_name == "collection.yaml"
+            || file_name == "folder.yml"
+            || file_name == "folder.yaml"
+        {
+            continue;
+        }
+
+        if path.is_file() {
+            let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
+            if ext == "yml" || ext == "yaml" {
+                if let Ok(mut req) = crate::engine::yaml_parser::read_and_validate_yaml::<
+                    crate::models::request::Request,
+                >(&path)
+                {
+                    let now = Utc::now();
+                    req.created_at = now;
+                    req.updated_at = now;
+                    let new_uuid = uuid::Uuid::now_v7();
+                    let dest_file = dest.join(format!("{}.yml", new_uuid));
+                    crate::engine::yaml_parser::atomic_write_yaml(&dest_file, &req)?;
+                    continue;
+                }
+            }
+            let dest_file = dest.join(file_name);
+            let _ = std::fs::copy(&path, &dest_file);
+        } else if path.is_dir() {
+            let fold_yml = path.join("folder.yml");
+            let fold_yaml = path.join("folder.yaml");
+            let meta_file = if fold_yml.exists() {
+                Some(fold_yml)
+            } else if fold_yaml.exists() {
+                Some(fold_yaml)
+            } else {
+                None
+            };
+
+            let new_subfolder_uuid = uuid::Uuid::now_v7();
+            let dest_subfolder = dest.join(new_subfolder_uuid.to_string());
+            std::fs::create_dir_all(&dest_subfolder)?;
+
+            if let Some(meta) = meta_file {
+                if let Ok(mut fold) = crate::engine::yaml_parser::read_and_validate_yaml::<
+                    crate::models::folder::Folder,
+                >(&meta)
+                {
+                    let now = Utc::now();
+                    fold.created_at = now;
+                    fold.updated_at = now;
+                    let dest_meta = dest_subfolder.join("folder.yml");
+                    let _ = crate::engine::yaml_parser::atomic_write_yaml(&dest_meta, &fold);
+                }
+            }
+
+            duplicate_directory_children(&path, &dest_subfolder)?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Tauri command to duplicate a request config file, folder, or collection, appending copy suffixes to name.
 ///
 /// # Errors
 /// Returns [`AppError::WorkspaceNotOpened`] if no workspace is opened,
@@ -296,47 +373,139 @@ pub async fn duplicate_item(
     } else {
         ws_state.path.join(&path)
     };
-    if !src.exists() || src.is_dir() {
+    if !src.exists() {
         return Err(AppError::ItemNotFound(path));
     }
 
     let parent = src.parent().ok_or(AppError::InvalidPath)?;
 
-    // Use UUID v7 for the duplicate filename to ensure uniqueness
+    if src.is_file() {
+        // Use UUID v7 for the duplicate filename to ensure uniqueness
+        let uuid = uuid::Uuid::now_v7();
+        let dest = parent.join(format!("{}.yml", uuid));
+
+        let mut req: crate::models::request::Request =
+            crate::engine::yaml_parser::read_and_validate_yaml(&src)?;
+
+        req.name = format!("{} (Copy)", req.name);
+        let now = Utc::now();
+        req.created_at = now;
+        req.updated_at = now;
+
+        let new_seq = crate::engine::fractional_index::FractionalIndexer::generate_between(
+            req.seq.as_deref(),
+            None,
+        );
+        req.seq = Some(new_seq);
+
+        let method = req.method.to_string();
+        let name = req.name.clone();
+
+        crate::engine::yaml_parser::atomic_write_yaml(&dest, &req)?;
+
+        let id = dest
+            .strip_prefix(&ws_state.path)
+            .unwrap_or(&dest)
+            .to_string_lossy()
+            .to_string();
+
+        return Ok(DuplicateResult {
+            id,
+            new_path: dest.to_string_lossy().to_string(),
+            name,
+            method: Some(method),
+            node_type: "request".to_string(),
+        });
+    }
+
+    // src is a directory: Collection or Folder
+    let col_yml = src.join("collection.yml");
+    let col_yaml = src.join("collection.yaml");
+    let fold_yml = src.join("folder.yml");
+    let fold_yaml = src.join("folder.yaml");
+
+    let is_collection = col_yml.exists() || col_yaml.exists();
+    let is_folder = fold_yml.exists() || fold_yaml.exists();
+
+    if !is_collection && !is_folder {
+        return Err(AppError::ItemNotFound(path));
+    }
+
     let uuid = uuid::Uuid::now_v7();
-    let dest = parent.join(format!("{}.yml", uuid));
+    let dest = parent.join(uuid.to_string());
+    std::fs::create_dir_all(&dest)?;
 
-    let mut req: crate::models::request::Request =
-        crate::engine::yaml_parser::read_and_validate_yaml(&src)?;
+    if is_collection {
+        let meta_file = if col_yml.exists() { col_yml } else { col_yaml };
+        let mut col: crate::models::collection::Collection =
+            crate::engine::yaml_parser::read_and_validate_yaml(&meta_file)?;
 
-    req.name = format!("{} (Copy)", req.name);
-    let now = Utc::now();
-    req.created_at = now;
-    req.updated_at = now;
+        col.name = format!("{} (Copy)", col.name);
+        let now = Utc::now();
+        col.created_at = now;
+        col.updated_at = now;
 
-    let new_seq = crate::engine::fractional_index::FractionalIndexer::generate_between(
-        req.seq.as_deref(),
-        None,
-    );
-    req.seq = Some(new_seq);
+        let new_seq = crate::engine::fractional_index::FractionalIndexer::generate_between(
+            col.seq.as_deref(),
+            None,
+        );
+        col.seq = Some(new_seq);
 
-    let method = req.method.to_string();
-    let name = req.name.clone();
+        let name = col.name.clone();
+        let dest_meta = dest.join("collection.yml");
+        crate::engine::yaml_parser::atomic_write_yaml(&dest_meta, &col)?;
 
-    crate::engine::yaml_parser::atomic_write_yaml(&dest, &req)?;
+        duplicate_directory_children(&src, &dest)?;
 
-    let id = dest
-        .strip_prefix(&ws_state.path)
-        .unwrap_or(&dest)
-        .to_string_lossy()
-        .to_string();
+        let id = dest
+            .strip_prefix(&ws_state.path)
+            .unwrap_or(&dest)
+            .to_string_lossy()
+            .to_string();
 
-    Ok(DuplicateResult {
-        id,
-        new_path: dest.to_string_lossy().to_string(),
-        name,
-        method,
-    })
+        Ok(DuplicateResult {
+            id,
+            new_path: dest.to_string_lossy().to_string(),
+            name,
+            method: None,
+            node_type: "collection".to_string(),
+        })
+    } else {
+        let meta_file = if fold_yml.exists() { fold_yml } else { fold_yaml };
+        let mut fold: crate::models::folder::Folder =
+            crate::engine::yaml_parser::read_and_validate_yaml(&meta_file)?;
+
+        fold.name = format!("{} (Copy)", fold.name);
+        let now = Utc::now();
+        fold.created_at = now;
+        fold.updated_at = now;
+
+        let new_seq = crate::engine::fractional_index::FractionalIndexer::generate_between(
+            fold.seq.as_deref(),
+            None,
+        );
+        fold.seq = Some(new_seq);
+
+        let name = fold.name.clone();
+        let dest_meta = dest.join("folder.yml");
+        crate::engine::yaml_parser::atomic_write_yaml(&dest_meta, &fold)?;
+
+        duplicate_directory_children(&src, &dest)?;
+
+        let id = dest
+            .strip_prefix(&ws_state.path)
+            .unwrap_or(&dest)
+            .to_string_lossy()
+            .to_string();
+
+        Ok(DuplicateResult {
+            id,
+            new_path: dest.to_string_lossy().to_string(),
+            name,
+            method: None,
+            node_type: "folder".to_string(),
+        })
+    }
 }
 
 /// Response payload containing the resolved layout sequence.
@@ -676,3 +845,109 @@ pub async fn update_folder(
     crate::engine::yaml_parser::atomic_write_yaml(&fold_file, &fold_to_save)?;
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::collection::Collection;
+    use crate::models::folder::Folder;
+    use crate::models::request::{HttpMethod, Request};
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_duplicate_directory_children_deep() {
+        let temp = tempdir().unwrap();
+        let src_col = temp.path().join("collections").join("col_1");
+        std::fs::create_dir_all(&src_col).unwrap();
+
+        // 1. Create collection.yml
+        let mut col = Collection::new("Users API");
+        col.seq = Some("a0".to_string());
+        crate::engine::yaml_parser::atomic_write_yaml(&src_col.join("collection.yml"), &col)
+            .unwrap();
+
+        // 2. Create a root request
+        let mut req1 = Request::new("Get All Users");
+        req1.method = HttpMethod::Get;
+        req1.url = "https://api.example.com/users".to_string();
+        req1.seq = Some("a0".to_string());
+        crate::engine::yaml_parser::atomic_write_yaml(&src_col.join("req1.yml"), &req1).unwrap();
+
+        // 3. Create a subfolder with folder.yml and a nested request
+        let subfolder = src_col.join("subfolder_1");
+        std::fs::create_dir_all(&subfolder).unwrap();
+
+        let mut fold = Folder::new("Auth");
+        fold.seq = Some("a1".to_string());
+        crate::engine::yaml_parser::atomic_write_yaml(&subfolder.join("folder.yml"), &fold).unwrap();
+
+        let mut req2 = Request::new("Login");
+        req2.method = HttpMethod::Post;
+        req2.url = "https://api.example.com/login".to_string();
+        req2.seq = Some("a0".to_string());
+        crate::engine::yaml_parser::atomic_write_yaml(&subfolder.join("req2.yml"), &req2).unwrap();
+
+        // 4. Duplicate into dest
+        let dest_col = temp.path().join("collections").join("col_2");
+        std::fs::create_dir_all(&dest_col).unwrap();
+
+        // Write dest collection.yml with (Copy)
+        let mut col_copy = col.clone();
+        col_copy.name = format!("{} (Copy)", col.name);
+        crate::engine::yaml_parser::atomic_write_yaml(&dest_col.join("collection.yml"), &col_copy)
+            .unwrap();
+
+        // Run recursive duplication
+        duplicate_directory_children(&src_col, &dest_col).unwrap();
+
+        // Validate dest
+        assert!(dest_col.join("collection.yml").exists());
+        let read_col: Collection =
+            crate::engine::yaml_parser::read_and_validate_yaml(&dest_col.join("collection.yml"))
+                .unwrap();
+        assert_eq!(read_col.name, "Users API (Copy)");
+
+        // Check duplicated root request
+        let dest_entries: Vec<_> = std::fs::read_dir(&dest_col)
+            .unwrap()
+            .flatten()
+            .map(|e| e.path())
+            .collect();
+        let req_files: Vec<_> = dest_entries
+            .iter()
+            .filter(|p| p.is_file() && p.file_name().unwrap() != "collection.yml")
+            .collect();
+        assert_eq!(req_files.len(), 1);
+
+        let read_req: Request =
+            crate::engine::yaml_parser::read_and_validate_yaml(req_files[0]).unwrap();
+        assert_eq!(read_req.name, "Get All Users");
+        assert_eq!(read_req.method, HttpMethod::Get);
+
+        // Check duplicated subfolder
+        let subfolders: Vec<_> = dest_entries.iter().filter(|p| p.is_dir()).collect();
+        assert_eq!(subfolders.len(), 1);
+        let dest_subfolder = subfolders[0];
+        assert!(dest_subfolder.join("folder.yml").exists());
+
+        let read_fold: Folder = crate::engine::yaml_parser::read_and_validate_yaml(
+            &dest_subfolder.join("folder.yml"),
+        )
+        .unwrap();
+        assert_eq!(read_fold.name, "Auth");
+
+        let inner_reqs: Vec<_> = std::fs::read_dir(dest_subfolder)
+            .unwrap()
+            .flatten()
+            .map(|e| e.path())
+            .filter(|p| p.is_file() && p.file_name().unwrap() != "folder.yml")
+            .collect();
+        assert_eq!(inner_reqs.len(), 1);
+
+        let read_inner_req: Request =
+            crate::engine::yaml_parser::read_and_validate_yaml(&inner_reqs[0]).unwrap();
+        assert_eq!(read_inner_req.name, "Login");
+        assert_eq!(read_inner_req.method, HttpMethod::Post);
+    }
+}
+

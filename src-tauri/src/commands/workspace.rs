@@ -321,21 +321,9 @@ pub fn create_workspace_scaffold(path: &Path) -> Result<(), AppError> {
     let ws_file = path.join("workspace.yml");
     crate::engine::yaml_parser::atomic_write_yaml(&ws_file, &workspace)?;
 
-    // Scaffold dev.yml environment
+    // Scaffold environments directory
     let env_dir = path.join("environments");
     std::fs::create_dir_all(&env_dir)?;
-    let mut dev_env = crate::models::environment::Environment::new("dev");
-    dev_env
-        .variables
-        .push(crate::models::environment::Variable {
-            name: "base_url".to_string(),
-            value: "http://localhost:8080".to_string(),
-            var_type: crate::models::environment::VariableType::Default,
-            enabled: true,
-            description: Some("Base API server URL".to_string()),
-        });
-    let dev_file = env_dir.join("dev.yml");
-    crate::engine::yaml_parser::atomic_write_yaml(&dev_file, &dev_env)?;
 
     // Scaffold sample requests collection folders
     let col_dir = path.join("collections");

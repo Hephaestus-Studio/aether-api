@@ -248,7 +248,8 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
         id: string;
         newPath: string;
         name: string;
-        method: string;
+        method?: string;
+        nodeType: "request" | "folder" | "collection";
       }>("duplicate_item", { path: node.id });
 
       if (workspacePath) {
@@ -256,14 +257,19 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
         setTreeData(tree.children);
       }
 
-      openTab({
-        id: result.newPath,
-        name: result.name,
-        method: result.method || node.method || "GET",
-        isDirty: false,
-      });
+      if (result.nodeType === "request") {
+        openTab({
+          id: result.newPath,
+          name: result.name,
+          method: result.method || node.method || "GET",
+          isDirty: false,
+          nodeType: "request",
+        });
+      } else {
+        setNodeExpanded(result.id, true);
+      }
     } catch (err: any) {
-      console.error("Failed to duplicate request:", err);
+      console.error("Failed to duplicate item:", err);
       alert(err.message || String(err));
     }
   };
@@ -642,7 +648,9 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
               <Menu.Item onClick={handleNewFolder}>New Folder</Menu.Item>
             </>
           )}
-          {!isFolder && node.nodeType === "request" && (
+          {(node.nodeType === "request" ||
+            node.nodeType === "folder" ||
+            node.nodeType === "collection") && (
             <Menu.Item onClick={handleDuplicate}>Duplicate</Menu.Item>
           )}
           <Menu.Item onClick={handleRename}>Rename</Menu.Item>

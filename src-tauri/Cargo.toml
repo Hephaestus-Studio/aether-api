@@ -1,6 +1,6 @@
 [package]
 name = "aether-api"
-version = "0.3.0-beta.1"
+version = "0.3.0-beta.2"
 description = "Next-generation local-first and git-centric API client"
 authors = ["Hephaestus Studio"]
 edition = "2021"
