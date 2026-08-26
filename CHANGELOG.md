@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0-beta.2] - 2026-08-26
+
+### Documentation
+
+- *(changelog)* Update CHANGELOG.md for v0.3.0-beta.1 [skip ci] - ([4bc1966](https://github.com/Hephaestus-Studio/aether-api/commit/4bc1966eaa4c7767cd6967448b37f4aacfabca0c))
 ## [0.3.0-beta.1] - 2026-08-25
 
 ### Documentation
@@ -174,6 +179,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Build
 
 - Generate application icons for desktop, android, and ios using tauri icon - ([d2fefe2](https://github.com/Hephaestus-Studio/aether-api/commit/d2fefe202e673796672317eccc27645b96d45d15))
+[0.3.0-beta.2]: https://github.com/Hephaestus-Studio/aether-api/compare/v0.3.0-beta.1...v0.3.0-beta.2
 [0.3.0-beta.1]: https://github.com/Hephaestus-Studio/aether-api/compare/v0.2.0...v0.3.0-beta.1
 [0.2.0]: https://github.com/Hephaestus-Studio/aether-api/compare/v0.2.0-beta.4...v0.2.0
 [0.2.0-beta.4]: https://github.com/Hephaestus-Studio/aether-api/compare/v0.2.0-beta.3...v0.2.0-beta.4
