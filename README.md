@@ -6,7 +6,7 @@
 <br/>
 
 **Your APIs. Your Files. Your Control.**  
-_Aether API là API Client mã nguồn mở thế hệ mới: **Local-first**, **Git-centric**, bảo mật cao và siêu nhẹ dành cho lập trình viên._
+_The next-generation open-source API client: **Local-first**, **Git-centric**, ultra-lightweight, and privacy-focused._
 
 <br/>
 
@@ -14,54 +14,54 @@ _Aether API là API Client mã nguồn mở thế hệ mới: **Local-first**, *
 [![Tauri v2](https://img.shields.io/badge/Tauri-v2-orange.svg)](https://v2.tauri.app/)
 [![React 19](https://img.shields.io/badge/React-19-61dafb.svg)](https://react.dev/)
 [![Rust](https://img.shields.io/badge/Rust-reqwest-dea584.svg)](https://www.rust-lang.org/)
-[![Local First](https://img.shields.io/badge/Privacy-100%25%20Local--First-brightgreen.svg)](#tuyên-ngôn-quyền-riêng-tư-privacy-manifesto)
+[![Local First](https://img.shields.io/badge/Privacy-100%25%20Local--First-brightgreen.svg)](#privacy-manifesto)
 
 </div>
 
 ---
 
-## Giới thiệu (Overview)
+## Overview
 
-**Aether API** sinh ra để giải quyết triệt để sự phụ thuộc vào cloud, tình trạng vendor lock-in, thu thập dữ liệu (telemetry) và tốc độ nặng nề của các công cụ API truyền thống.
+**Aether API** is an open-source, local-first, and Git-centric API development client built to eliminate cloud dependency, vendor lock-in, telemetry tracking, and bloated memory usage common in traditional API tools.
 
-Toàn bộ collections, folders, requests và environments của bạn được lưu dưới dạng **tệp tin YAML chuẩn trên ổ đĩa**, sẵn sàng đưa vào **Git** để phân nhánh (branch), đánh giá (PR review), và cộng tác cùng đồng đội mà không cần tài khoản hay server trung gian.
+All collections, folders, requests, and environments are saved directly as **human-readable YAML files on your disk**. This allows you to manage API workspaces with **Git**—branching, code reviews, pull requests, and offline team collaboration without mandatory accounts or third-party servers.
 
 ---
 
-## Tính năng nổi bật (Key Features)
+## Key Features
 
 ### 1. File-System & Git-Centric Workspaces
 
-- Workspaces là các thư mục thông thường trên máy tính của bạn.
-- Mọi thay đổi lưu trực tiếp thành các file `.yml` tinh gọn, sẵn sàng cho `git commit`, `git merge`, `git diff`.
-- Tự động đồng bộ với hệ thống tệp tin (File System Watcher) theo thời gian thực.
+- Workspaces are standard local directories on your computer.
+- Every change is saved directly into clean `.yml` files, ready for `git commit`, `git merge`, and `git diff`.
+- Built-in real-time File System Watcher automatically synchronizes external disk modifications.
 
-### 2. Trải nghiệm gửi Request mạnh mẽ & Chuẩn xác
+### 2. Powerful & Accurate Request Execution
 
-- **Đầy đủ HTTP Methods**: `GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `HEAD`, `OPTIONS`.
-- **Query Params & Custom Headers**: Trình biên tập bảng trực quan, bật/tắt từng dòng linh hoạt.
-- **Authentication**: Hỗ trợ Bearer Token, Basic Auth, API Key (Header/Query).
-- **Body Formats đa dạng**: `JSON` (kèm Monaco Editor & format tự động), `Text`, `XML`, `Form URL-Encoded`, `Multipart Form Data` (hỗ trợ file upload), và `Binary`.
-- **Response Viewer chuyên sâu**:
-  - Chế độ **Pretty** (Monaco Editor với theme tối ưu), **Raw**, **Preview**.
-  - Bảng thống kê Headers, Request Timeline, Status Code, Latency (ms), và Dung lượng dữ liệu.
-  - Tải response về máy (`Download Response`).
+- **Comprehensive HTTP Methods**: `GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `HEAD`, `OPTIONS`.
+- **Query Parameters & Headers Editor**: Intuitive key-value table with bulk edits and individual toggle switches.
+- **Authentication**: Native support for Bearer Token, Basic Auth, and API Key (Header / Query).
+- **Rich Body Formats**: `JSON` (powered by Monaco Editor with syntax highlighting & auto-format), `Text`, `XML`, `Form URL-Encoded`, `Multipart Form Data` (file uploads), and `Binary`.
+- **Advanced Response Viewer**:
+  - View modes: **Pretty**, **Raw**, and **Preview**.
+  - Detailed response metrics: Status Code, Response Timeline, Latency (ms), Download Size, and Response Headers.
+  - One-click response export (`Download Response`).
 
-### 3. Biến môi trường thông minh & Placeholder Autocomplete
+### 3. Smart Environments & Autocomplete
 
-- Hỗ trợ cú pháp `{{variable_name}}` trên toàn bộ URL, Headers, Params, Auth và Request Body.
-- **Tự động gợi ý (Autocomplete)** khi gõ `{{` với điều hướng bàn phím `↑` `↓` `Enter`.
-- **Secret Masking**: Giá trị nhạy cảm (API Keys, Passwords, Tokens) được ẩn dạng `••••••••` kèm icon mắt bật/tắt và tooltip xem chi tiết nguồn biến (_Global_ vs _Environment_).
-- **Mã hoá On-Device (AES-256-GCM)**: Secret variables được bảo vệ bằng passphrase master key với thuật toán mã hoá mạnh mẽ, không bao giờ lưu trữ plain text lên ổ đĩa.
+- Universal variable substitution syntax: `{{variable_name}}` in URLs, Headers, Query Params, Auth, and Request Bodies.
+- **Trigger Autocomplete** simply by typing `{{` with keyboard navigation (`↑`, `↓`, `Enter`).
+- **Secret Masking & Tooltip Details**: Sensitive values (API keys, passwords, tokens) are masked as `••••••••` with quick reveal toggle and tooltip showing variable origin (_Global_ vs _Environment_).
+- **On-Device Cryptography (AES-256-GCM)**: Secret environment variables are encrypted using master key passphrases with AES-256-GCM + PBKDF2; sensitive secrets are never saved in plain text.
 
-### 4. Terminal nhúng đa Tab (Embedded Multi-Tab Terminal)
+### 4. Embedded Multi-Tab Terminal
 
-- Tích hợp terminal thật (PTY) ngay trong ứng dụng được phát triển bằng Rust và xterm.js.
-- Hỗ trợ mở nhiều tab terminal độc lập, chạy trực tiếp `git`, `curl`, `npm`, `cargo` ngay tại thư mục workspace.
+- Integrated pseudo-terminal (PTY) built with Rust and xterm.js.
+- Open multiple independent terminal tabs to run `git`, `curl`, `npm`, `cargo`, and local scripts directly in your workspace directory.
 
-### 5. Tự động sinh mã nguồn (Code Snippets Generator)
+### 5. Instant Code Snippet Generator
 
-- Chuyển đổi mọi HTTP request thành mã nguồn chỉ với 1 click:
+- Convert any HTTP request into production-ready code with a single click:
   - **cURL**, **HTTPie**, **Wget**
   - **JavaScript / TypeScript (Fetch API)**
   - **Python (Requests)**
@@ -69,107 +69,106 @@ Toàn bộ collections, folders, requests và environments của bạn được 
   - **Go (net/http)**
   - **Java (OkHttp)**
 
-### 6. Phím tắt & Công cụ điều hướng cấp tốc (Power Tools)
+### 6. Power Tools & Keyboard Navigation
 
-- **Search Open Tabs (`Ctrl+Shift+A`)**: Tìm kiếm và chuyển tab đang mở siêu tốc với bộ lọc method và cảnh báo unsaved dirty dot `●`.
-- **Quick Open (`Ctrl+P`)**: Tìm kiếm mở nhanh file request / folder trong explorer.
-- **Command Palette (`Ctrl+K` / `Ctrl+Shift+P`)**: Danh mục toàn bộ hành động nhanh.
-- **Lăn chuột cuộn Tab (Mouse Wheel)**: Rê chuột vào thanh tab bar và lăn con lăn để trượt danh sách tab sang trái/phải mượt mà.
-
----
-
-## Tuyên ngôn Quyền riêng tư (Privacy Manifesto)
-
-- **100% Local-First & Zero Telemetry**: Aether API không thu thập, không theo dõi, không gửi bất kỳ request headers, payloads hay responses nào về server bên ngoài.
-- **Bảo mật tuyệt đối**: Dữ liệu và bí mật của bạn chỉ nằm trên máy tính của bạn.
-- **Không Vendor Lock-in**: Toàn quyền sao lưu, đồng bộ qua Git, Google Drive, Dropbox hoặc bất kỳ nền tảng nào bạn chọn.
+- **Quick Open (`Ctrl+P`)**: Fuzzy find and jump to any request or folder in the workspace.
+- **Search Open Tabs (`Ctrl+Shift+A`)**: Instantly search open tabs with HTTP method badges and dirty indicators `●`.
+- **Command Palette (`Ctrl+K` / `Ctrl+Shift+P`)**: Access all application actions from one central menu.
+- **Horizontal Tab Scrolling**: Smooth mouse wheel scroll support across open request tabs.
 
 ---
 
-## Công nghệ sử dụng (Tech Stack)
+## Privacy Manifesto
 
-| Thành phần                      | Công nghệ                                                                                                    |
-| :------------------------------ | :----------------------------------------------------------------------------------------------------------- |
-| **Core Shell & Native Backend** | [Tauri v2](https://v2.tauri.app/) (Rust 2021)                                                                |
-| **HTTP Engine**                 | [Reqwest](https://github.com/seanmonstar/reqwest) + [Tokio](https://tokio.rs/)                               |
-| **Frontend Framework**          | [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/) + [Vite](https://vitejs.dev/) |
-| **UI Components & Icons**       | [Mantine v7](https://mantine.dev/) + [Tabler Icons](https://tabler.io/icons)                                 |
-| **Code Editor**                 | [Monaco Editor](https://microsoft.github.io/monaco-editor/)                                                  |
-| **Terminal**                    | [xterm.js](https://xtermjs.org/) + Portable PTY                                                              |
-| **Mã hoá (Cryptography)**       | AES-256-GCM + PBKDF2 (Rust `aes-gcm` crate)                                                                  |
+- **100% Local-First & Zero Telemetry**: Aether API does not track, collect, or send your API keys, payloads, or responses to any external analytics server.
+- **Complete Data Ownership**: Your data stays exclusively on your machine and in your own Git repositories.
+- **No Vendor Lock-in**: Full freedom to backup, sync, and share through Git, Google Drive, Dropbox, or any self-hosted solution.
 
 ---
 
-## Hướng dẫn Cài đặt & Chạy Development (Getting Started)
+## Tech Stack
 
-### Yêu cầu hệ thống (Prerequisites)
+| Component | Technology |
+| :--- | :--- |
+| **Core Shell & Backend** | [Tauri v2](https://v2.tauri.app/) (Rust 2021) |
+| **HTTP Engine** | [Reqwest](https://github.com/seanmonstar/reqwest) + [Tokio](https://tokio.rs/) |
+| **Frontend Framework** | [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/) + [Vite](https://vitejs.dev/) |
+| **UI Components & Icons** | [Mantine v7](https://mantine.dev/) + [Tabler Icons](https://tabler.io/icons) |
+| **Code Editor** | [Monaco Editor](https://microsoft.github.io/monaco-editor/) |
+| **Terminal Engine** | [xterm.js](https://xtermjs.org/) + Portable PTY |
+| **Cryptography** | AES-256-GCM + PBKDF2 (Rust `aes-gcm` crate) |
 
-1. **Node.js**: Phiên bản 18.x trở lên.
-2. **pnpm**: Trình quản lý package (`npm install -g pnpm`).
-3. **Rust Toolchain**: Đã cài đặt `cargo` và `rustc` ([rustup.rs](https://rustup.rs/)).
-4. **Cài đặt thư viện hệ thống cần thiết cho Tauri (Linux)**:
+---
+
+## Getting Started
+
+### Prerequisites
+
+1. **Node.js**: Version 18.x or higher.
+2. **pnpm**: Package manager (`npm install -g pnpm`).
+3. **Rust Toolchain**: `cargo` and `rustc` installed via [rustup.rs](https://rustup.rs/).
+4. **Linux System Dependencies** (Debian / Ubuntu):
 
    ```bash
-   # Debian/Ubuntu
    sudo apt update && sudo apt install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
    ```
 
-### Các bước khởi chạy
+### Development Setup
 
 ```bash
-# 1. Clone repository
+# 1. Clone the repository
 git clone https://github.com/Hephaestus-Studio/aether-api.git
 cd aether-api
 
-# 2. Cài đặt dependencies
+# 2. Install dependencies
 pnpm install
 
-# 3. Chạy ứng dụng ở môi trường Development (Hot reload frontend + backend)
+# 3. Launch application in development mode (with hot reload)
 pnpm tauri dev
 ```
 
-### Build ứng dụng ra bộ cài đặt (Production Build)
+### Production Build
 
 ```bash
-# Build binary và bộ cài đặt (AppImage, deb, dmg, msi, exe tuỳ OS)
+# Compile binary and package installer (AppImage, deb, dmg, msi, exe based on OS)
 pnpm tauri build
 ```
 
 ---
 
-## ⌨Phím tắt mặc định (Keyboard Shortcuts)
+## Keyboard Shortcuts
 
-| Phím tắt                                | Chức năng                                            |
-| :-------------------------------------- | :--------------------------------------------------- |
-| **`Ctrl + Enter`**                      | Gửi Request hiện tại (Send Request)                  |
-| **`Ctrl + S`**                          | Lưu Request hiện tại                                 |
-| **`Ctrl + W`**                          | Đóng tab đang mở (kèm xác nhận Unsaved)              |
-| **`Ctrl + Shift + A`**                  | Tìm kiếm nhanh các tab đang mở (Search Tabs)         |
-| **`Ctrl + P`**                          | Mở nhanh file / request trong Workspace (Quick Open) |
-| **`Ctrl + K`** / **`Ctrl + Shift + P`** | Mở bảng điều khiển lệnh (Command Palette)            |
-| **`Ctrl + \``**                         | Bật / Tắt thanh Terminal Panel                       |
-| **`Ctrl + O`**                          | Chọn và mở thư mục Workspace mới                     |
-
----
-
-## Đóng góp (Contributing)
-
-Chúng tôi luôn hoan nghênh mọi sự đóng góp từ cộng đồng!
-
-1. Fork repository.
-2. Tạo branch tính năng của bạn (`git checkout -b feature/amazing-feature`).
-3. Commit các thay đổi (`git commit -m 'feat: add amazing feature'`).
-4. Đẩy branch lên remote (`git push origin feature/amazing-feature`).
-5. Mở một **Pull Request**.
+| Shortcut | Description |
+| :--- | :--- |
+| **`Ctrl + Enter`** | Send current request |
+| **`Ctrl + S`** | Save current request |
+| **`Ctrl + W`** | Close current tab (with unsaved changes prompt) |
+| **`Ctrl + Shift + A`** | Quick search open tabs |
+| **`Ctrl + P`** | Quick Open request / file in workspace |
+| **`Ctrl + K`** / **`Ctrl + Shift + P`** | Open Command Palette |
+| **`Ctrl + \``** | Toggle Terminal Panel |
+| **`Ctrl + O`** | Open a new workspace folder |
 
 ---
 
-## Bản quyền (License)
+## Contributing
 
-Dự án được phân phối dưới giấy phép **MIT License**. Xem chi tiết tại tệp [LICENSE](LICENSE).
+Contributions from the community are warmly welcomed!
+
+1. Fork the repository.
+2. Create your feature branch (`git checkout -b feature/amazing-feature`).
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`).
+4. Push to the branch (`git push origin feature/amazing-feature`).
+5. Open a **Pull Request**.
+
+---
+
+## License
+
+This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for details.
 
 ---
 
 <div align="center">
-  <sub>Xây dựng với ❤️ bởi <strong>Hephaestus Studio</strong>.</sub>
+  <sub>Built with ❤️ by <strong>Hephaestus Studio</strong>.</sub>
 </div>
