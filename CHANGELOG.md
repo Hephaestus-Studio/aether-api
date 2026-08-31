@@ -5,11 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [unreleased]
+## [0.3.0-beta.3] - 2026-08-31
 
 ### Documentation
 
 - *(changelog)* Update CHANGELOG.md for v0.3.0-beta.2 [skip ci] - ([8677a6a](https://github.com/Hephaestus-Studio/aether-api/commit/8677a6adb082313d78d60c6cadc1927c98f33381))
+- Update README with English documentation and clean heading styles - ([45d33c3](https://github.com/Hephaestus-Studio/aether-api/commit/45d33c3890ea539c1ecc31b8f42bcc494e844fb3))
+
+### Maintenance
+
+- *(changelog)* Update cliff.toml configuration and changelog format - ([2272e21](https://github.com/Hephaestus-Studio/aether-api/commit/2272e21e36f626741339e8762f092fd6b308b49c))
 
 ## [0.3.0-beta.2] - 2026-08-26
 
