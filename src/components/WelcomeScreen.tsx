@@ -231,7 +231,7 @@ export default function WelcomeScreen() {
               <img src={logoUrl} alt="AetherAPI Logo" className={classes.logo} />
               <div>
                 <h1 className={classes.title}>AetherAPI</h1>
-                <span className={classes.version}>v0.3.0-beta.2</span>
+                <span className={classes.version}>v0.3.0-beta.3</span>
               </div>
             </div>
           </div>

@@ -88,15 +88,15 @@ All collections, folders, requests, and environments are saved directly as **hum
 
 ## Tech Stack
 
-| Component | Technology |
-| :--- | :--- |
-| **Core Shell & Backend** | [Tauri v2](https://v2.tauri.app/) (Rust 2021) |
-| **HTTP Engine** | [Reqwest](https://github.com/seanmonstar/reqwest) + [Tokio](https://tokio.rs/) |
-| **Frontend Framework** | [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/) + [Vite](https://vitejs.dev/) |
-| **UI Components & Icons** | [Mantine v7](https://mantine.dev/) + [Tabler Icons](https://tabler.io/icons) |
-| **Code Editor** | [Monaco Editor](https://microsoft.github.io/monaco-editor/) |
-| **Terminal Engine** | [xterm.js](https://xtermjs.org/) + Portable PTY |
-| **Cryptography** | AES-256-GCM + PBKDF2 (Rust `aes-gcm` crate) |
+| Component                 | Technology                                                                                                   |
+| :------------------------ | :----------------------------------------------------------------------------------------------------------- |
+| **Core Shell & Backend**  | [Tauri v2](https://v2.tauri.app/) (Rust 2021)                                                                |
+| **HTTP Engine**           | [Reqwest](https://github.com/seanmonstar/reqwest) + [Tokio](https://tokio.rs/)                               |
+| **Frontend Framework**    | [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/) + [Vite](https://vitejs.dev/) |
+| **UI Components & Icons** | [Mantine v7](https://mantine.dev/) + [Tabler Icons](https://tabler.io/icons)                                 |
+| **Code Editor**           | [Monaco Editor](https://microsoft.github.io/monaco-editor/)                                                  |
+| **Terminal Engine**       | [xterm.js](https://xtermjs.org/) + Portable PTY                                                              |
+| **Cryptography**          | AES-256-GCM + PBKDF2 (Rust `aes-gcm` crate)                                                                  |
 
 ---
 
@@ -138,16 +138,16 @@ pnpm tauri build
 
 ## Keyboard Shortcuts
 
-| Shortcut | Description |
-| :--- | :--- |
-| **`Ctrl + Enter`** | Send current request |
-| **`Ctrl + S`** | Save current request |
-| **`Ctrl + W`** | Close current tab (with unsaved changes prompt) |
-| **`Ctrl + Shift + A`** | Quick search open tabs |
-| **`Ctrl + P`** | Quick Open request / file in workspace |
-| **`Ctrl + K`** / **`Ctrl + Shift + P`** | Open Command Palette |
-| **`Ctrl + \``** | Toggle Terminal Panel |
-| **`Ctrl + O`** | Open a new workspace folder |
+| Shortcut                                | Description                                     |
+| :-------------------------------------- | :---------------------------------------------- |
+| **`Ctrl + Enter`**                      | Send current request                            |
+| **`Ctrl + S`**                          | Save current request                            |
+| **`Ctrl + W`**                          | Close current tab (with unsaved changes prompt) |
+| **`Ctrl + Shift + A`**                  | Quick search open tabs                          |
+| **`Ctrl + P`**                          | Quick Open request / file in workspace          |
+| **`Ctrl + K`** / **`Ctrl + Shift + P`** | Open Command Palette                            |
+| **`Ctrl + \``**                         | Toggle Terminal Panel                           |
+| **`Ctrl + O`**                          | Open a new workspace folder                     |
 
 ---
 

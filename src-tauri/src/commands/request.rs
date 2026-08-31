@@ -480,7 +480,8 @@ async fn load_environment_variables(
         crate::engine::yaml_parser::read_and_validate_yaml(&env_file)?;
 
     let master_key = crate::engine::key_manager::get_master_key(workspace_path);
-    let salt = workspace_path.to_string_lossy().as_bytes().to_vec();
+    let ws_salt = crate::commands::workspace::ensure_workspace_salt(workspace_path)?;
+    let legacy_salt = workspace_path.to_string_lossy().as_bytes().to_vec();
 
     let mut map = HashMap::new();
     for mut var in env.variables {
@@ -490,8 +491,12 @@ async fn load_environment_variables(
         ) && crate::engine::crypto::is_encrypted(&var.value)
         {
             if let Some(ref key) = master_key {
-                if let Ok(decrypted) = crate::engine::crypto::decrypt_secret(&var.value, key, &salt)
-                {
+                if let Ok(decrypted) = crate::engine::crypto::decrypt_secret_with_fallback(
+                    &var.value,
+                    key,
+                    &ws_salt,
+                    Some(&legacy_salt),
+                ) {
                     var.value = decrypted;
                 }
             }

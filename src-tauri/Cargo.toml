@@ -1,6 +1,6 @@
 [package]
 name = "aether-api"
-version = "0.3.0-beta.2"
+version = "0.3.0-beta.3"
 description = "Next-generation local-first and git-centric API client"
 authors = ["Hephaestus Studio"]
 edition = "2021"
@@ -39,4 +39,3 @@ aes-gcm = "0.11.0"
 pbkdf2 = { version = "0.13.0", default-features = false, features = ["hmac", "sha2"] }
 sha2 = "0.11.0"
 rand = "0.10.2"
-

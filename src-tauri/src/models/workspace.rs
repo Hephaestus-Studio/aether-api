@@ -80,6 +80,10 @@ pub struct Workspace {
 
     /// Index of the currently active/focused tab in `active_tabs`.
     pub active_tab_index: usize,
+
+    /// Cryptographic salt for PBKDF2 Master Key derivation (Base64 encoded).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub salt: Option<String>,
 }
 
 impl Workspace {
@@ -100,6 +104,7 @@ impl Workspace {
             settings: WorkspaceSettings::default(),
             active_tabs: Vec::new(),
             active_tab_index: 0,
+            salt: Some(crate::engine::crypto::generate_salt()),
         }
     }
 }

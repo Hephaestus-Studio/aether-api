@@ -6,11 +6,21 @@ use aes_gcm::aead::{Aead, KeyInit};
 use aes_gcm::{Aes256Gcm, Nonce};
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine as _;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex, OnceLock};
 
 const CIPHER_PREFIX: &str = "enc:aes-gcm:";
 const PBKDF2_ROUNDS: u32 = 100_000;
 const NONCE_SIZE: usize = 12; // 96 bits for AES-GCM
 const KEY_SIZE: usize = 32; // 256 bits
+
+/// Thread-safe in-memory cache for derived keys to prevent re-running 100k PBKDF2 iterations per variable.
+static DERIVED_KEY_CACHE: OnceLock<Arc<Mutex<HashMap<(String, Vec<u8>), [u8; KEY_SIZE]>>>> =
+    OnceLock::new();
+
+fn get_derived_key_cache() -> &'static Arc<Mutex<HashMap<(String, Vec<u8>), [u8; KEY_SIZE]>>> {
+    DERIVED_KEY_CACHE.get_or_init(|| Arc::new(Mutex::new(HashMap::new())))
+}
 
 /// Derives a 256-bit AES key from either a 32-byte Base64 key or an arbitrary passphrase.
 pub fn derive_key(key_input: &str, salt: &[u8]) -> Result<[u8; KEY_SIZE], AppError> {
@@ -30,20 +40,37 @@ pub fn derive_key(key_input: &str, salt: &[u8]) -> Result<[u8; KEY_SIZE], AppErr
         }
     }
 
-    // Otherwise derive key via PBKDF2-HMAC-SHA256
-    let mut key = [0u8; KEY_SIZE];
     let effective_salt = if salt.is_empty() {
         b"aether-api-default-salt-v1"
     } else {
         salt
     };
 
+    let cache_key = (trimmed.to_string(), effective_salt.to_vec());
+    let cache = get_derived_key_cache();
+
+    if let Ok(guard) = cache.lock() {
+        if let Some(cached_key) = guard.get(&cache_key) {
+            return Ok(*cached_key);
+        }
+    }
+
+    // Otherwise derive key via PBKDF2-HMAC-SHA256
+    let mut key = [0u8; KEY_SIZE];
     pbkdf2::pbkdf2_hmac::<sha2::Sha256>(
         trimmed.as_bytes(),
         effective_salt,
         PBKDF2_ROUNDS,
         &mut key,
     );
+
+    if let Ok(mut guard) = cache.lock() {
+        // Keep cache bounded to avoid unbounded RAM usage
+        if guard.len() > 64 {
+            guard.clear();
+        }
+        guard.insert(cache_key, key);
+    }
 
     Ok(key)
 }
@@ -52,6 +79,23 @@ pub fn derive_key(key_input: &str, salt: &[u8]) -> Result<[u8; KEY_SIZE], AppErr
 pub fn generate_random_key() -> String {
     let bytes: [u8; KEY_SIZE] = rand::random();
     BASE64.encode(bytes)
+}
+
+const SALT_SIZE: usize = 16; // 128 bits for PBKDF2 salt
+
+/// Generates a cryptographically secure random salt encoded in Base64 (16 bytes).
+pub fn generate_salt() -> String {
+    let bytes: [u8; SALT_SIZE] = rand::random();
+    BASE64.encode(bytes)
+}
+
+/// Decodes a Base64 salt string to bytes, or returns a default domain salt if decoding fails or is empty.
+pub fn decode_salt(salt_str: &str) -> Vec<u8> {
+    let trimmed = salt_str.trim();
+    if trimmed.is_empty() {
+        return b"aether-api-default-salt-v1".to_vec();
+    }
+    BASE64.decode(trimmed).unwrap_or_else(|_| trimmed.as_bytes().to_vec())
 }
 
 /// Checks whether a given string is in the encrypted format `enc:aes-gcm:...`.
@@ -135,6 +179,28 @@ pub fn decrypt_secret(
         .map_err(|e| AppError::CryptoError(format!("Decrypted data is not valid UTF-8: {}", e)))
 }
 
+/// Decrypts an encrypted string with a primary salt, and optionally falls back to a legacy salt if primary decryption fails.
+pub fn decrypt_secret_with_fallback(
+    encrypted_str: &str,
+    key_input: &str,
+    primary_salt: &[u8],
+    fallback_salt: Option<&[u8]>,
+) -> Result<String, AppError> {
+    match decrypt_secret(encrypted_str, key_input, primary_salt) {
+        Ok(decrypted) => Ok(decrypted),
+        Err(err) => {
+            if let Some(fallback) = fallback_salt {
+                if fallback != primary_salt {
+                    if let Ok(decrypted) = decrypt_secret(encrypted_str, key_input, fallback) {
+                        return Ok(decrypted);
+                    }
+                }
+            }
+            Err(err)
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -210,6 +276,35 @@ mod tests {
 
         let result = decrypt_secret(&corrupted, "key-123", salt);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_generate_salt_and_decode() {
+        let salt_b64 = generate_salt();
+        let decoded = decode_salt(&salt_b64);
+        assert_eq!(decoded.len(), SALT_SIZE);
+    }
+
+    #[test]
+    fn test_decrypt_with_fallback_success() {
+        let legacy_salt = b"legacy_path_salt_123";
+        let workspace_salt = decode_salt(&generate_salt());
+        let passphrase = "my-test-password";
+        let secret = "secret_api_token_value";
+
+        // Encrypted with legacy salt
+        let encrypted_legacy = encrypt_secret(secret, passphrase, legacy_salt).unwrap();
+
+        // Attempt decrypt with workspace_salt (should fail if no fallback, but succeed with fallback)
+        let decrypted = decrypt_secret_with_fallback(
+            &encrypted_legacy,
+            passphrase,
+            &workspace_salt,
+            Some(legacy_salt),
+        )
+        .unwrap();
+
+        assert_eq!(decrypted, secret);
     }
 
     #[test]

@@ -81,6 +81,8 @@ pub async fn open_workspace(
     if !workspace_yml.exists() {
         tracing::info!("Scaffolding new workspace.yml at {}", path.display());
         create_workspace_scaffold(&path)?;
+    } else {
+        let _ = ensure_workspace_salt(&path);
     }
 
     let tree = FsScanner::scan(&path)?;
@@ -332,6 +334,31 @@ pub fn create_workspace_scaffold(path: &Path) -> Result<(), AppError> {
     Ok(())
 }
 
+/// Ensures that the workspace has a persistent cryptographic salt in `workspace.yml`
+/// and returns the decoded salt byte vector.
+pub fn ensure_workspace_salt(workspace_path: &Path) -> Result<Vec<u8>, AppError> {
+    let ws_file = workspace_path.join("workspace.yml");
+    if ws_file.exists() {
+        if let Ok(mut workspace) =
+            crate::engine::yaml_parser::read_and_validate_yaml::<crate::models::workspace::Workspace>(&ws_file)
+        {
+            if let Some(ref salt_str) = workspace.salt {
+                if !salt_str.trim().is_empty() {
+                    return Ok(crate::engine::crypto::decode_salt(salt_str));
+                }
+            }
+
+            // Salt missing in existing workspace.yml -> generate and persist
+            let new_salt = crate::engine::crypto::generate_salt();
+            workspace.salt = Some(new_salt.clone());
+            let _ = crate::engine::yaml_parser::atomic_write_yaml(&ws_file, &workspace);
+            return Ok(crate::engine::crypto::decode_salt(&new_salt));
+        }
+    }
+
+    Ok(crate::engine::crypto::decode_salt(""))
+}
+
 /// Scans child contents in a directory to resolve the largest sequence string (used for sequential append placement).
 pub fn get_last_seq_in_dir(dir_path: &Path) -> Option<String> {
     let mut seqs = Vec::new();
@@ -414,4 +441,32 @@ pub fn update_app_config(
     app_handle: tauri::AppHandle,
 ) -> Result<(), AppError> {
     crate::engine::config::ConfigManager::write_config(&app_handle, &config)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_ensure_workspace_salt_creates_and_persists() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let ws_path = temp_dir.path();
+
+        // Create scaffold without salt
+        create_workspace_scaffold(ws_path).unwrap();
+
+        // Call ensure_workspace_salt
+        let salt1 = ensure_workspace_salt(ws_path).unwrap();
+        assert!(!salt1.is_empty());
+
+        // Call again and verify it returns identical salt
+        let salt2 = ensure_workspace_salt(ws_path).unwrap();
+        assert_eq!(salt1, salt2);
+
+        // Verify workspace.yml contains the salt
+        let ws_file = ws_path.join("workspace.yml");
+        let ws: crate::models::workspace::Workspace =
+            crate::engine::yaml_parser::read_and_validate_yaml(&ws_file).unwrap();
+        assert!(ws.salt.is_some());
+    }
 }

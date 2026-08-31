@@ -198,7 +198,8 @@ pub async fn set_master_key(
         return Err(AppError::CryptoError("Master Key cannot be empty".into()));
     }
 
-    let salt = ws_state.path.to_string_lossy().as_bytes().to_vec();
+    let ws_salt = crate::commands::workspace::ensure_workspace_salt(&ws_state.path)?;
+    let legacy_salt = ws_state.path.to_string_lossy().as_bytes().to_vec();
 
     if let Some(existing_key) = key_manager::get_master_key(&ws_state.path) {
         // Workspace already has an active master key in RAM -> changing/rotating key requires validating current_key
@@ -240,10 +241,15 @@ pub async fn set_master_key(
                                         crate::models::environment::VariableType::Secret
                                     ) {
                                         if let Ok(decrypted) =
-                                            crypto::decrypt_secret(&v.value, &existing_key, &salt)
+                                            crypto::decrypt_secret_with_fallback(
+                                                &v.value,
+                                                &existing_key,
+                                                &ws_salt,
+                                                Some(&legacy_salt),
+                                            )
                                         {
                                             if let Ok(re_encrypted) =
-                                                crypto::encrypt_secret(&decrypted, &new_key, &salt)
+                                                crypto::encrypt_secret(&decrypted, &new_key, &ws_salt)
                                             {
                                                 v.value = re_encrypted;
                                                 modified = true;
@@ -263,28 +269,61 @@ pub async fn set_master_key(
         }
     } else {
         // No active master key in RAM yet -> user is unlocking or setting for the first time.
-        // If workspace already has encrypted secrets, verify that the key can decrypt them!
+        // If workspace already has encrypted secrets, verify that the key can decrypt them,
+        // and automatically re-encrypt any legacy secrets to the new workspace salt!
         let env_dir = ws_state.path.join("environments");
         if env_dir.exists() {
             if let Ok(entries) = std::fs::read_dir(&env_dir) {
                 for entry in entries.flatten() {
                     let path = entry.path();
                     if path.is_file() {
-                        if let Ok(env) = crate::engine::yaml_parser::read_and_validate_yaml::<
-                            crate::models::environment::Environment,
-                        >(&path)
-                        {
-                            for v in &env.variables {
-                                if matches!(
-                                    v.var_type,
-                                    crate::models::environment::VariableType::Secret
-                                ) && crypto::is_encrypted(&v.value)
-                                {
-                                    if crypto::decrypt_secret(&v.value, &new_key, &salt).is_err() {
-                                        return Err(AppError::InvalidMasterKey(
-                                            "The provided Master Key cannot decrypt this workspace's secret variables.".into(),
-                                        ));
+                        let is_yaml = path
+                            .extension()
+                            .and_then(|e| e.to_str())
+                            .map(|ext| {
+                                ext.eq_ignore_ascii_case("yml") || ext.eq_ignore_ascii_case("yaml")
+                            })
+                            .unwrap_or(false);
+                        if is_yaml {
+                            if let Ok(mut env) = crate::engine::yaml_parser::read_and_validate_yaml::<
+                                crate::models::environment::Environment,
+                            >(&path)
+                            {
+                                let mut modified = false;
+                                for v in &mut env.variables {
+                                    if matches!(
+                                        v.var_type,
+                                        crate::models::environment::VariableType::Secret
+                                    ) && crypto::is_encrypted(&v.value)
+                                    {
+                                        match crypto::decrypt_secret_with_fallback(
+                                            &v.value,
+                                            &new_key,
+                                            &ws_salt,
+                                            Some(&legacy_salt),
+                                        ) {
+                                            Ok(decrypted) => {
+                                                // If secret was encrypted with legacy salt, upgrade to ws_salt
+                                                if crypto::decrypt_secret(&v.value, &new_key, &ws_salt).is_err() {
+                                                    if let Ok(re_encrypted) =
+                                                        crypto::encrypt_secret(&decrypted, &new_key, &ws_salt)
+                                                    {
+                                                        v.value = re_encrypted;
+                                                        modified = true;
+                                                    }
+                                                }
+                                            }
+                                            Err(_) => {
+                                                return Err(AppError::InvalidMasterKey(
+                                                    "The provided Master Key cannot decrypt this workspace's secret variables.".into(),
+                                                ));
+                                            }
+                                        }
                                     }
+                                }
+                                if modified {
+                                    let _ = crate::engine::yaml_parser::atomic_write_yaml(&path, &env);
+                                    tracing::info!("Migrated legacy secrets to workspace salt for {:?}", path);
                                 }
                             }
                         }
@@ -428,7 +467,8 @@ pub async fn read_environment(
         crate::engine::yaml_parser::read_and_validate_yaml(&env_file)?;
 
     let master_key = key_manager::get_master_key(&ws_state.path);
-    let salt = ws_state.path.to_string_lossy().as_bytes().to_vec();
+    let ws_salt = crate::commands::workspace::ensure_workspace_salt(&ws_state.path)?;
+    let legacy_salt = ws_state.path.to_string_lossy().as_bytes().to_vec();
 
     // Read legacy .env variables in case this workspace is being migrated
     let legacy_map = read_legacy_dot_env(&ws_state.path, &name);
@@ -445,7 +485,12 @@ pub async fn read_environment(
         // Check if value is encrypted
         if is_secret && crypto::is_encrypted(&var.value) {
             if let Some(ref key) = master_key {
-                match crypto::decrypt_secret(&var.value, key, &salt) {
+                match crypto::decrypt_secret_with_fallback(
+                    &var.value,
+                    key,
+                    &ws_salt,
+                    Some(&legacy_salt),
+                ) {
                     Ok(decrypted) => {
                         final_val = decrypted;
                         is_locked = false;
@@ -568,7 +613,7 @@ pub async fn update_environment(
     }
 
     let master_key = key_manager::get_master_key(&ws_state.path);
-    let salt = ws_state.path.to_string_lossy().as_bytes().to_vec();
+    let ws_salt = crate::commands::workspace::ensure_workspace_salt(&ws_state.path)?;
 
     let mut updated_variables = Vec::new();
     for v in variables {
@@ -591,7 +636,7 @@ pub async fn update_environment(
             } else {
                 // User provided / edited secret plaintext -> must encrypt with Master Key!
                 let key_str = master_key.as_ref().ok_or(AppError::MasterKeyRequired)?;
-                crypto::encrypt_secret(&v.value, key_str, &salt)?
+                crypto::encrypt_secret(&v.value, key_str, &ws_salt)?
             }
         } else {
             v.value
