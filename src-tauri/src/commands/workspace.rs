@@ -29,6 +29,8 @@ pub struct AppState {
     pub request_tracker: crate::engine::http_client::RequestTracker,
     /// Shared manager for active PTY terminal sessions.
     pub terminal_manager: crate::commands::terminal::TerminalManager,
+    /// Shared manager for active WebSocket client connections.
+    pub ws_manager: std::sync::Arc<crate::engine::websocket_client::WebSocketManager>,
 }
 
 impl AppState {
@@ -39,9 +41,11 @@ impl AppState {
             http_executor,
             request_tracker: crate::engine::http_client::RequestTracker::new(),
             terminal_manager: crate::commands::terminal::TerminalManager::new(),
+            ws_manager: std::sync::Arc::new(crate::engine::websocket_client::WebSocketManager::new()),
         }
     }
 }
+
 
 /// Information payload detailing workspace characteristics.
 #[derive(Debug, Clone, Serialize)]
@@ -368,7 +372,7 @@ pub fn get_last_seq_in_dir(dir_path: &Path) -> Option<String> {
             if path.is_dir() {
                 let meta_yml = path.join("collection.yml");
                 if meta_yml.exists() {
-                    if let Ok((_, Some(seq), _)) =
+                    if let Ok((_, Some(seq), _, _)) =
                         crate::engine::yaml_parser::peek_metadata(&meta_yml)
                     {
                         seqs.push(seq);
@@ -376,7 +380,7 @@ pub fn get_last_seq_in_dir(dir_path: &Path) -> Option<String> {
                 } else {
                     let folder_yml = path.join("folder.yml");
                     if folder_yml.exists() {
-                        if let Ok((_, Some(seq), _)) =
+                        if let Ok((_, Some(seq), _, _)) =
                             crate::engine::yaml_parser::peek_metadata(&folder_yml)
                         {
                             seqs.push(seq);
@@ -384,10 +388,11 @@ pub fn get_last_seq_in_dir(dir_path: &Path) -> Option<String> {
                     }
                 }
             } else if path.is_file() {
-                if let Ok((_, Some(seq), _)) = crate::engine::yaml_parser::peek_metadata(&path) {
+                if let Ok((_, Some(seq), _, _)) = crate::engine::yaml_parser::peek_metadata(&path) {
                     seqs.push(seq);
                 }
             }
+
         }
     }
     seqs.sort();

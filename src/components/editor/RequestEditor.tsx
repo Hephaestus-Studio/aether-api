@@ -24,6 +24,7 @@ import BodyEditor from "./BodyEditor";
 import AuthEditor from "./AuthEditor";
 import UrlInput from "./UrlInput";
 import CodeSnippetModal from "@/components/snippet/CodeSnippetModal";
+
 import type { ParsedCurl } from "@/utils/curlParser";
 import { buildUrlWithParams, parseParamsFromUrl } from "@/utils/url";
 import type { HttpRequestDetails } from "@/types/request";
@@ -80,7 +81,7 @@ export default memo(function RequestEditor({ tabId }: Readonly<RequestEditorProp
       case "http":
         return <IconGlobe size={16} color="#00b4d8" />;
       case "websocket":
-        return <IconPlug size={16} color="#ff9f1c" />;
+        return <IconPlug size={16} color="#00b4d8" />;
       case "socketio":
         return <IconBolt size={16} color="#ffca3a" />;
       case "graphql":
@@ -96,11 +97,18 @@ export default memo(function RequestEditor({ tabId }: Readonly<RequestEditorProp
 
   const handleProtocolChange = (proto: string) => {
     setProtocol(tabId, proto);
-    notifications.show({
-      title: "Protocol Selected",
-      message: `Switched to ${proto.toUpperCase()} client layout (pipeline integration coming soon).`,
-      color: "indigo",
-    });
+    if (proto === "websocket") {
+      setResponsePanelOpened(true);
+    } else {
+      notifications.show({
+        title: "Protocol Selected",
+        message: `Switched to ${proto.toUpperCase()} client layout (pipeline integration coming soon).`,
+        color: "indigo",
+      });
+    }
+    if (request) {
+      handleChange({ protocol: proto });
+    }
   };
 
   useEffect(() => {
@@ -331,26 +339,13 @@ export default memo(function RequestEditor({ tabId }: Readonly<RequestEditorProp
             >
               <span style={{ width: 88, display: "inline-block" }}>HTTP</span>
             </Menu.Item>
-            <Menu.Item leftSection={<IconPlug size={16} color="#ff9f1c" />} disabled>
-              <div style={{ display: "inline-flex", alignItems: "center" }}>
-                <span style={{ width: 88, display: "inline-block" }}>WebSocket</span>
-                <span
-                  style={{
-                    fontSize: 9.5,
-                    fontWeight: 500,
-                    padding: "1px 6px",
-                    borderRadius: 4,
-                    backgroundColor: "rgba(255, 255, 255, 0.08)",
-                    color: "#8e8e93",
-                    whiteSpace: "nowrap",
-                    lineHeight: 1.3,
-                    letterSpacing: "0.2px",
-                  }}
-                >
-                  Coming soon
-                </span>
-              </div>
+            <Menu.Item
+              leftSection={<IconPlug size={16} color="#00b4d8" />}
+              onClick={() => handleProtocolChange("websocket")}
+            >
+              <span style={{ width: 88, display: "inline-block" }}>WebSocket</span>
             </Menu.Item>
+
             <Menu.Item leftSection={<IconBolt size={16} color="#ffca3a" />} disabled>
               <div style={{ display: "inline-flex", alignItems: "center" }}>
                 <span style={{ width: 88, display: "inline-block" }}>Socket.IO</span>

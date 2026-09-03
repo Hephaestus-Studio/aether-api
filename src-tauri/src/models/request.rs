@@ -198,10 +198,61 @@ impl Default for RequestSettings {
     }
 }
 
-/// Represents a single HTTP Request entity.
+/// Preset / saved message template for WebSocket requests.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct WebSocketSavedMessage {
+    /// Unique identifier for the preset message.
+    pub id: String,
+    /// Friendly label or name.
+    pub name: String,
+    /// Message format: "json", "text", or "binary".
+    pub format: String,
+    /// The message payload string.
+    pub payload: String,
+}
+
+/// Settings specific to WebSocket connections.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct WebSocketSettings {
+    /// Heartbeat ping interval in seconds (0 to disable).
+    #[serde(default)]
+    pub heartbeat_interval_secs: u64,
+    /// Whether to automatically reply with a Pong frame when receiving a Ping.
+    #[serde(default = "default_true")]
+    pub auto_pong: bool,
+    /// Whether to attempt reconnection if connection drops unexpectedly.
+    #[serde(default)]
+    pub auto_reconnect: bool,
+    /// Maximum number of reconnection attempts.
+    #[serde(default = "default_max_reconnect")]
+    pub max_reconnect_attempts: u32,
+}
+
+fn default_true() -> bool {
+    true
+}
+
+fn default_max_reconnect() -> u32 {
+    5
+}
+
+impl Default for WebSocketSettings {
+    fn default() -> Self {
+        Self {
+            heartbeat_interval_secs: 0,
+            auto_pong: true,
+            auto_reconnect: false,
+            max_reconnect_attempts: 5,
+        }
+    }
+}
+
+/// Represents a single Request entity (HTTP or WebSocket).
 ///
-/// Contains all configuration data necessary to execute an HTTP request,
-/// including method, URL, parameters, headers, authentication, body, and options.
+/// Contains all configuration data necessary to execute an HTTP or WebSocket request,
+/// including protocol, method, URL, parameters, headers, authentication, body, and options.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Request {
@@ -211,6 +262,10 @@ pub struct Request {
     /// The entity type identifier, which is always "request".
     #[serde(rename = "type")]
     pub entity_type: String, // "request"
+
+    /// Protocol type: "http" (default) or "websocket".
+    #[serde(default = "default_protocol")]
+    pub protocol: String,
 
     /// The name of the request.
     pub name: String,
@@ -247,6 +302,18 @@ pub struct Request {
 
     /// Execution settings specific to this request.
     pub settings: RequestSettings,
+
+    /// Saved messages / presets for WebSocket requests.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub saved_messages: Option<Vec<WebSocketSavedMessage>>,
+
+    /// WebSocket-specific connection settings.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ws_settings: Option<WebSocketSettings>,
+}
+
+fn default_protocol() -> String {
+    "http".to_string()
 }
 
 #[allow(dead_code)]
@@ -260,6 +327,7 @@ impl Request {
         Self {
             schema_version: "1.0.0".to_string(),
             entity_type: "request".to_string(),
+            protocol: "http".to_string(),
             name: name.into(),
             description: None,
             seq: None,
@@ -272,12 +340,15 @@ impl Request {
             auth: AuthConfig::default(),
             body: RequestBody::default(),
             settings: RequestSettings::default(),
+            saved_messages: None,
+            ws_settings: None,
         }
     }
 
     /// Compares all user-editable content fields, ignoring timestamps (`created_at`, `updated_at`).
     pub fn content_equals(&self, other: &Request) -> bool {
         self.name == other.name
+            && self.protocol == other.protocol
             && self.description == other.description
             && self.method == other.method
             && self.url == other.url
@@ -287,5 +358,8 @@ impl Request {
             && self.body == other.body
             && self.settings == other.settings
             && self.seq == other.seq
+            && self.saved_messages == other.saved_messages
+            && self.ws_settings == other.ws_settings
     }
 }
+

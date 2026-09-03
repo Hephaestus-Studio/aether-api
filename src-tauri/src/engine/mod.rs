@@ -15,4 +15,5 @@ pub mod git_engine;
 pub mod http_client;
 pub mod key_manager;
 pub mod variable_resolver;
+pub mod websocket_client;
 pub mod yaml_parser;

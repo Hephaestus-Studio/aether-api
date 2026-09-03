@@ -11,4 +11,5 @@ pub mod environment;
 pub mod git;
 pub mod request;
 pub mod terminal;
+pub mod websocket;
 pub mod workspace;

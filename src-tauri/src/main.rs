@@ -93,13 +93,26 @@ fn main() {
             commands::git::git_get_conflict_details,
             commands::git::git_resolve_conflict,
             commands::git::git_abort_merge,
+            commands::websocket::ws_connect,
+            commands::websocket::ws_send_message,
+            commands::websocket::ws_send_ping,
+            commands::websocket::ws_disconnect,
+            commands::websocket::ws_get_metrics,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
+                let app = window.app_handle();
+                if let Some(state) = app.try_state::<commands::workspace::AppState>() {
+                    let ws_mgr = std::sync::Arc::clone(&state.ws_manager);
+                    tauri::async_runtime::spawn(async move {
+                        ws_mgr.close_all().await;
+                    });
+                }
                 let label = window.label();
                 if label == "main" {
                     window.app_handle().exit(0);
                 } else if label == "welcome" {
+
                     let app = window.app_handle();
                     if let Some(main_window) = app.get_webview_window("main") {
                         if !main_window.is_visible().unwrap_or(false) {

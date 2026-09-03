@@ -422,7 +422,7 @@ pub async fn cancel_request(
 }
 
 /// Helper function to retrieve all environment variables for resolution (global + active environment file).
-async fn get_all_variables(
+pub(crate) async fn get_all_variables(
     workspace_path: &Path,
     env_name: Option<&str>,
 ) -> Result<HashMap<String, crate::models::environment::Variable>, AppError> {

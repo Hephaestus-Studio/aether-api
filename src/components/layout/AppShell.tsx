@@ -10,8 +10,10 @@ import SplitPane from "./SplitPane";
 import TerminalPanel from "./TerminalPanel";
 import EnvironmentPanel from "@/components/environment/EnvironmentPanel";
 import RequestEditor from "@/components/editor/RequestEditor";
+import WebSocketEditor from "@/components/editor/websocket/WebSocketEditor";
 import FolderEditor from "@/components/editor/FolderEditor";
 import ResponseViewer from "@/components/response/ResponseViewer";
+import WebSocketStreamViewer from "@/components/editor/websocket/WebSocketStreamViewer";
 import QuickOpen from "@/components/tools/QuickOpen";
 import CommandPalette from "@/components/tools/CommandPalette";
 import UnlockMasterKeyModal from "@/components/modals/UnlockMasterKeyModal";
@@ -33,6 +35,7 @@ export default function AppShell() {
 
   const tabs = useTabStore((s) => s.tabs);
   const activeTabId = useTabStore((s) => s.activeTabId);
+  const protocols = useTabStore((s) => s.protocols);
   const bottomPanelOpened = useTabStore((s) => s.bottomPanelOpened);
   const activeBottomPanelTab = useTabStore((s) => s.activeBottomPanelTab);
   const responsePanelOpened = useTabStore((s) => s.responsePanelOpened);
@@ -41,6 +44,10 @@ export default function AppShell() {
   const activeTab = tabs.find((t) => t.id === activeTabId);
   const isFolderOrCollectionTab =
     activeTab?.nodeType === "folder" || activeTab?.nodeType === "collection";
+  const activeProtocol = activeTab
+    ? protocols[activeTab.id] || activeTab.protocol || "http"
+    : "http";
+  const isWebSocket = activeProtocol === "websocket";
 
   const MIN_SIDEBAR_WIDTH = 280;
   const MAX_SIDEBAR_WIDTH = 600;
@@ -113,7 +120,7 @@ export default function AppShell() {
               topPanel={
                 activeTab ? (
                   <SplitPane
-                    collapsed={!responsePanelOpened || isFolderOrCollectionTab}
+                    collapsed={(!responsePanelOpened && !isWebSocket) || isFolderOrCollectionTab}
                     topPanel={
                       <Box style={{ width: "100%", height: "100%", position: "relative" }}>
                         {activeTab.nodeType === "folder" || activeTab.nodeType === "collection" ? (
@@ -122,6 +129,8 @@ export default function AppShell() {
                             tabId={activeTab.id}
                             nodeType={activeTab.nodeType}
                           />
+                        ) : isWebSocket ? (
+                          <WebSocketEditor key={activeTab.id} tabId={activeTab.id} />
                         ) : (
                           <RequestEditor key={activeTab.id} tabId={activeTab.id} />
                         )}
@@ -129,9 +138,13 @@ export default function AppShell() {
                     }
                     bottomPanel={
                       <Box style={{ width: "100%", height: "100%", position: "relative" }}>
-                        {activeTab.nodeType !== "folder" && activeTab.nodeType !== "collection" && (
-                          <ResponseViewer key={activeTab.id} tabId={activeTab.id} />
-                        )}
+                        {activeTab.nodeType !== "folder" &&
+                          activeTab.nodeType !== "collection" &&
+                          (isWebSocket ? (
+                            <WebSocketStreamViewer key={activeTab.id} tabId={activeTab.id} />
+                          ) : (
+                            <ResponseViewer key={activeTab.id} tabId={activeTab.id} />
+                          ))}
                       </Box>
                     }
                     orientation={layoutOrientation}
@@ -144,6 +157,7 @@ export default function AppShell() {
                   </Box>
                 )
               }
+
               bottomPanel={
                 bottomPanelOpened ? (
                   <Box style={{ height: "100%", width: "100%", position: "relative" }}>

@@ -28,7 +28,9 @@ import classes from "./EditorTabs.module.css";
 export default function EditorTabs() {
   const tabs = useTabStore((s) => s.tabs);
   const activeTabId = useTabStore((s) => s.activeTabId);
+  const protocols = useTabStore((s) => s.protocols);
   const setActiveTab = useTabStore((s) => s.setActiveTab);
+
   const closeTab = useTabStore((s) => s.closeTab);
   const closeOtherTabs = useTabStore((s) => s.closeOtherTabs);
   const closeAllTabs = useTabStore((s) => s.closeAllTabs);
@@ -151,14 +153,23 @@ export default function EditorTabs() {
                         style={{ flexShrink: 0 }}
                       />
                     ) : (
-                      <Text
-                        size="xs"
-                        fw={700}
-                        style={{ color: getMethodColor(tab.method) }}
-                        className={classes.methodText}
-                      >
-                        {tab.method || "GET"}
-                      </Text>
+                      (() => {
+                        const isWs =
+                          protocols[tab.id] === "websocket" ||
+                          tab.protocol === "websocket" ||
+                          tab.method === "WS";
+                        const displayMethod = isWs ? "WS" : tab.method || "GET";
+                        return (
+                          <Text
+                            size="xs"
+                            fw={700}
+                            style={{ color: getMethodColor(displayMethod) }}
+                            className={classes.methodText}
+                          >
+                            {displayMethod}
+                          </Text>
+                        );
+                      })()
                     )}
                     <Text size="xs" className={classes.nameText} truncate>
                       {tab.name}

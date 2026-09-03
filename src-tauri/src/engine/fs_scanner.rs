@@ -46,9 +46,12 @@ pub struct WorkspaceTreeNode {
     pub seq: Option<String>,
     /// Optional HTTP method for request nodes.
     pub method: Option<String>,
+    /// Optional protocol (e.g. "websocket", "http").
+    pub protocol: Option<String>,
     /// Child nodes contained within this directory node.
     pub children: Vec<WorkspaceTreeNode>,
 }
+
 
 /// The root representation of a scanned workspace.
 #[derive(Debug, Clone, Serialize)]
@@ -154,8 +157,8 @@ impl FsScanner {
             } else {
                 collection_yaml
             };
-            let (name, seq, _) = yaml_parser::peek_metadata(&meta_path)
-                .unwrap_or_else(|_| (dir_name.to_string(), None, None));
+            let (name, seq, _, _) = yaml_parser::peek_metadata(&meta_path)
+                .unwrap_or_else(|_| (dir_name.to_string(), None, None, None));
             (NodeType::Collection, name, seq)
         } else if folder_yml.exists() || folder_yaml.exists() {
             let meta_path = if folder_yml.exists() {
@@ -163,8 +166,8 @@ impl FsScanner {
             } else {
                 folder_yaml
             };
-            let (name, seq, _) = yaml_parser::peek_metadata(&meta_path)
-                .unwrap_or_else(|_| (dir_name.to_string(), None, None));
+            let (name, seq, _, _) = yaml_parser::peek_metadata(&meta_path)
+                .unwrap_or_else(|_| (dir_name.to_string(), None, None, None));
             (NodeType::Folder, name, seq)
         } else {
             (NodeType::Folder, dir_name.to_string(), None)
@@ -184,6 +187,7 @@ impl FsScanner {
             node_type,
             seq,
             method: None,
+            protocol: None,
             children,
         })
     }
@@ -204,7 +208,7 @@ impl FsScanner {
         }
 
         let entity_type = yaml_parser::peek_entity_type(file_path).unwrap_or_default();
-        let (name, seq, method) = yaml_parser::peek_metadata(file_path).unwrap_or_else(|_| {
+        let (name, seq, mut method, protocol) = yaml_parser::peek_metadata(file_path).unwrap_or_else(|_| {
             (
                 file_name
                     .trim_end_matches(".yml")
@@ -212,8 +216,13 @@ impl FsScanner {
                     .to_string(),
                 None,
                 None,
+                None,
             )
         });
+
+        if protocol.as_deref() == Some("websocket") {
+            method = Some("WS".to_string());
+        }
 
         let node_type = match entity_type.as_str() {
             "request" => NodeType::Request,
@@ -229,9 +238,11 @@ impl FsScanner {
             node_type,
             seq,
             method,
+            protocol,
             children: Vec::new(),
         })
     }
+
 
     /// Checks if a file or directory name should be ignored during workspace traversal.
     fn should_ignore(name: &str) -> bool {

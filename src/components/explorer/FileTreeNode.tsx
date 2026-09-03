@@ -37,6 +37,7 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
   const setActiveDraggedId = useWorkspaceStore((s) => s.setActiveDraggedId);
   const [dropPosition, setDropPosition] = useState<"above" | "below" | "inside" | null>(null);
   const openTab = useTabStore((s) => s.openTab);
+  const setProtocol = useTabStore((s) => s.setProtocol);
   const replaceTabId = useTabStore((s) => s.replaceTabId);
   const activeTabId = useTabStore((s) => s.activeTabId);
   const isFolder = node.nodeType === "collection" || node.nodeType === "folder";
@@ -94,7 +95,8 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
     return expanded ? <IconChevronDown size={12} /> : <IconChevronRight size={12} />;
   };
 
-  const getMethodText = (method?: string) => {
+  const getMethodText = (method?: string, protocol?: string) => {
+    if (protocol === "websocket" || method === "WS" || method === "WEBSOCKET") return "WS";
     const m = (method || "GET").toUpperCase();
     if (m === "DELETE") return "DEL";
     if (m === "OPTIONS") return "OPT";
@@ -127,10 +129,16 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
   const handleNodeClick = () => {
     if (isInlineRenaming) return;
     if (node.nodeType === "request") {
+      const isWs =
+        node.protocol === "websocket" || node.method === "WS" || node.method === "WEBSOCKET";
+      const proto = isWs ? "websocket" : "http";
+      const method = isWs ? "WS" : node.method || "GET";
+      setProtocol(node.path, proto);
       openTab({
         id: node.path,
         name: node.name,
-        method: node.method || "GET",
+        method,
+        protocol: proto,
         isDirty: false,
         nodeType: "request",
       });
@@ -395,12 +403,15 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
     dragGhost.className = classes.dragPreview;
 
     if (node.nodeType === "request") {
+      const isWs =
+        node.protocol === "websocket" || node.method === "WS" || node.method === "WEBSOCKET";
+      const effectiveMethod = isWs ? "WS" : node.method || "GET";
       const methodSpan = document.createElement("span");
-      methodSpan.style.color = getMethodColor(node.method);
+      methodSpan.style.color = getMethodColor(effectiveMethod);
       methodSpan.style.fontSize = "10px";
       methodSpan.style.fontWeight = "800";
       methodSpan.style.marginRight = "2px";
-      methodSpan.innerText = getMethodText(node.method);
+      methodSpan.innerText = getMethodText(effectiveMethod, node.protocol);
 
       const labelSpan = document.createElement("span");
       labelSpan.style.fontSize = "12px";
@@ -601,14 +612,17 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
                   <span
                     className={classes.methodTag}
                     style={{
-                      color: getMethodColor(node.method),
-                      backgroundColor: getMethodBgColor(node.method),
+                      color: getMethodColor(node.protocol === "websocket" ? "WS" : node.method),
+                      backgroundColor: getMethodBgColor(
+                        node.protocol === "websocket" ? "WS" : node.method,
+                      ),
                     }}
                   >
-                    {getMethodText(node.method)}
+                    {getMethodText(node.method, node.protocol)}
                   </span>
                 </>
               )}
+
               {isInlineRenaming ? (
                 <input
                   ref={inlineInputRef}

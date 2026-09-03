@@ -26,7 +26,6 @@
   padding: 0 12px;
   background-color: #18181b;
   border: 1px solid #27272a;
-
   border-radius: var(--aether-radius-md);
   cursor: pointer;
   user-select: none;
@@ -43,6 +42,13 @@
 .protocolBtn:hover {
   background-color: #202023;
   border-color: #3f3f46;
+}
+
+.protocolDropdownDropdown {
+  background-color: #18181b !important;
+  border: 1px solid #27272a !important;
+  border-radius: 8px !important;
+  padding: 4px !important;
 }
 
 .requestNameContainer {
@@ -76,28 +82,6 @@
   color: var(--text-primary);
   background-color: transparent !important;
   border: none !important;
-}
-
-.snippetBtn {
-  height: 36px !important;
-  padding: 0 12px !important;
-  font-weight: 600 !important;
-  font-size: var(--aether-font-size-md) !important;
-  border-radius: var(--aether-radius-md) !important;
-  flex-shrink: 0 !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  background-color: rgba(255, 255, 255, 0.04) !important;
-  border: 1px solid var(--border-color) !important;
-  color: var(--text-primary) !important;
-  cursor: pointer !important;
-  transition: all 0.15s ease !important;
-}
-
-.snippetBtn:hover {
-  background-color: rgba(255, 255, 255, 0.09) !important;
-  border-color: rgba(255, 255, 255, 0.25) !important;
 }
 
 .saveBtn {
@@ -148,7 +132,7 @@
   border: 1px solid var(--border-color);
   border-radius: var(--aether-radius-md);
   background-color: var(--bg-app);
-  height: 36px;
+  height: 38px;
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease;
@@ -168,23 +152,82 @@
   font-size: var(--aether-font-size-md);
   font-family: var(--aether-font-mono);
   padding: 0 12px;
-  height: 34px;
+  height: 36px;
   color: var(--text-primary);
 }
 
-.sendBtn {
-  height: 36px;
-  width: 88px;
-  min-width: 88px;
-  font-weight: var(--aether-font-weight-semibold);
+.connectBtn {
+  height: 38px;
+  min-width: 110px;
+  font-weight: 600;
   font-size: var(--aether-font-size-md);
-  padding: 0;
   border-radius: var(--aether-radius-md);
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.15s ease;
+  transition: all 0.15s ease;
+}
+
+.statusIndicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.statusIndicator.connected {
+  background-color: rgba(18, 184, 134, 0.15);
+  color: #20c997;
+  border: 1px solid rgba(18, 184, 134, 0.3);
+}
+
+.statusIndicator.connecting {
+  background-color: rgba(0, 180, 216, 0.15);
+  color: #00b4d8;
+  border: 1px solid rgba(0, 180, 216, 0.3);
+}
+
+.statusIndicator.disconnected {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.statusIndicator.error {
+  background-color: rgba(250, 82, 82, 0.15);
+  color: #ff6b6b;
+  border: 1px solid rgba(250, 82, 82, 0.3);
+}
+
+.pulseDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+.pulseDot.active {
+  box-shadow: 0 0 8px currentColor;
+  animation: pulseAnimation 1.5s infinite;
+}
+
+@keyframes pulseAnimation {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .tabs {
@@ -202,34 +245,14 @@
   min-height: 0;
   overflow: auto;
   padding-top: 8px;
-  height: calc(100% - 38px);
-}
-
-.tabHeaderWrapper {
-  width: 100%;
-}
-
-.tabListContainer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid var(--border-color);
-  margin-bottom: 8px;
-  min-width: 0;
-  gap: 8px;
-  flex-wrap: nowrap !important;
-}
-
-.tabScrollArea {
-  flex: 1;
-  min-width: 0;
 }
 
 .tabList {
-  border-bottom: none !important;
+  border-bottom: 1px solid var(--border-color) !important;
   display: flex !important;
   flex-wrap: nowrap !important;
   white-space: nowrap !important;
+  margin-bottom: 8px;
 }
 
 .tabList :global(.mantine-Tabs-tab) {
@@ -244,80 +267,45 @@
 
 .tabList :global(.mantine-Tabs-tab[data-active]) {
   color: var(--text-primary);
-  border-bottom-color: var(--aether-color-primary-base);
+  border-bottom-color: var(--aether-color-primary-base, #0084ff);
+  font-weight: 600;
 }
 
-.compactTabHeader {
+.composerSection {
+  margin-top: 12px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  min-height: 220px;
+}
+
+.composerHeader {
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--border-color);
-  padding: 4px 0 8px 0;
+  justify-content: space-between;
   margin-bottom: 8px;
+}
+
+.composerControls {
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
-.compactTabSelectBtn {
-  background-color: var(--bg-sidebar);
+.composerEditorContainer {
+  flex: 1;
+  min-height: 140px;
   border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  font-weight: 500;
-  height: 32px;
-  padding: 0 10px;
-  border-radius: 6px;
+  border-radius: var(--aether-radius-md);
+  overflow: hidden;
+  background-color: var(--bg-app);
+}
+
+.composerFooter {
   display: flex;
   align-items: center;
-}
-
-.compactTabSelectBtn:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-.compactTabLabel {
-  color: var(--text-primary);
-  font-size: var(--aether-font-size-sm);
-  font-weight: 600;
-}
-
-.compactTabDropdown {
-  background-color: var(--bg-sidebar) !important;
-  border: 1px solid var(--border-color) !important;
-  padding: 4px !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45) !important;
-}
-
-.compactTabDropdown :global(.mantine-Menu-item) {
-  font-size: var(--aether-font-size-sm);
-  color: var(--text-muted);
-  border-radius: 4px;
-  padding: 6px 10px;
-}
-
-.compactTabDropdown :global(.mantine-Menu-item:hover) {
-  background-color: rgba(255, 255, 255, 0.08);
-  color: var(--text-primary);
-}
-
-.compactItemActive {
-  color: var(--aether-color-primary-base) !important;
-  background-color: rgba(34, 139, 230, 0.1) !important;
-  font-weight: 600;
-}
-
-.protocolBadge {
-  padding: 4px 6px;
-  border-radius: 4px;
-  transition: background-color 0.15s ease;
-}
-
-.protocolBadge:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-}
-
-.protocolDropdownDropdown {
-  background-color: var(--bg-sidebar) !important;
-  border: 1px solid var(--border-color) !important;
-  min-width: 230px !important;
-  padding: 6px !important;
-  border-radius: var(--aether-radius-lg) !important;
+  justify-content: space-between;
+  margin-top: 8px;
+  gap: 8px;
 }

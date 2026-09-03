@@ -1,0 +1,144 @@
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--aether-color-bg-editor);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: rgba(0, 0, 0, 0.15);
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.toolbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 260px;
+}
+
+.toolbarRight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.searchInput {
+  width: 190px;
+}
+
+.searchInput :global(.mantine-Input-input) {
+  font-size: 12px;
+  height: 28px;
+  min-height: 28px;
+  padding-left: 28px !important;
+  background-color: var(--bg-app) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.searchInput :global(.mantine-Input-section[data-position="left"]) {
+  width: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.messagesList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.messageCard {
+  border: 1px solid var(--border-color);
+  border-radius: var(--aether-radius-sm);
+  background-color: rgba(255, 255, 255, 0.02);
+  padding: 8px 10px;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+  position: relative;
+}
+
+.messageCard:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.messageCard.inbound {
+  border-left: 3px solid #20c997;
+}
+
+.messageCard.outbound {
+  border-left: 3px solid #00b4d8;
+}
+
+.messageCard.pingpong {
+  border-left: 3px solid #ffca3a;
+}
+
+.messageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.messageMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.timeText {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--aether-font-mono);
+}
+
+.sizeText {
+  font-size: 11px;
+  color: var(--text-muted);
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.payloadBox {
+  font-family: var(--aether-font-mono);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 6px 8px;
+  background-color: rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 24px;
+  gap: 8px;
+}

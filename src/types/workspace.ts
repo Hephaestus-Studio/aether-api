@@ -19,6 +19,7 @@ export interface WorkspaceTreeNode {
   nodeType: "collection" | "folder" | "request" | "environment" | "config";
   seq?: string;
   method?: string;
+  protocol?: string;
   children: WorkspaceTreeNode[];
 }
 

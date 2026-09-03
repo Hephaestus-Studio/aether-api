@@ -137,8 +137,10 @@ pub fn peek_entity_type(path: &Path) -> Result<String, AppError> {
         })
 }
 
-/// Peeks standard tree metadata fields ('name', 'seq', 'method') from a YAML file.
-pub fn peek_metadata(path: &Path) -> Result<(String, Option<String>, Option<String>), AppError> {
+/// Peeks standard tree metadata fields ('name', 'seq', 'method', 'protocol') from a YAML file.
+pub fn peek_metadata(
+    path: &Path,
+) -> Result<(String, Option<String>, Option<String>, Option<String>), AppError> {
     let raw = std::fs::read_to_string(path)?;
     let val: serde_json::Value =
         serde_yml::from_str(&raw).map_err(|e| AppError::YamlParseError(e.to_string()))?;
@@ -159,8 +161,14 @@ pub fn peek_metadata(path: &Path) -> Result<(String, Option<String>, Option<Stri
         .and_then(|v| v.as_str())
         .map(|s| s.to_string());
 
-    Ok((name, seq, method))
+    let protocol = val
+        .get("protocol")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+
+    Ok((name, seq, method, protocol))
 }
+
 
 #[cfg(test)]
 mod tests {
