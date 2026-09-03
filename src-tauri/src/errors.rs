@@ -67,6 +67,14 @@ pub enum AppError {
     #[error("Not a git repository")]
     NotAGitRepository,
 
+    /// General Git operation error containing detailed message or stderr.
+    #[error("Git error: {0}")]
+    GitError(String),
+
+    /// Error indicating an active merge or rebase conflict.
+    #[error("Git conflict: {0}")]
+    GitConflict(String),
+
     /// Error triggered when a connection or operation exceeds its permitted timeout limit.
     #[error("Timeout error")]
     TimeoutError,
@@ -115,6 +123,8 @@ impl AppError {
             AppError::WorkspaceNotOpened => "WORKSPACE_NOT_OPENED",
             AppError::GitNotFound => "GIT_NOT_FOUND",
             AppError::NotAGitRepository => "NOT_A_GIT_REPOSITORY",
+            AppError::GitError(_) => "GIT_ERROR",
+            AppError::GitConflict(_) => "GIT_CONFLICT",
             AppError::TimeoutError => "TIMEOUT_ERROR",
             AppError::CryptoError(_) => "CRYPTO_ERROR",
             AppError::MasterKeyRequired => "MASTER_KEY_REQUIRED",

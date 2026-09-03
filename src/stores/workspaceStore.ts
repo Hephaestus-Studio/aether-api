@@ -12,7 +12,7 @@ interface WorkspaceState {
   treeData: WorkspaceTreeNode[] | null;
   gitStatus: GitStatus | null;
   isLoading: boolean;
-  activeView: "explorer" | "environment";
+  activeView: "explorer" | "environment" | "git";
   expandedNodeIds: Record<string, boolean>;
   activeDraggedId: string | null;
 
@@ -21,7 +21,7 @@ interface WorkspaceState {
   setWorkspaceInfo: (info: WorkspaceInfo | null) => void;
   setGitStatus: (status: GitStatus | null) => void;
   setLoading: (loading: boolean) => void;
-  setActiveView: (view: "explorer" | "environment") => void;
+  setActiveView: (view: "explorer" | "environment" | "git") => void;
   setActiveDraggedId: (id: string | null) => void;
   toggleNodeExpanded: (nodeId: string) => void;
   setNodeExpanded: (nodeId: string, expanded: boolean) => void;

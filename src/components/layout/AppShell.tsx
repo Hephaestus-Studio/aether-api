@@ -87,25 +87,22 @@ export default function AppShell() {
     window.addEventListener("mouseup", handleMouseUp);
   };
 
-  const navWidth = sidebarOpened ? sidebarWidth : 24;
-
   return (
     <Box className={classes.shellRoot}>
-      {/* Middle row: Sidebar on left + Main Workspace on right */}
+      {/* Middle row: ActivityBar (48px fixed) + Sidebar (when expanded) + Main Workspace on right */}
       <Box className={classes.workspaceRow}>
-        {/* Navbar: ActivityBar (24px thin strip when collapsed) or Sidebar (when expanded) */}
-        <Box className={classes.navbar} style={{ width: navWidth }}>
-          {!sidebarOpened ? (
-            <ActivityBar setSidebarOpened={setSidebarOpened} />
-          ) : (
-            <>
-              <Box className={classes.sidebarContainer}>
-                <Sidebar onClose={() => setSidebarOpened(false)} />
-              </Box>
-              <div className={classes.resizeHandle} onMouseDown={handleResizeMouseDown} />
-            </>
-          )}
-        </Box>
+        {/* ActivityBar: VS Code style vertical icon rail */}
+        <ActivityBar sidebarOpened={sidebarOpened} setSidebarOpened={setSidebarOpened} />
+
+        {/* Primary Sidebar (when expanded) */}
+        {sidebarOpened && (
+          <Box className={classes.sidebarWrapper} style={{ width: sidebarWidth }}>
+            <Box className={classes.sidebarContainer}>
+              <Sidebar onClose={() => setSidebarOpened(false)} />
+            </Box>
+            <div className={classes.resizeHandle} onMouseDown={handleResizeMouseDown} />
+          </Box>
+        )}
 
         {/* Main Area: EditorTabs + RequestEditor/ResponseViewer/Terminal SplitPane */}
         <Box className={classes.mainArea}>

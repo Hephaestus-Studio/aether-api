@@ -1,47 +1,101 @@
-.collapsedStrip {
-  width: 24px;
+.activityRail {
+  width: 48px;
+  min-width: 48px;
   height: 100%;
-  background-color: var(--bg-sidebar);
+  background-color: var(--bg-activity, #181818);
+  border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  padding: 44px 0 16px 0;
-  cursor: pointer;
-  user-select: none;
-  transition: background-color 0.15s ease;
-  gap: 12px;
-  border: none;
-  outline: none;
+  padding: 0;
   box-sizing: border-box;
-}
-
-.collapsedStrip:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-}
-
-.collapsedStrip:hover .verticalText {
-  color: var(--text-primary);
-}
-
-.collapsedStrip:hover .collapsedIcon {
-  color: var(--aether-color-primary-base);
-}
-
-.collapsedIcon {
-  color: var(--text-muted);
-  transition: color 0.15s ease;
+  user-select: none;
+  z-index: 20;
   flex-shrink: 0;
 }
 
-.verticalText {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  transform: rotate(180deg);
+.topGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+}
+
+.bottomGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+}
+
+.railButton {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted, #858585);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+  outline: none;
+}
+
+.railButton:hover {
+  color: var(--text-main, #ffffff);
+}
+
+.activeButton {
+  color: var(--text-main, #ffffff) !important;
+}
+
+.activeIndicator {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--aether-color-primary-base, #6366f1);
+}
+
+.badge {
+  position: absolute;
+  top: 8px;
+  right: 6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background-color: var(--aether-color-primary-base, #6366f1);
+  color: #ffffff;
   font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 1.5px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  transition: color 0.15s ease;
-  white-space: nowrap;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.conflictBadge {
+  background-color: #ff6b6b;
+  animation: pulseConflict 1.8s infinite;
+}
+
+@keyframes pulseConflict {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 4px rgba(255, 107, 107, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 107, 0);
+  }
 }

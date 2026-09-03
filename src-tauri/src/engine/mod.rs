@@ -11,6 +11,7 @@ pub mod config;
 pub mod crypto;
 pub mod fractional_index;
 pub mod fs_scanner;
+pub mod git_engine;
 pub mod http_client;
 pub mod key_manager;
 pub mod variable_resolver;

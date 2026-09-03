@@ -11,6 +11,7 @@ import {
 import { invoke } from "@tauri-apps/api/core";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import FileTree from "@/components/explorer/FileTree";
+import SourceControlPanel from "@/components/git/SourceControlPanel";
 import type { WorkspaceTree } from "@/types/workspace";
 import classes from "./Sidebar.module.css";
 
@@ -20,9 +21,11 @@ interface SidebarProps {
 
 export default function Sidebar({ onClose }: Readonly<SidebarProps>) {
   const workspacePath = useWorkspaceStore((s) => s.workspacePath);
+  const activeView = useWorkspaceStore((s) => s.activeView);
   const setTreeData = useWorkspaceStore((s) => s.setTreeData);
   const collapseAllCollections = useWorkspaceStore((s) => s.collapseAllCollections);
   const expandAllCollections = useWorkspaceStore((s) => s.expandAllCollections);
+
   const [modalOpened, setModalOpened] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState("");
   const [error, setError] = useState("");
@@ -68,89 +71,94 @@ export default function Sidebar({ onClose }: Readonly<SidebarProps>) {
 
   return (
     <Box className={classes.container}>
+      {/* Sidebar Panel Header */}
       <Box className={classes.header}>
-        <Group
-          justify="space-between"
-          align="center"
-          style={{ width: "100%", minWidth: 0 }}
-          wrap="nowrap"
-        >
-          <span className={classes.title}>Explorer</span>
-          {onClose && (
-            <ActionIcon
-              variant="subtle"
-              size="sm"
-              className={classes.actionIcon}
-              onClick={onClose}
-              title="Collapse Explorer"
-            >
-              <IconLayoutSidebarLeftCollapse size={15} />
-            </ActionIcon>
-          )}
-        </Group>
+        <span className={classes.sectionTitle}>
+          {activeView === "git" ? "Source Control" : "Explorer"}
+        </span>
+
+        {onClose && (
+          <ActionIcon
+            variant="subtle"
+            size="sm"
+            className={classes.actionIcon}
+            onClick={onClose}
+            title="Collapse Sidebar"
+          >
+            <IconLayoutSidebarLeftCollapse size={15} />
+          </ActionIcon>
+        )}
       </Box>
 
-      {workspacePath && (
-        <Box className={classes.sectionHeader}>
-          <Group
-            justify="space-between"
-            align="center"
-            style={{ width: "100%", minWidth: 0 }}
-            gap={0}
-            wrap="nowrap"
-          >
-            <div className={classes.sectionHeaderLeft}>
-              <IconChevronDown size={14} className={classes.chevronIcon} />
-              <span className={classes.sectionTitle} title={getFolderName()}>
-                {getFolderName()}
-              </span>
-            </div>
-            <div className={classes.actionsGroup}>
-              <ActionIcon
-                onClick={() => setModalOpened(true)}
-                variant="subtle"
-                size="xs"
-                className={classes.actionIcon}
-                title="New Collection"
+      {/* View Content */}
+      {activeView === "git" ? (
+        <SourceControlPanel onClose={onClose} />
+      ) : (
+        <>
+          {workspacePath && (
+            <Box className={classes.sectionHeader}>
+              <Group
+                justify="space-between"
+                align="center"
+                style={{ width: "100%", minWidth: 0 }}
+                gap={0}
+                wrap="nowrap"
               >
-                <IconFolderPlus size={14} />
-              </ActionIcon>
-              <ActionIcon
-                onClick={handleRefresh}
-                variant="subtle"
-                size="xs"
-                className={classes.actionIcon}
-                title="Refresh Explorer"
-              >
-                <IconRefresh size={14} />
-              </ActionIcon>
-              <ActionIcon
-                onClick={expandAllCollections}
-                variant="subtle"
-                size="xs"
-                className={classes.actionIcon}
-                title="Expand Collections"
-              >
-                <IconFolderOpen size={14} />
-              </ActionIcon>
-              <ActionIcon
-                onClick={collapseAllCollections}
-                variant="subtle"
-                size="xs"
-                className={classes.actionIcon}
-                title="Collapse Collections"
-              >
-                <IconFold size={14} />
-              </ActionIcon>
-            </div>
-          </Group>
-        </Box>
+                <div className={classes.sectionHeaderLeft}>
+                  <IconChevronDown size={14} className={classes.chevronIcon} />
+                  <span className={classes.sectionTitle} title={getFolderName()}>
+                    {getFolderName()}
+                  </span>
+                </div>
+                <div className={classes.actionsGroup}>
+                  <ActionIcon
+                    onClick={() => setModalOpened(true)}
+                    variant="subtle"
+                    size="xs"
+                    className={classes.actionIcon}
+                    title="New Collection"
+                  >
+                    <IconFolderPlus size={14} />
+                  </ActionIcon>
+                  <ActionIcon
+                    onClick={handleRefresh}
+                    variant="subtle"
+                    size="xs"
+                    className={classes.actionIcon}
+                    title="Refresh Explorer"
+                  >
+                    <IconRefresh size={14} />
+                  </ActionIcon>
+                  <ActionIcon
+                    onClick={expandAllCollections}
+                    variant="subtle"
+                    size="xs"
+                    className={classes.actionIcon}
+                    title="Expand Collections"
+                  >
+                    <IconFolderOpen size={14} />
+                  </ActionIcon>
+                  <ActionIcon
+                    onClick={collapseAllCollections}
+                    variant="subtle"
+                    size="xs"
+                    className={classes.actionIcon}
+                    title="Collapse Collections"
+                  >
+                    <IconFold size={14} />
+                  </ActionIcon>
+                </div>
+              </Group>
+            </Box>
+          )}
+
+          <Box className={classes.body}>
+            <FileTree />
+          </Box>
+        </>
       )}
 
-      <Box className={classes.body}>
-        <FileTree />
-      </Box>
-
+      {/* Modal for Creating Collection */}
       <Modal
         opened={modalOpened}
         onClose={() => {

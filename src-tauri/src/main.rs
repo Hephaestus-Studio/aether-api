@@ -79,6 +79,20 @@ fn main() {
             commands::environment::generate_master_key,
             commands::environment::remove_master_key,
             commands::environment::cleanup_legacy_dotenv_files,
+            commands::git::git_get_status,
+            commands::git::git_stage_paths,
+            commands::git::git_unstage_paths,
+            commands::git::git_discard_changes,
+            commands::git::git_commit,
+            commands::git::git_fetch,
+            commands::git::git_smart_sync,
+            commands::git::git_push,
+            commands::git::git_pull_rebase,
+            commands::git::git_list_branches,
+            commands::git::git_checkout_branch,
+            commands::git::git_get_conflict_details,
+            commands::git::git_resolve_conflict,
+            commands::git::git_abort_merge,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
