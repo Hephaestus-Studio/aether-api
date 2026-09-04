@@ -10,6 +10,7 @@ import {
   IconArrowsExchange,
   IconBroadcast,
   IconCode,
+  IconRss,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useTabStore } from "@/stores/tabStore";
@@ -82,6 +83,8 @@ export default memo(function RequestEditor({ tabId }: Readonly<RequestEditorProp
         return <IconGlobe size={16} color="#00b4d8" />;
       case "websocket":
         return <IconPlug size={16} color="#00b4d8" />;
+      case "sse":
+        return <IconRss size={16} color="#e056fd" />;
       case "socketio":
         return <IconBolt size={16} color="#ffca3a" />;
       case "graphql":
@@ -97,7 +100,7 @@ export default memo(function RequestEditor({ tabId }: Readonly<RequestEditorProp
 
   const handleProtocolChange = (proto: string) => {
     setProtocol(tabId, proto);
-    if (proto === "websocket") {
+    if (proto === "websocket" || proto === "sse") {
       setResponsePanelOpened(true);
     } else {
       notifications.show({
@@ -344,6 +347,12 @@ export default memo(function RequestEditor({ tabId }: Readonly<RequestEditorProp
               onClick={() => handleProtocolChange("websocket")}
             >
               <span style={{ width: 88, display: "inline-block" }}>WebSocket</span>
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<IconRss size={16} color="#e056fd" />}
+              onClick={() => handleProtocolChange("sse")}
+            >
+              <span style={{ width: 88, display: "inline-block" }}>SSE</span>
             </Menu.Item>
 
             <Menu.Item leftSection={<IconBolt size={16} color="#ffca3a" />} disabled>

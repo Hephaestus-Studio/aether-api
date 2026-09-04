@@ -13,6 +13,7 @@ import {
   IconPlayerStop,
   IconWand,
   IconDeviceFloppy,
+  IconRss,
 } from "@tabler/icons-react";
 
 import { notifications } from "@mantine/notifications";
@@ -273,6 +274,15 @@ export default memo(function WebSocketEditor({ tabId }: Readonly<WebSocketEditor
               }}
             >
               <span style={{ width: 88, display: "inline-block" }}>WebSocket</span>
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<IconRss size={16} color="#e056fd" />}
+              onClick={() => {
+                setProtocol(tabId, "sse");
+                handleChange({ protocol: "sse" });
+              }}
+            >
+              <span style={{ width: 88, display: "inline-block" }}>SSE</span>
             </Menu.Item>
 
             <Menu.Item leftSection={<IconBolt size={16} color="#ffca3a" />} disabled>

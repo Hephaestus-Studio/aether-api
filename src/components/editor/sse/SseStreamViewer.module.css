@@ -1,0 +1,187 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--bg-app);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: rgba(24, 24, 27, 0.6);
+  backdrop-filter: blur(8px);
+  gap: 8px;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+}
+
+.searchBox {
+  flex: 1;
+  max-width: 260px;
+}
+
+.searchBox :global(.mantine-TextInput-input) {
+  height: 28px;
+  min-height: 28px;
+  font-size: 12px;
+  background-color: #18181b;
+  border: 1px solid #27272a;
+}
+
+.eventList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-secondary);
+  font-size: 13px;
+  gap: 12px;
+}
+
+.eventCard {
+  border: 1px solid #27272a;
+  border-radius: 8px;
+  background-color: #18181b;
+  overflow: hidden;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.eventCard:hover {
+  border-color: #3f3f46;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background-color: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid transparent;
+}
+
+.cardHeaderOpen {
+  border-bottom-color: #27272a;
+}
+
+.cardHeader:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.cardBody {
+  padding: 8px 12px;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  line-height: 1.5;
+  color: #e4e4e7;
+  background-color: #121214;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.jsonKey {
+  color: #93c5fd;
+}
+
+.jsonString {
+  color: #86efac;
+}
+
+.jsonNumber {
+  color: #fcd34d;
+}
+
+.jsonBoolean {
+  color: #f472b6;
+}
+
+.jsonNull {
+  color: #a1a1aa;
+}
+
+.statusBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 12px;
+  border-top: 1px solid var(--border-color);
+  background-color: #141416;
+  font-size: 11px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.statusIndicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.statusConnected {
+  background-color: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+
+.statusConnecting {
+  background-color: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+}
+
+.statusDisconnected {
+  background-color: #71717a;
+}
+
+.statusError {
+  background-color: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+
+.scrollPauseNotice {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #27272a;
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 10;
+}
+
+.scrollPauseNotice:hover {
+  background-color: #3f3f46;
+}

@@ -14,6 +14,7 @@ export const HTTP_METHODS: HttpMethodDefinition[] = [
   { name: "OPTIONS", color: "#f472b6", bgColor: "rgba(244, 114, 182, 0.15)" },
   { name: "WS", color: "#00b4d8", bgColor: "rgba(0, 180, 216, 0.15)" },
   { name: "WEBSOCKET", color: "#00b4d8", bgColor: "rgba(0, 180, 216, 0.15)" },
+  { name: "SSE", color: "#e056fd", bgColor: "rgba(224, 86, 253, 0.15)" },
 ];
 
 export const getMethodColor = (method?: string): string => {

@@ -14,6 +14,7 @@ pub mod fs_scanner;
 pub mod git_engine;
 pub mod http_client;
 pub mod key_manager;
+pub mod sse_client;
 pub mod variable_resolver;
 pub mod websocket_client;
 pub mod yaml_parser;

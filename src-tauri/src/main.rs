@@ -98,14 +98,19 @@ fn main() {
             commands::websocket::ws_send_ping,
             commands::websocket::ws_disconnect,
             commands::websocket::ws_get_metrics,
+            commands::sse::sse_connect,
+            commands::sse::sse_disconnect,
+            commands::sse::sse_get_metrics,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
                 let app = window.app_handle();
                 if let Some(state) = app.try_state::<commands::workspace::AppState>() {
                     let ws_mgr = std::sync::Arc::clone(&state.ws_manager);
+                    let sse_mgr = std::sync::Arc::clone(&state.sse_manager);
                     tauri::async_runtime::spawn(async move {
                         ws_mgr.close_all().await;
+                        sse_mgr.close_all().await;
                     });
                 }
                 let label = window.label();

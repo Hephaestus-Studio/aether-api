@@ -87,6 +87,10 @@ pub enum AppError {
     #[error("WebSocket error: {0}")]
     WebSocketError(String),
 
+    /// Error related to Server-Sent Events (SSE) connections or streaming.
+    #[error("SSE error: {0}")]
+    SseError(String),
+
     /// Error indicating a Master Key is required to decrypt/encrypt secrets.
     #[error("Master Key required for this operation")]
     MasterKeyRequired,
@@ -132,6 +136,7 @@ impl AppError {
             AppError::TimeoutError => "TIMEOUT_ERROR",
             AppError::CryptoError(_) => "CRYPTO_ERROR",
             AppError::WebSocketError(_) => "WEBSOCKET_ERROR",
+            AppError::SseError(_) => "SSE_ERROR",
             AppError::MasterKeyRequired => "MASTER_KEY_REQUIRED",
             AppError::InvalidMasterKey(_) => "INVALID_MASTER_KEY",
         }

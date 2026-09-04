@@ -11,9 +11,11 @@ import TerminalPanel from "./TerminalPanel";
 import EnvironmentPanel from "@/components/environment/EnvironmentPanel";
 import RequestEditor from "@/components/editor/RequestEditor";
 import WebSocketEditor from "@/components/editor/websocket/WebSocketEditor";
+import SseEditor from "@/components/editor/sse/SseEditor";
 import FolderEditor from "@/components/editor/FolderEditor";
 import ResponseViewer from "@/components/response/ResponseViewer";
 import WebSocketStreamViewer from "@/components/editor/websocket/WebSocketStreamViewer";
+import SseStreamViewer from "@/components/editor/sse/SseStreamViewer";
 import QuickOpen from "@/components/tools/QuickOpen";
 import CommandPalette from "@/components/tools/CommandPalette";
 import UnlockMasterKeyModal from "@/components/modals/UnlockMasterKeyModal";
@@ -48,6 +50,7 @@ export default function AppShell() {
     ? protocols[activeTab.id] || activeTab.protocol || "http"
     : "http";
   const isWebSocket = activeProtocol === "websocket";
+  const isSse = activeProtocol === "sse";
 
   const MIN_SIDEBAR_WIDTH = 280;
   const MAX_SIDEBAR_WIDTH = 600;
@@ -120,7 +123,9 @@ export default function AppShell() {
               topPanel={
                 activeTab ? (
                   <SplitPane
-                    collapsed={(!responsePanelOpened && !isWebSocket) || isFolderOrCollectionTab}
+                    collapsed={
+                      (!responsePanelOpened && !isWebSocket && !isSse) || isFolderOrCollectionTab
+                    }
                     topPanel={
                       <Box style={{ width: "100%", height: "100%", position: "relative" }}>
                         {activeTab.nodeType === "folder" || activeTab.nodeType === "collection" ? (
@@ -131,6 +136,8 @@ export default function AppShell() {
                           />
                         ) : isWebSocket ? (
                           <WebSocketEditor key={activeTab.id} tabId={activeTab.id} />
+                        ) : isSse ? (
+                          <SseEditor key={activeTab.id} tabId={activeTab.id} />
                         ) : (
                           <RequestEditor key={activeTab.id} tabId={activeTab.id} />
                         )}
@@ -142,6 +149,8 @@ export default function AppShell() {
                           activeTab.nodeType !== "collection" &&
                           (isWebSocket ? (
                             <WebSocketStreamViewer key={activeTab.id} tabId={activeTab.id} />
+                          ) : isSse ? (
+                            <SseStreamViewer key={activeTab.id} tabId={activeTab.id} />
                           ) : (
                             <ResponseViewer key={activeTab.id} tabId={activeTab.id} />
                           ))}

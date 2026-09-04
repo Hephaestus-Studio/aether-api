@@ -158,7 +158,11 @@ export default function EditorTabs() {
                           protocols[tab.id] === "websocket" ||
                           tab.protocol === "websocket" ||
                           tab.method === "WS";
-                        const displayMethod = isWs ? "WS" : tab.method || "GET";
+                        const isSse =
+                          protocols[tab.id] === "sse" ||
+                          tab.protocol === "sse" ||
+                          tab.method === "SSE";
+                        const displayMethod = isWs ? "WS" : isSse ? "SSE" : tab.method || "GET";
                         return (
                           <Text
                             size="xs"

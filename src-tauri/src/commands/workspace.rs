@@ -31,6 +31,8 @@ pub struct AppState {
     pub terminal_manager: crate::commands::terminal::TerminalManager,
     /// Shared manager for active WebSocket client connections.
     pub ws_manager: std::sync::Arc<crate::engine::websocket_client::WebSocketManager>,
+    /// Shared manager for active SSE client streaming sessions.
+    pub sse_manager: std::sync::Arc<crate::engine::sse_client::SseManager>,
 }
 
 impl AppState {
@@ -42,6 +44,7 @@ impl AppState {
             request_tracker: crate::engine::http_client::RequestTracker::new(),
             terminal_manager: crate::commands::terminal::TerminalManager::new(),
             ws_manager: std::sync::Arc::new(crate::engine::websocket_client::WebSocketManager::new()),
+            sse_manager: std::sync::Arc::new(crate::engine::sse_client::SseManager::new()),
         }
     }
 }

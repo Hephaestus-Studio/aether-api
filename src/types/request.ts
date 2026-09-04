@@ -36,7 +36,7 @@ export interface RequestSettings {
   verifySsl: boolean;
 }
 
-export type ProtocolType = "http" | "websocket" | "socketio" | "graphql" | "grpc" | "mqtt";
+export type ProtocolType = "http" | "websocket" | "sse" | "socketio" | "graphql" | "grpc" | "mqtt";
 
 export interface WebSocketSavedMessage {
   id: string;
@@ -72,6 +72,31 @@ export interface WsMetrics {
   connectedSince?: number;
 }
 
+export interface SseEventLog {
+  id: string;
+  tabId: string;
+  event: string;
+  data: string;
+  eventId?: string;
+  retry?: number;
+  timestamp: number;
+  size: number;
+}
+
+export type SseStatus = "disconnected" | "connecting" | "connected" | "error";
+
+export interface SseMetrics {
+  receivedCount: number;
+  receivedBytes: number;
+  connectedSince?: number;
+}
+
+export interface SseSettings {
+  autoReconnect?: boolean;
+  maxReconnectAttempts?: number;
+  reconnectIntervalMs?: number;
+}
+
 export interface HttpRequestDetails {
   id: string;
   name: string;
@@ -85,6 +110,7 @@ export interface HttpRequestDetails {
   settings: RequestSettings;
   savedMessages?: WebSocketSavedMessage[];
   wsSettings?: WebSocketSettings;
+  sseSettings?: SseSettings;
   seq?: string;
 }
 

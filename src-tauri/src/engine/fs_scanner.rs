@@ -321,6 +321,7 @@ mod tests {
                 node_type: NodeType::Request,
                 seq: None,
                 method: Some("GET".into()),
+                protocol: None,
                 children: vec![],
             },
             WorkspaceTreeNode {
@@ -330,6 +331,7 @@ mod tests {
                 node_type: NodeType::Collection,
                 seq: None,
                 method: None,
+                protocol: None,
                 children: vec![],
             },
         ];

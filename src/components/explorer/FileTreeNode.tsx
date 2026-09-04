@@ -97,6 +97,7 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
 
   const getMethodText = (method?: string, protocol?: string) => {
     if (protocol === "websocket" || method === "WS" || method === "WEBSOCKET") return "WS";
+    if (protocol === "sse" || method === "SSE") return "SSE";
     const m = (method || "GET").toUpperCase();
     if (m === "DELETE") return "DEL";
     if (m === "OPTIONS") return "OPT";
@@ -131,8 +132,9 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
     if (node.nodeType === "request") {
       const isWs =
         node.protocol === "websocket" || node.method === "WS" || node.method === "WEBSOCKET";
-      const proto = isWs ? "websocket" : "http";
-      const method = isWs ? "WS" : node.method || "GET";
+      const isSse = node.protocol === "sse" || node.method === "SSE";
+      const proto = isWs ? "websocket" : isSse ? "sse" : node.protocol || "http";
+      const method = isWs ? "WS" : isSse ? "SSE" : node.method || "GET";
       setProtocol(node.path, proto);
       openTab({
         id: node.path,
@@ -405,7 +407,8 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
     if (node.nodeType === "request") {
       const isWs =
         node.protocol === "websocket" || node.method === "WS" || node.method === "WEBSOCKET";
-      const effectiveMethod = isWs ? "WS" : node.method || "GET";
+      const isSse = node.protocol === "sse" || node.method === "SSE";
+      const effectiveMethod = isWs ? "WS" : isSse ? "SSE" : node.method || "GET";
       const methodSpan = document.createElement("span");
       methodSpan.style.color = getMethodColor(effectiveMethod);
       methodSpan.style.fontSize = "10px";
@@ -612,9 +615,19 @@ export default function FileTreeNode({ node, parentNode }: Readonly<FileTreeNode
                   <span
                     className={classes.methodTag}
                     style={{
-                      color: getMethodColor(node.protocol === "websocket" ? "WS" : node.method),
+                      color: getMethodColor(
+                        node.protocol === "websocket"
+                          ? "WS"
+                          : node.protocol === "sse"
+                            ? "SSE"
+                            : node.method,
+                      ),
                       backgroundColor: getMethodBgColor(
-                        node.protocol === "websocket" ? "WS" : node.method,
+                        node.protocol === "websocket"
+                          ? "WS"
+                          : node.protocol === "sse"
+                            ? "SSE"
+                            : node.method,
                       ),
                     }}
                   >

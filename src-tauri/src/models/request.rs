@@ -310,6 +310,39 @@ pub struct Request {
     /// WebSocket-specific connection settings.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ws_settings: Option<WebSocketSettings>,
+
+    /// SSE-specific connection settings.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sse_settings: Option<SseSettings>,
+}
+
+/// Settings specific to Server-Sent Events (SSE) connections.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct SseSettings {
+    /// Whether to attempt reconnection if connection drops unexpectedly.
+    #[serde(default)]
+    pub auto_reconnect: bool,
+    /// Maximum number of reconnection attempts.
+    #[serde(default = "default_max_reconnect")]
+    pub max_reconnect_attempts: u32,
+    /// Reconnect interval in milliseconds if not specified by server retry field.
+    #[serde(default = "default_reconnect_interval_ms")]
+    pub reconnect_interval_ms: u64,
+}
+
+fn default_reconnect_interval_ms() -> u64 {
+    3000
+}
+
+impl Default for SseSettings {
+    fn default() -> Self {
+        Self {
+            auto_reconnect: false,
+            max_reconnect_attempts: 5,
+            reconnect_interval_ms: 3000,
+        }
+    }
 }
 
 fn default_protocol() -> String {
@@ -342,6 +375,7 @@ impl Request {
             settings: RequestSettings::default(),
             saved_messages: None,
             ws_settings: None,
+            sse_settings: None,
         }
     }
 
@@ -360,6 +394,7 @@ impl Request {
             && self.seq == other.seq
             && self.saved_messages == other.saved_messages
             && self.ws_settings == other.ws_settings
+            && self.sse_settings == other.sse_settings
     }
 }
 
