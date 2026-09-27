@@ -11,5 +11,11 @@ serde_json = "1.0.151"
 base64 = "0.23.1"
 tokio = { version = "1.53.1", features = ["full"] }
 tokio-util = { version = "0.7.19", features = ["rt"] }
+chrono = { version = "0.4.40", features = ["serde"] }
 rfd = "0.15"
 tracing = "0.1.44"
+unicode-segmentation = "1.12"
+uuid = { version = "1.17", features = ["v4"] }
+
+[dev-dependencies]
+tempfile = "3"

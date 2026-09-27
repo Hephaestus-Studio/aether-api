@@ -145,7 +145,11 @@ impl HttpExecutor {
         let is_https = req_data.url.starts_with("https://");
         let dns_ms = (ttfb_ms * 0.15).max(1.0);
         let tcp_ms = (ttfb_ms * 0.25).max(1.0);
-        let tls_ms = if is_https { (ttfb_ms * 0.35).max(1.0) } else { 0.0 };
+        let tls_ms = if is_https {
+            (ttfb_ms * 0.35).max(1.0)
+        } else {
+            0.0
+        };
 
         let timing = TimingMetrics {
             dns_ms,

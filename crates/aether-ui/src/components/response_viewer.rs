@@ -218,11 +218,7 @@ pub fn render_response_viewer(
                                 .text_color(status_color)
                                 .child("●"),
                         )
-                        .child(
-                            div()
-                                .text_color(theme.text_muted)
-                                .child("Status:"),
-                        )
+                        .child(div().text_color(theme.text_muted).child("Status:"))
                         .child(
                             div()
                                 .font_weight(FontWeight::BOLD)
@@ -236,11 +232,7 @@ pub fn render_response_viewer(
                         .flex()
                         .items_center()
                         .gap_1p5()
-                        .child(
-                            div()
-                                .text_color(theme.text_muted)
-                                .child("Time:"),
-                        )
+                        .child(div().text_color(theme.text_muted).child("Time:"))
                         .child(
                             div()
                                 .font_weight(FontWeight::BOLD)
@@ -254,11 +246,7 @@ pub fn render_response_viewer(
                         .flex()
                         .items_center()
                         .gap_1p5()
-                        .child(
-                            div()
-                                .text_color(theme.text_muted)
-                                .child("Size:"),
-                        )
+                        .child(div().text_color(theme.text_muted).child("Size:"))
                         .child(
                             div()
                                 .font_weight(FontWeight::BOLD)
@@ -440,7 +428,9 @@ pub fn render_response_viewer(
                         .text_color(theme.text_muted)
                         .hover(|s| s.bg(theme.surface_hover).text_color(theme.text_primary))
                         .on_click(move |_, _w, cx| {
-                            cx.write_to_clipboard(gpui::ClipboardItem::new_string(body_text.clone()));
+                            cx.write_to_clipboard(gpui::ClipboardItem::new_string(
+                                body_text.clone(),
+                            ));
                         })
                         .child("⧉")
                 })
@@ -474,7 +464,8 @@ pub fn render_response_viewer(
             } else {
                 let formatted_text = if view_mode == ResponseBodyViewMode::Pretty {
                     if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&response.body) {
-                        serde_json::to_string_pretty(&parsed).unwrap_or_else(|_| response.body.clone())
+                        serde_json::to_string_pretty(&parsed)
+                            .unwrap_or_else(|_| response.body.clone())
                     } else {
                         response.body.clone()
                     }
@@ -500,9 +491,10 @@ pub fn render_response_viewer(
                             .text_color(theme.text_muted)
                             .items_end()
                             .pr_1()
-                            .children((1..=lines.len()).map(|num| {
-                                div().h(px(20.0)).child(format!("{}", num))
-                            })),
+                            .children(
+                                (1..=lines.len())
+                                    .map(|num| div().h(px(20.0)).child(format!("{}", num))),
+                            ),
                     )
                     // Code lines with syntax highlighting
                     .child(
@@ -511,9 +503,7 @@ pub fn render_response_viewer(
                             .flex_col()
                             .flex_1()
                             .text_size(px(12.0))
-                            .children(lines.into_iter().map(|line| {
-                                render_json_line(line, theme)
-                            })),
+                            .children(lines.into_iter().map(|line| render_json_line(line, theme))),
                     )
             }
         }
@@ -644,18 +634,20 @@ fn render_json_line(line: &str, theme: &Theme) -> Div {
     let indent_spaces = line.len() - trimmed.len();
     let indent_px = (indent_spaces as f32) * 8.0;
 
-    let key_color = hsla(199.0 / 360.0, 0.90, 0.65, 1.0);     // Sky Cyan #38bdf8
-    let string_color = hsla(340.0 / 360.0, 0.85, 0.65, 1.0);  // Coral Pink #fb7185
-    let number_color = hsla(270.0 / 360.0, 0.85, 0.72, 1.0);  // Light Violet #c084fc
-    let brace_color = hsla(45.0 / 360.0, 0.95, 0.55, 1.0);    // Gold / Yellow #eab308
+    let key_color = hsla(199.0 / 360.0, 0.90, 0.65, 1.0); // Sky Cyan #38bdf8
+    let string_color = hsla(340.0 / 360.0, 0.85, 0.65, 1.0); // Coral Pink #fb7185
+    let number_color = hsla(270.0 / 360.0, 0.85, 0.72, 1.0); // Light Violet #c084fc
+    let brace_color = hsla(45.0 / 360.0, 0.95, 0.55, 1.0); // Gold / Yellow #eab308
 
-    let mut line_row = div()
-        .flex()
-        .items_center()
-        .h(px(20.0))
-        .pl(px(indent_px));
+    let mut line_row = div().flex().items_center().h(px(20.0)).pl(px(indent_px));
 
-    if trimmed == "{" || trimmed == "}" || trimmed == "}," || trimmed == "[" || trimmed == "]" || trimmed == "]," {
+    if trimmed == "{"
+        || trimmed == "}"
+        || trimmed == "},"
+        || trimmed == "["
+        || trimmed == "]"
+        || trimmed == "],"
+    {
         let (brace, comma) = if trimmed.ends_with(',') {
             (&trimmed[..trimmed.len() - 1], Some(","))
         } else {

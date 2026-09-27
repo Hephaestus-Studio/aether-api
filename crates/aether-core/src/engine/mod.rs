@@ -9,6 +9,7 @@
 
 pub mod config;
 pub mod crypto;
+pub mod curl_parser;
 pub mod fractional_index;
 pub mod fs_scanner;
 pub mod git_engine;

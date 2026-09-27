@@ -1,5 +1,6 @@
 use crate::components::method_badge::render_method_badge;
-use crate::models::{PickerMode, PickerState};
+use crate::components::text_input::TextInput;
+use crate::models::PickerState;
 use crate::theme::Theme;
 use crate::views::WorkspaceView;
 use gpui::prelude::*;
@@ -10,6 +11,7 @@ pub fn render_command_palette(
     state: &PickerState,
     theme: &Theme,
     view: Entity<WorkspaceView>,
+    picker_input: Entity<TextInput>,
 ) -> impl IntoElement {
     if !state.is_open {
         return div();
@@ -17,12 +19,6 @@ pub fn render_command_palette(
 
     let view_backdrop = view.clone();
     let filtered_items = state.filtered_items();
-
-    let title_placeholder = match state.mode {
-        Some(PickerMode::QuickOpen) => "Search requests by name or URL... (Press Esc to close)",
-        Some(PickerMode::CommandPalette) => "Type a command... (Press Esc to close)",
-        None => "Search...",
-    };
 
     let mut items_list = div()
         .flex()
@@ -178,21 +174,7 @@ pub fn render_command_palette(
                         .border_color(theme.border)
                         .gap_2()
                         .child(div().text_xs().text_color(theme.text_muted).child(">"))
-                        .child(
-                            div()
-                                .flex_1()
-                                .text_xs()
-                                .text_color(if state.query.is_empty() {
-                                    theme.text_muted
-                                } else {
-                                    theme.text_primary
-                                })
-                                .child(if state.query.is_empty() {
-                                    title_placeholder.to_string()
-                                } else {
-                                    state.query.clone()
-                                }),
-                        ),
+                        .child(div().flex_1().child(picker_input)),
                 )
                 // Filtered List
                 .child(items_list)

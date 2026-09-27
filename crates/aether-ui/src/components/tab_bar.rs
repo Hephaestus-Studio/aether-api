@@ -30,6 +30,7 @@ pub fn render_tab_bar(
         let tab_idx = idx;
         let view_select = view.clone();
         let view_close = view.clone();
+        let view_tab_ctx = view.clone();
         let method_str = tab.request.method.to_string();
 
         let tab_element = div()
@@ -56,6 +57,14 @@ pub fn render_tab_bar(
             .on_click(move |_, _window, cx| {
                 view_select.update(cx, |this, cx| {
                     this.select_tab(tab_idx, cx);
+                });
+            })
+            .on_mouse_down(MouseButton::Right, move |event, _window, cx| {
+                cx.stop_propagation();
+                let pos = event.position;
+                view_tab_ctx.update(cx, |this, cx| {
+                    this.context_menu_state.open_for_tab(tab_idx, pos);
+                    cx.notify();
                 });
             })
             .child(render_method_badge(&method_str, theme))

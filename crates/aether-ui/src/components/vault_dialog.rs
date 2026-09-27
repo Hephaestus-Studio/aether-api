@@ -1,3 +1,4 @@
+use crate::components::text_input::TextInput;
 use crate::models::VaultState;
 use crate::theme::Theme;
 use crate::views::WorkspaceView;
@@ -9,6 +10,7 @@ pub fn render_vault_dialog(
     state: &VaultState,
     theme: &Theme,
     view: Entity<WorkspaceView>,
+    vault_input: Entity<TextInput>,
 ) -> impl IntoElement {
     if !state.is_dialog_open {
         return div();
@@ -18,18 +20,6 @@ pub fn render_vault_dialog(
     let view_unlock = view.clone();
     let view_cancel = view.clone();
     let view_close = view.clone();
-    let view_toggle_show = view.clone();
-
-    let is_input_empty = state.master_key_input.is_empty();
-    let show_password = state.show_password;
-
-    let display_value = if is_input_empty {
-        "Enter your workspace Master Key or Passphrase".to_string()
-    } else if show_password {
-        format!("{}|", state.master_key_input)
-    } else {
-        format!("{}|", "•".repeat(state.master_key_input.chars().count()))
-    };
 
     div()
         .absolute()
@@ -192,61 +182,18 @@ pub fn render_vault_dialog(
                                 ),
                         )
                         // Input Field Box
-                        .child({
-                            let view_focus = view.clone();
+                        .child(
                             div()
-                                .id("vault-passphrase-input-container")
-                                .cursor_text()
-                                .on_mouse_down(MouseButton::Left, move |_event, window, cx| {
-                                    cx.stop_propagation();
-                                    view_focus.update(cx, |this, _cx| {
-                                        window.focus(&this.focus_handle);
-                                    });
-                                })
                                 .flex()
                                 .items_center()
-                                .justify_between()
                                 .h(px(38.0))
-                                .px_3()
+                                .px_1()
                                 .bg(theme.background)
                                 .border_1()
                                 .border_color(theme.primary)
                                 .rounded_md()
-                                // Passphrase text or placeholder
-                                .child(
-                                    div()
-                                        .flex_1()
-                                        .text_xs()
-                                        .text_color(if is_input_empty {
-                                            theme.text_muted
-                                        } else {
-                                            theme.text_primary
-                                        })
-                                        .child(display_value),
-                                )
-                                // Eye toggle icon button
-                                .child(
-                                    div()
-                                        .id("vault-toggle-eye-btn")
-                                        .flex()
-                                        .items_center()
-                                        .justify_center()
-                                        .px_1p5()
-                                        .py_1()
-                                        .rounded_sm()
-                                        .text_xs()
-                                        .cursor_pointer()
-                                        .text_color(theme.text_muted)
-                                        .hover(|s| s.text_color(theme.text_primary))
-                                        .on_click(move |_, _window, cx| {
-                                            view_toggle_show.update(cx, |this, cx| {
-                                                this.vault_state.toggle_show_password();
-                                                cx.notify();
-                                            });
-                                        })
-                                        .child(if show_password { "👁" } else { "👁‍🗨" }),
-                                )
-                        })
+                                .child(vault_input),
+                        )
                 )
                 // Optional Error Banner
                 .when_some(state.error_message.as_ref(), |this, err| {

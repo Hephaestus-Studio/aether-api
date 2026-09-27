@@ -103,16 +103,12 @@ impl Render for AetherApp {
                                     .gap_3()
                                     // Aether Logo Icon
                                     .child(
-                                        div()
-                                            .flex()
-                                            .items_center()
-                                            .gap_1p5()
-                                            .child(
-                                                div()
-                                                    .text_size(px(14.0))
-                                                    .text_color(theme.primary)
-                                                    .child("❄"),
-                                            )
+                                        div().flex().items_center().gap_1p5().child(
+                                            div()
+                                                .text_size(px(14.0))
+                                                .text_color(theme.primary)
+                                                .child("❄"),
+                                        ),
                                     )
                                     // Header MenuBar items (File, Edit, View, Help)
                                     .child(
@@ -635,6 +631,8 @@ fn main() {
     let _runtime_guard = runtime.enter();
 
     Application::new().run(move |cx: &mut App| {
+        aether_ui::bind_text_input_keys(cx);
+        aether_ui::bind_text_area_keys(cx);
         let bounds = Bounds::centered(None, size(px(1240.0), px(780.0)), cx);
         let path = initial_path.clone();
 

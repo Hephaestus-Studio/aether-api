@@ -1,5 +1,5 @@
-use aether_core::models::recent_workspace::{RecentWorkspace, RecentWorkspacesList};
 use crate::theme::Theme;
+use aether_core::models::recent_workspace::{RecentWorkspace, RecentWorkspacesList};
 use gpui::prelude::*;
 use gpui::*;
 use std::path::{Path, PathBuf};
@@ -306,9 +306,11 @@ impl Render for LauncherView {
                                                     .font_weight(FontWeight::BOLD)
                                                     .cursor_pointer()
                                                     .hover(|s| s.bg(theme.primary_hover))
-                                                    .on_click(cx.listener(|this, _event, _window, cx| {
-                                                        this.open_folder_dialog(cx);
-                                                    }))
+                                                    .on_click(cx.listener(
+                                                        |this, _event, _window, cx| {
+                                                            this.open_folder_dialog(cx);
+                                                        },
+                                                    ))
                                                     .child("+"),
                                             )
                                             // Open Folder button
@@ -326,10 +328,15 @@ impl Render for LauncherView {
                                                     .text_color(theme.text_secondary)
                                                     .text_xs()
                                                     .cursor_pointer()
-                                                    .hover(|s| s.bg(theme.surface_hover).text_color(theme.text_primary))
-                                                    .on_click(cx.listener(|this, _event, _window, cx| {
-                                                        this.open_folder_dialog(cx);
-                                                    }))
+                                                    .hover(|s| {
+                                                        s.bg(theme.surface_hover)
+                                                            .text_color(theme.text_primary)
+                                                    })
+                                                    .on_click(cx.listener(
+                                                        |this, _event, _window, cx| {
+                                                            this.open_folder_dialog(cx);
+                                                        },
+                                                    ))
                                                     .child("Folder"),
                                             )
                                             // Clone from Git button
@@ -347,10 +354,15 @@ impl Render for LauncherView {
                                                     .text_color(theme.text_secondary)
                                                     .text_xs()
                                                     .cursor_pointer()
-                                                    .hover(|s| s.bg(theme.surface_hover).text_color(theme.text_primary))
-                                                    .on_click(cx.listener(|this, _event, _window, cx| {
-                                                        this.open_folder_dialog(cx);
-                                                    }))
+                                                    .hover(|s| {
+                                                        s.bg(theme.surface_hover)
+                                                            .text_color(theme.text_primary)
+                                                    })
+                                                    .on_click(cx.listener(
+                                                        |this, _event, _window, cx| {
+                                                            this.open_folder_dialog(cx);
+                                                        },
+                                                    ))
                                                     .child("Git"),
                                             ),
                                     ),
@@ -384,17 +396,16 @@ impl Render for LauncherView {
                                                     .font_weight(FontWeight::BOLD)
                                                     .cursor_pointer()
                                                     .hover(|s| s.bg(theme.primary_hover))
-                                                    .on_click(cx.listener(|this, _event, _window, cx| {
-                                                        this.open_folder_dialog(cx);
-                                                    }))
+                                                    .on_click(cx.listener(
+                                                        |this, _event, _window, cx| {
+                                                            this.open_folder_dialog(cx);
+                                                        },
+                                                    ))
                                                     .child("Open Workspace Folder"),
                                             )
                                     } else {
-                                        let mut list_col = div()
-                                            .flex()
-                                            .flex_col()
-                                            .gap_2()
-                                            .overflow_y_hidden();
+                                        let mut list_col =
+                                            div().flex().flex_col().gap_2().overflow_y_hidden();
 
                                         for ws in filtered {
                                             let path_clone = ws.path.clone();
@@ -403,7 +414,9 @@ impl Render for LauncherView {
 
                                             list_col = list_col.child(
                                                 div()
-                                                    .id(ElementId::Name(format!("ws-item-{}", path_str).into()))
+                                                    .id(ElementId::Name(
+                                                        format!("ws-item-{}", path_str).into(),
+                                                    ))
                                                     .flex()
                                                     .items_center()
                                                     .justify_between()
@@ -413,10 +426,18 @@ impl Render for LauncherView {
                                                     .border_1()
                                                     .border_color(theme.border)
                                                     .cursor_pointer()
-                                                    .hover(|s| s.bg(theme.surface_hover).border_color(theme.primary))
-                                                    .on_click(cx.listener(move |this, _event, _window, cx| {
-                                                        this.open_workspace(path_clone.clone(), cx);
-                                                    }))
+                                                    .hover(|s| {
+                                                        s.bg(theme.surface_hover)
+                                                            .border_color(theme.primary)
+                                                    })
+                                                    .on_click(cx.listener(
+                                                        move |this, _event, _window, cx| {
+                                                            this.open_workspace(
+                                                                path_clone.clone(),
+                                                                cx,
+                                                            );
+                                                        },
+                                                    ))
                                                     .child(
                                                         div()
                                                             .flex()
@@ -442,64 +463,62 @@ impl Render for LauncherView {
                                         list_col
                                     }
                                 }
-                                LauncherTab::Customize => {
-                                    div()
-                                        .flex()
-                                        .flex_col()
-                                        .gap_4()
-                                        .p_4()
-                                        .rounded_md()
-                                        .bg(theme.surface)
-                                        .border_1()
-                                        .border_color(theme.border)
-                                        .child(
-                                            div()
-                                                .text_sm()
-                                                .font_weight(FontWeight::BOLD)
-                                                .text_color(theme.text_primary)
-                                                .child("Appearance & Customization"),
-                                        )
-                                        .child(
-                                            div()
-                                                .flex()
-                                                .items_center()
-                                                .justify_between()
-                                                .child(
-                                                    div()
-                                                        .text_xs()
-                                                        .text_color(theme.text_secondary)
-                                                        .child("Theme Mode"),
-                                                )
-                                                .child(
-                                                    div()
-                                                        .px_3()
-                                                        .py_1()
-                                                        .rounded_sm()
-                                                        .bg(theme.surface_hover)
-                                                        .text_xs()
-                                                        .text_color(theme.primary)
-                                                        .child("Dark (Default)"),
-                                                ),
-                                        )
-                                        .child(
-                                            div()
-                                                .flex()
-                                                .items_center()
-                                                .justify_between()
-                                                .child(
-                                                    div()
-                                                        .text_xs()
-                                                        .text_color(theme.text_secondary)
-                                                        .child("Storage Engine"),
-                                                )
-                                                .child(
-                                                    div()
-                                                        .text_xs()
-                                                        .text_color(theme.text_muted)
-                                                        .child("Local-First YAML / Git"),
-                                                ),
-                                        )
-                                }
+                                LauncherTab::Customize => div()
+                                    .flex()
+                                    .flex_col()
+                                    .gap_4()
+                                    .p_4()
+                                    .rounded_md()
+                                    .bg(theme.surface)
+                                    .border_1()
+                                    .border_color(theme.border)
+                                    .child(
+                                        div()
+                                            .text_sm()
+                                            .font_weight(FontWeight::BOLD)
+                                            .text_color(theme.text_primary)
+                                            .child("Appearance & Customization"),
+                                    )
+                                    .child(
+                                        div()
+                                            .flex()
+                                            .items_center()
+                                            .justify_between()
+                                            .child(
+                                                div()
+                                                    .text_xs()
+                                                    .text_color(theme.text_secondary)
+                                                    .child("Theme Mode"),
+                                            )
+                                            .child(
+                                                div()
+                                                    .px_3()
+                                                    .py_1()
+                                                    .rounded_sm()
+                                                    .bg(theme.surface_hover)
+                                                    .text_xs()
+                                                    .text_color(theme.primary)
+                                                    .child("Dark (Default)"),
+                                            ),
+                                    )
+                                    .child(
+                                        div()
+                                            .flex()
+                                            .items_center()
+                                            .justify_between()
+                                            .child(
+                                                div()
+                                                    .text_xs()
+                                                    .text_color(theme.text_secondary)
+                                                    .child("Storage Engine"),
+                                            )
+                                            .child(
+                                                div()
+                                                    .text_xs()
+                                                    .text_color(theme.text_muted)
+                                                    .child("Local-First YAML / Git"),
+                                            ),
+                                    ),
                             }),
                     )
                     // Footer

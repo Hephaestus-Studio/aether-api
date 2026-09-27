@@ -27,21 +27,9 @@ pub fn render_key_value_table(
         .font_weight(FontWeight::BOLD)
         .text_color(theme.text_muted)
         .child(div().w(px(28.0)).child(""))
-        .child(
-            div()
-                .w(px(180.0))
-                .child("KEY"),
-        )
-        .child(
-            div()
-                .w(px(240.0))
-                .child("VALUE"),
-        )
-        .child(
-            div()
-                .flex_1()
-                .child("DESCRIPTION"),
-        )
+        .child(div().w(px(180.0)).child("KEY"))
+        .child(div().w(px(240.0)).child("VALUE"))
+        .child(div().flex_1().child("DESCRIPTION"))
         .child(div().w(px(32.0)).child(""));
 
     table_content = table_content.child(header_row);
@@ -155,15 +143,11 @@ pub fn render_key_value_table(
                 )
                 // Description Column
                 .child(
-                    div()
-                        .flex_1()
-                        .text_xs()
-                        .text_color(theme.text_muted)
-                        .child(
-                            item.description
-                                .clone()
-                                .unwrap_or_else(|| "Description".to_string()),
-                        ),
+                    div().flex_1().text_xs().text_color(theme.text_muted).child(
+                        item.description
+                            .clone()
+                            .unwrap_or_else(|| "Description".to_string()),
+                    ),
                 )
                 // Delete button
                 .child(

@@ -1,3 +1,4 @@
+use crate::components::TextInput;
 use crate::models::request_tab_state::RequestTabState;
 use crate::theme::Theme;
 use crate::views::WorkspaceView;
@@ -10,6 +11,7 @@ pub fn render_url_bar(
     tab: &RequestTabState,
     theme: &Theme,
     view: Entity<WorkspaceView>,
+    url_input: Entity<TextInput>,
 ) -> impl IntoElement {
     let view_send = view.clone();
     let view_save = view.clone();
@@ -221,33 +223,39 @@ pub fn render_url_bar(
                                 .child("⌄"),
                         ),
                 )
-                // URL Input Field Container
+                // URL Input Field — Using native TextInput component
                 .child(
                     div()
                         .flex()
                         .items_center()
                         .flex_1()
                         .h_full()
-                        .px_3()
-                        .bg(theme.surface)
-                        .border_1()
-                        .border_color(theme.border)
-                        .rounded_md()
-                        .text_xs()
-                        .text_color(if tab.request.url.is_empty() {
-                            theme.text_muted
-                        } else {
-                            theme.text_primary
-                        })
-                        .child(if tab.request.url.is_empty() {
-                            "Enter URL or paste curl command (e.g. https://api.example.com/v1/users)..."
-                                .to_string()
-                        } else {
-                            tab.request.url.clone()
-                        }),
+                        .child(url_input),
                 )
-                // Send Button (Bright Blue Primary Pill)
-                .child(
+                // Send / Cancel Button
+                .child(if is_sending {
+                    let view_cancel = view.clone();
+                    div()
+                        .id("cancel-request-btn")
+                        .flex()
+                        .items_center()
+                        .justify_center()
+                        .h_full()
+                        .px_4()
+                        .bg(hsla(0.0, 0.70, 0.50, 0.85))
+                        .rounded_md()
+                        .cursor_pointer()
+                        .text_xs()
+                        .font_weight(FontWeight::BOLD)
+                        .text_color(gpui::hsla(0.0, 0.0, 1.0, 1.0))
+                        .hover(|s| s.bg(hsla(0.0, 0.80, 0.45, 1.0)))
+                        .on_click(move |_, _window, cx| {
+                            view_cancel.update(cx, |this, cx| {
+                                this.cancel_active_request(cx);
+                            });
+                        })
+                        .child("✕ Cancel")
+                } else {
                     div()
                         .id("send-request-btn")
                         .flex()
@@ -267,7 +275,7 @@ pub fn render_url_bar(
                                 this.send_active_request(cx);
                             });
                         })
-                        .child(if is_sending { "Sending..." } else { "Send" }),
-                ),
+                        .child("Send")
+                }),
         )
 }

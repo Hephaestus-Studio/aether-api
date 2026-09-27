@@ -41,6 +41,8 @@ pub fn render_tree_node(
     };
 
     let view_click = view.clone();
+    let view_ctx = view.clone();
+    let node_for_ctx = node.clone();
 
     let item_row = div()
         .id(ElementId::Name(format!("node-{}", node.id).into()))
@@ -59,10 +61,8 @@ pub fn render_tree_node(
                 .font_weight(FontWeight::MEDIUM)
         })
         .when(!is_selected, |this| {
-            this.hover(|style| {
-                style.bg(gpui::hsla(220.0 / 360.0, 0.14, 0.16, 0.8))
-            })
-            .text_color(theme.text_secondary)
+            this.hover(|style| style.bg(gpui::hsla(220.0 / 360.0, 0.14, 0.16, 0.8)))
+                .text_color(theme.text_secondary)
         })
         .on_click(move |_, _window, cx| {
             let node_id = node_id_for_click.clone();
@@ -73,6 +73,15 @@ pub fn render_tree_node(
                 } else {
                     this.open_request(&node, cx);
                 }
+            });
+        })
+        .on_mouse_down(MouseButton::Right, move |event, _window, cx| {
+            cx.stop_propagation();
+            let node = node_for_ctx.clone();
+            let pos = event.position;
+            view_ctx.update(cx, |this, cx| {
+                this.context_menu_state.open_for_tree_node(node, pos);
+                cx.notify();
             });
         })
         // Chevron

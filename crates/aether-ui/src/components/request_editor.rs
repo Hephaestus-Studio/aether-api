@@ -2,6 +2,8 @@ use crate::components::auth_editor::render_auth_editor;
 use crate::components::body_editor::render_body_editor;
 use crate::components::key_value_editor::render_key_value_table;
 use crate::components::response_viewer::render_response_viewer;
+use crate::components::text_area::TextArea;
+use crate::components::text_input::TextInput;
 use crate::components::url_bar::render_url_bar;
 use crate::models::request_tab_state::RequestSubtab;
 use crate::models::RequestTabState;
@@ -15,6 +17,8 @@ pub fn render_request_editor(
     tab: &RequestTabState,
     theme: &Theme,
     view: Entity<WorkspaceView>,
+    url_input: Entity<TextInput>,
+    body_input: Entity<TextArea>,
 ) -> impl IntoElement {
     let subtabs = [
         (RequestSubtab::Params, "Params"),
@@ -84,7 +88,7 @@ pub fn render_request_editor(
             true,
         ),
         RequestSubtab::Auth => render_auth_editor(tab, theme, view.clone()),
-        RequestSubtab::Body => render_body_editor(tab, theme, view.clone()),
+        RequestSubtab::Body => render_body_editor(tab, theme, view.clone(), body_input),
         RequestSubtab::Settings => render_key_value_table(
             &[],
             theme,
@@ -101,7 +105,7 @@ pub fn render_request_editor(
         .flex_1()
         .gap_3()
         // Top URL Bar
-        .child(render_url_bar(tab, theme, view.clone()))
+        .child(render_url_bar(tab, theme, view.clone(), url_input))
         // Split Container: Top Request Area + Bottom Response Area
         .child(
             div()

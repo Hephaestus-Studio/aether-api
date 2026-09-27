@@ -62,13 +62,11 @@ impl RecentWorkspacesList {
     /// Records or updates an opened workspace, moving it to the top of the list.
     pub fn add_or_update(&mut self, path: &Path, name_override: Option<&str>) {
         let path_buf = path.to_path_buf();
-        let name = name_override
-            .map(|s| s.to_string())
-            .unwrap_or_else(|| {
-                path.file_name()
-                    .map(|n| n.to_string_lossy().to_string())
-                    .unwrap_or_else(|| "Workspace".to_string())
-            });
+        let name = name_override.map(|s| s.to_string()).unwrap_or_else(|| {
+            path.file_name()
+                .map(|n| n.to_string_lossy().to_string())
+                .unwrap_or_else(|| "Workspace".to_string())
+        });
 
         // Remove existing item with same path if present
         self.workspaces.retain(|w| w.path != path_buf);

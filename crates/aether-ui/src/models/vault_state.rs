@@ -42,25 +42,60 @@ impl VaultState {
         self.error_message = None;
     }
 
-    /// Attempts to unlock the vault by deriving the AES-256 key from passphrase + salt.
-    pub fn unlock(&mut self, salt: Option<&str>) -> Result<(), AppError> {
-        let passphrase = self.master_key_input.trim();
-        let salt_bytes = salt.map(|s| s.as_bytes()).unwrap_or(b"");
+    /// Attempts to unlock the vault by validating passphrase against candidate encrypted secrets.
+    pub fn unlock(
+        &mut self,
+        passphrase_input: &str,
+        workspace_salt: Option<&str>,
+        candidate_encrypted_secrets: &[String],
+    ) -> Result<(), AppError> {
+        let passphrase = passphrase_input.trim();
+        if passphrase.is_empty() {
+            let err = "Master Key or Passphrase cannot be empty".to_string();
+            self.error_message = Some(err.clone());
+            return Err(AppError::CryptoError(err));
+        }
 
-        let key_bytes = crypto::derive_key(
-            if passphrase.is_empty() {
-                "default-master-key"
-            } else {
-                passphrase
-            },
-            salt_bytes,
-        )?;
-        let key_base64 = BASE64.encode(key_bytes);
-        self.cached_key_base64 = Some(key_base64);
-        self.is_unlocked = true;
-        self.is_dialog_open = false;
-        self.error_message = None;
-        Ok(())
+        self.master_key_input = passphrase.to_string();
+
+        // If there are encrypted secrets in the workspace, test decrypting them to verify the key
+        if !candidate_encrypted_secrets.is_empty() {
+            let mut verified_key = None;
+            for secret in candidate_encrypted_secrets {
+                if let Ok((_decrypted, key_bytes)) =
+                    crypto::decrypt_secret_auto(secret, passphrase, workspace_salt)
+                {
+                    verified_key = Some(key_bytes);
+                    break;
+                }
+            }
+
+            match verified_key {
+                Some(key_bytes) => {
+                    self.cached_key_base64 = Some(BASE64.encode(key_bytes));
+                    self.is_unlocked = true;
+                    self.is_dialog_open = false;
+                    self.error_message = None;
+                    Ok(())
+                }
+                None => {
+                    let err = "Incorrect Master Key or Passphrase. Decryption failed.".to_string();
+                    self.error_message = Some(err.clone());
+                    Err(AppError::CryptoError(err))
+                }
+            }
+        } else {
+            // No existing secrets yet - derive new key
+            let salt_bytes = workspace_salt
+                .map(|s| crypto::decode_salt(s))
+                .unwrap_or_else(|| b"aether-api-default-salt-v1".to_vec());
+            let key_bytes = crypto::derive_key(passphrase, &salt_bytes)?;
+            self.cached_key_base64 = Some(BASE64.encode(key_bytes));
+            self.is_unlocked = true;
+            self.is_dialog_open = false;
+            self.error_message = None;
+            Ok(())
+        }
     }
 
     /// Locks the vault and clears cached keys in memory.
