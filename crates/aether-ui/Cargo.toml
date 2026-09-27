@@ -1,0 +1,15 @@
+[package]
+name = "aether-ui"
+version = "0.3.0-beta.3"
+edition = "2021"
+
+[dependencies]
+aether-core = { path = "../aether-core" }
+gpui = { version = "0.2.2", default-features = false, features = ["wayland", "font-kit"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+base64 = "0.23.1"
+tokio = { version = "1.53.1", features = ["full"] }
+tokio-util = { version = "0.7.19", features = ["rt"] }
+rfd = "0.15"
+tracing = "0.1.44"

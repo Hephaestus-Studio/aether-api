@@ -7,11 +7,10 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-website
-dist-ssr
-*.local
+# Rust / Cargo
+/target
+**/*.rs.bk
+Cargo.lock
 
 # Editor directories and files
 .vscode/*
@@ -19,8 +18,4 @@ dist-ssr
 !.vscode/settings.json
 .idea
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
 *.sw?

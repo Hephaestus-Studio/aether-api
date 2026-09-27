@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Aether API
+Comment=Fast, Local-First, and Git-Centric API Client
+Exec=aether-app %F
+Icon=aether-api
+Terminal=false
+Type=Application
+Categories=Development;Network;WebDevelopment;
+Keywords=api;http;rest;graphql;curl;postman;git;
+StartupWMClass=aether-app
+MimeType=x-scheme-handler/aether;

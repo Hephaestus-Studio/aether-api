@@ -11,9 +11,8 @@ _The next-generation open-source API client: **Local-first**, **Git-centric**, u
 <br/>
 
 [![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Tauri v2](https://img.shields.io/badge/Tauri-v2-orange.svg)](https://v2.tauri.app/)
-[![React 19](https://img.shields.io/badge/React-19-61dafb.svg)](https://react.dev/)
-[![Rust](https://img.shields.io/badge/Rust-reqwest-dea584.svg)](https://www.rust-lang.org/)
+[![GPUI](https://img.shields.io/badge/GPUI-0.2.2-purple.svg)](https://gpui.rs/)
+[![Pure Rust](https://img.shields.io/badge/Rust-100%25%20Native-dea584.svg)](https://www.rust-lang.org/)
 [![Local First](https://img.shields.io/badge/Privacy-100%25%20Local--First-brightgreen.svg)](#privacy-manifesto)
 
 </div>
@@ -22,7 +21,20 @@ _The next-generation open-source API client: **Local-first**, **Git-centric**, u
 
 ## Overview
 
-**Aether API** is an open-source, local-first, and Git-centric API development client built to eliminate cloud dependency, vendor lock-in, telemetry tracking, and bloated memory usage common in traditional API tools.
+**Aether API** is a blazingly fast, 100% Native Rust, local-first, and Git-centric API development client powered by **GPUI** (GPU-accelerated native UI framework). It completely eliminates webview bloat, memory overhead, telemetry tracking, and cloud vendor lock-in.
+
+### 🚀 Quick Start (Native GPUI)
+
+```bash
+# Run in development mode
+cargo run -p aether-app
+
+# Run with a specific workspace folder
+cargo run -p aether-app -- /path/to/my-workspace
+
+# Build standalone optimized release binary
+cargo build --release -p aether-app
+```
 
 All collections, folders, requests, and environments are saved directly as **human-readable YAML files on your disk**. This allows you to manage API workspaces with **Git**—branching, code reviews, pull requests, and offline team collaboration without mandatory accounts or third-party servers.
 

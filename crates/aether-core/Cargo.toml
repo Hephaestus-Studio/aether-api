@@ -1,0 +1,38 @@
+[package]
+name = "aether-core"
+version = "0.3.0-beta.3"
+description = "Core engine for Aether API: HTTP, YAML storage, Crypto, Git, and Watcher"
+authors = ["Hephaestus Studio"]
+edition = "2021"
+
+[dependencies]
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = { version = "1.0.151", features = [] }
+serde_yml = { version = "0.0.13", features = [] }
+reqwest = { version = "0.13.5", features = ["json", "cookies", "multipart", "query", "form", "stream"] }
+tokio = { version = "1.53.1", features = ["full"] }
+tokio-util = { version = "0.7.19", features = ["rt"] }
+tower = "0.5.3"
+notify = { version = "8.2.0", features = [] }
+walkdir = { version = "2.5.0", features = [] }
+regex = { version = "1.13.1", features = [] }
+chrono = { version = "0.4.45", features = ["serde"] }
+dirs = "7.0.0"
+thiserror = { version = "2.0.21", features = [] }
+tempfile = { version = "3.27.0", features = [] }
+fs2 = { version = "0.4.3", features = [] }
+zeroize = { version = "1.9.0", features = ["derive"] }
+tracing = { version = "0.1.44", features = [] }
+tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+tracing-appender = { version = "0.2.5", features = [] }
+uuid = { version = "1.26.1", features = ["v4", "v7"] }
+base64 = "0.23.1"
+portable-pty = "0.9.0"
+aes-gcm = "0.11.1"
+pbkdf2 = { version = "0.13.0", default-features = false, features = ["hmac", "sha2"] }
+sha2 = "0.11.0"
+rand = "0.10.3"
+tokio-tungstenite = { version = "0.30.0", features = ["native-tls", "connect"] }
+native-tls = "0.2.18"
+futures-util = "0.3.34"
+url = "2.5.8"

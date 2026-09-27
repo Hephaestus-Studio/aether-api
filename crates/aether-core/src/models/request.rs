@@ -1,0 +1,399 @@
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+
+/// Supported HTTP methods for API requests.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "UPPERCASE")]
+#[derive(Default)]
+pub enum HttpMethod {
+    /// GET request method.
+    #[default]
+    Get,
+    /// POST request method.
+    Post,
+    /// PUT request method.
+    Put,
+    /// PATCH request method.
+    Patch,
+    /// DELETE request method.
+    Delete,
+    /// HEAD request method.
+    Head,
+    /// OPTIONS request method.
+    Options,
+    /// Custom HTTP method.
+    #[serde(untagged)]
+    Custom(String),
+}
+
+impl std::fmt::Display for HttpMethod {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            HttpMethod::Get => write!(f, "GET"),
+            HttpMethod::Post => write!(f, "POST"),
+            HttpMethod::Put => write!(f, "PUT"),
+            HttpMethod::Patch => write!(f, "PATCH"),
+            HttpMethod::Delete => write!(f, "DELETE"),
+            HttpMethod::Head => write!(f, "HEAD"),
+            HttpMethod::Options => write!(f, "OPTIONS"),
+            HttpMethod::Custom(m) => write!(f, "{}", m),
+        }
+    }
+}
+
+/// A generic key-value pair structure with enabling capability.
+///
+/// Used for query parameters, headers, variables, etc.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct KeyValuePair {
+    /// The key.
+    pub key: String,
+    /// The value.
+    pub value: String,
+    /// Whether this key-value pair is active and will be sent in the request.
+    pub enabled: bool,
+    /// Optional description of what this key-value pair is.
+    pub description: Option<String>,
+}
+
+#[allow(dead_code)]
+impl KeyValuePair {
+    /// Creates a new `KeyValuePair` with the key and value, setting `enabled` to `true` by default.
+    pub fn new(key: impl Into<String>, value: impl Into<String>) -> Self {
+        Self {
+            key: key.into(),
+            value: value.into(),
+            enabled: true,
+            description: None,
+        }
+    }
+}
+
+/// Authentication configurations supported by requests.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "type", rename_all = "lowercase")]
+#[derive(Default)]
+pub enum AuthConfig {
+    /// No authentication.
+    #[default]
+    None,
+    /// Bearer Token authentication.
+    Bearer { bearer: BearerAuth },
+    /// Basic Access authentication.
+    Basic { basic: BasicAuth },
+    /// API Key authentication.
+    ApiKey { apikey: ApiKeyAuth },
+    /// Inherit the authentication settings from the parent folder or collection.
+    Inherit,
+}
+
+/// Bearer authentication configuration.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct BearerAuth {
+    /// The token value, which supports dynamic variable interpolation (e.g. `{{token}}`).
+    pub token: String, // Supports {{variable}} interpolation
+    /// Optional prefix for the bearer header (defaults to "Bearer" if None or empty).
+    pub prefix: Option<String>,
+}
+
+/// Basic access authentication configuration.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct BasicAuth {
+    /// Username for basic authentication.
+    pub username: String,
+    /// Password/token for basic authentication.
+    pub password: String,
+}
+
+/// API Key authentication configuration.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ApiKeyAuth {
+    /// Name of the key (e.g., `X-API-Key` or `apiKey`).
+    pub key: String,
+    /// Secret value of the API key.
+    pub value: String,
+    /// Where to add the API key: `"header"` or `"query"`.
+    #[serde(rename = "addTo")]
+    pub add_to: String,
+}
+
+/// Supported body formats for HTTP requests.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "type", rename_all = "kebab-case")]
+pub enum RequestBody {
+    /// No body content. Can contain an optional text/string payload.
+    None { content: Option<String> },
+    /// JSON content body.
+    Json { content: String },
+    /// XML content body.
+    Xml { content: String },
+    /// Plain text content body.
+    Text { content: String },
+    /// YAML content body.
+    Yaml { content: String },
+    /// URL-encoded form data (`application/x-www-form-urlencoded`).
+    FormUrlencoded { content: Vec<KeyValuePair> },
+    /// Multipart form data (`multipart/form-data`).
+    MultipartForm { content: Vec<MultipartField> },
+    /// Raw binary file body.
+    #[serde(rename = "binary")]
+    Binary {
+        #[serde(rename = "filePath", default)]
+        file_path: String,
+    },
+}
+
+impl Default for RequestBody {
+    fn default() -> Self {
+        RequestBody::None { content: None }
+    }
+}
+
+/// Represents an individual field in a multipart form body.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct MultipartField {
+    /// Field key name.
+    pub key: String,
+    /// Field value (can be plain text or a filepath).
+    pub value: String,
+    /// Type of the multipart field (text or file).
+    #[serde(rename = "type")]
+    pub field_type: MultipartFieldType, // "text" | "file"
+    /// Whether this multipart field is active.
+    pub enabled: bool,
+}
+
+/// Supported types for multipart fields.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum MultipartFieldType {
+    /// A text value field.
+    Text,
+    /// A file field referencing a local path to upload.
+    File,
+}
+
+/// Execution settings configured for an API request.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct RequestSettings {
+    /// Maximum execution time in milliseconds before timing out.
+    pub timeout_ms: u64, // Default: 30000
+    /// Whether redirect responses (3xx) should be followed automatically.
+    pub follow_redirects: bool, // Default: true
+    /// Maximum number of redirect cycles to follow.
+    pub max_redirects: u32, // Default: 10
+    /// Whether to verify the remote server's SSL certificate validity.
+    pub verify_ssl: bool, // Default: true
+}
+
+impl Default for RequestSettings {
+    fn default() -> Self {
+        Self {
+            timeout_ms: 30_000,
+            follow_redirects: true,
+            max_redirects: 10,
+            verify_ssl: true,
+        }
+    }
+}
+
+/// Preset / saved message template for WebSocket requests.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct WebSocketSavedMessage {
+    /// Unique identifier for the preset message.
+    pub id: String,
+    /// Friendly label or name.
+    pub name: String,
+    /// Message format: "json", "text", or "binary".
+    pub format: String,
+    /// The message payload string.
+    pub payload: String,
+}
+
+/// Settings specific to WebSocket connections.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct WebSocketSettings {
+    /// Heartbeat ping interval in seconds (0 to disable).
+    #[serde(default)]
+    pub heartbeat_interval_secs: u64,
+    /// Whether to automatically reply with a Pong frame when receiving a Ping.
+    #[serde(default = "default_true")]
+    pub auto_pong: bool,
+    /// Whether to attempt reconnection if connection drops unexpectedly.
+    #[serde(default)]
+    pub auto_reconnect: bool,
+    /// Maximum number of reconnection attempts.
+    #[serde(default = "default_max_reconnect")]
+    pub max_reconnect_attempts: u32,
+}
+
+fn default_true() -> bool {
+    true
+}
+
+fn default_max_reconnect() -> u32 {
+    5
+}
+
+impl Default for WebSocketSettings {
+    fn default() -> Self {
+        Self {
+            heartbeat_interval_secs: 0,
+            auto_pong: true,
+            auto_reconnect: false,
+            max_reconnect_attempts: 5,
+        }
+    }
+}
+
+/// Represents a single Request entity (HTTP or WebSocket).
+///
+/// Contains all configuration data necessary to execute an HTTP or WebSocket request,
+/// including protocol, method, URL, parameters, headers, authentication, body, and options.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct Request {
+    /// Version of the request schema, e.g., "1.0.0".
+    pub schema_version: String, // "1.0.0"
+
+    /// The entity type identifier, which is always "request".
+    #[serde(rename = "type")]
+    pub entity_type: String, // "request"
+
+    /// Protocol type: "http" (default) or "websocket".
+    #[serde(default = "default_protocol")]
+    pub protocol: String,
+
+    /// The name of the request.
+    pub name: String,
+
+    /// Optional detailed description of the request.
+    pub description: Option<String>,
+
+    /// Fractional Index sequence string used to determine the display order in the UI sidebar.
+    pub seq: Option<String>, // Fractional Index for display order
+
+    /// The timestamp when the request was created.
+    pub created_at: DateTime<Utc>,
+
+    /// The timestamp when the request was last updated.
+    pub updated_at: DateTime<Utc>,
+
+    /// The HTTP method to use (e.g. GET, POST).
+    pub method: HttpMethod,
+
+    /// The destination URL, potentially containing `{{variable}}` templates.
+    pub url: String, // Raw URL with {{variables}}
+
+    /// Query string parameters to attach to the URL.
+    pub params: Vec<KeyValuePair>,
+
+    /// Custom HTTP headers to include with the request.
+    pub headers: Vec<KeyValuePair>,
+
+    /// Request-level authentication settings.
+    pub auth: AuthConfig,
+
+    /// Request body payload configuration.
+    pub body: RequestBody,
+
+    /// Execution settings specific to this request.
+    pub settings: RequestSettings,
+
+    /// Saved messages / presets for WebSocket requests.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub saved_messages: Option<Vec<WebSocketSavedMessage>>,
+
+    /// WebSocket-specific connection settings.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ws_settings: Option<WebSocketSettings>,
+
+    /// SSE-specific connection settings.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sse_settings: Option<SseSettings>,
+}
+
+/// Settings specific to Server-Sent Events (SSE) connections.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct SseSettings {
+    /// Whether to attempt reconnection if connection drops unexpectedly.
+    #[serde(default)]
+    pub auto_reconnect: bool,
+    /// Maximum number of reconnection attempts.
+    #[serde(default = "default_max_reconnect")]
+    pub max_reconnect_attempts: u32,
+    /// Reconnect interval in milliseconds if not specified by server retry field.
+    #[serde(default = "default_reconnect_interval_ms")]
+    pub reconnect_interval_ms: u64,
+}
+
+fn default_reconnect_interval_ms() -> u64 {
+    3000
+}
+
+impl Default for SseSettings {
+    fn default() -> Self {
+        Self {
+            auto_reconnect: false,
+            max_reconnect_attempts: 5,
+            reconnect_interval_ms: 3000,
+        }
+    }
+}
+
+fn default_protocol() -> String {
+    "http".to_string()
+}
+
+#[allow(dead_code)]
+impl Request {
+    /// Creates a new `Request` with the given name and default values.
+    ///
+    /// The schema version defaults to "1.0.0", the entity type to "request",
+    /// timestamps are set to the current UTC time, and parameters/headers are empty.
+    pub fn new(name: impl Into<String>) -> Self {
+        let now = Utc::now();
+        Self {
+            schema_version: "1.0.0".to_string(),
+            entity_type: "request".to_string(),
+            protocol: "http".to_string(),
+            name: name.into(),
+            description: None,
+            seq: None,
+            created_at: now,
+            updated_at: now,
+            method: HttpMethod::default(),
+            url: String::new(),
+            params: Vec::new(),
+            headers: Vec::new(),
+            auth: AuthConfig::default(),
+            body: RequestBody::default(),
+            settings: RequestSettings::default(),
+            saved_messages: None,
+            ws_settings: None,
+            sse_settings: None,
+        }
+    }
+
+    /// Compares all user-editable content fields, ignoring timestamps (`created_at`, `updated_at`).
+    pub fn content_equals(&self, other: &Request) -> bool {
+        self.name == other.name
+            && self.protocol == other.protocol
+            && self.description == other.description
+            && self.method == other.method
+            && self.url == other.url
+            && self.params == other.params
+            && self.headers == other.headers
+            && self.auth == other.auth
+            && self.body == other.body
+            && self.settings == other.settings
+            && self.seq == other.seq
+            && self.saved_messages == other.saved_messages
+            && self.ws_settings == other.ws_settings
+            && self.sse_settings == other.sse_settings
+    }
+}
